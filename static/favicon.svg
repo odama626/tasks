@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:svgjs="http://svgjs.com/svgjs" width="512" height="512"><svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_1_4)">
+<path d="M137.152 208L48 256L137.152 304M137.152 208L256 272L374.848 208M137.152 208L48 160L256 48L464 160L374.848 208M137.152 304L48 352L256 464L464 352L374.848 304M137.152 304L256 368L374.848 304M374.848 208L464 256L374.848 304" stroke="black" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"></path>
+</g>
+<defs>
+<clipPath id="SvgjsClipPath1000">
+<rect width="512" height="512" fill="white"></rect>
+</clipPath>
+</defs>
+</svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: invert(100%); } }
+</style></svg>
