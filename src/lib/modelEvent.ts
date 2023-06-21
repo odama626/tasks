@@ -96,7 +96,7 @@ export class ModelEvents {
 				case EventType.Update:
 					await pb
 						.collection(record.modelType)
-						.update(record.recordId, record.payload, { $autoCancel: false });
+						.update(record.recordId, record.payload);
 					break;
 				case EventType.Delete:
 					await pb.collection(record.modelType).delete(record.recordId, { $autoCancel: false });

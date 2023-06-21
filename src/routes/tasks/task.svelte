@@ -15,7 +15,7 @@
 			eventType: EventType.Update,
 			recordId: id,
 			modelType: 'tasks',
-			payload: { ...task, ...payload }
+			payload  
 		});
 	}
 
