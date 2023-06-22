@@ -1,6 +1,7 @@
 import type { CollectionRecords, Collections } from './db.types';
 import { db, pb } from './storage';
 import { DateTime } from 'luxon';
+import { NotificationType, notify } from './utils';
 
 export enum EventType {
 	Add = 'add',
@@ -60,7 +61,6 @@ export class ModelEvents {
 			await db[event.modelType][event.eventType](event.payload);
 		}
 
-		console.log(pb.authStore);
 
 		if (this.online) {
 			if (!this.processing)
@@ -75,9 +75,21 @@ export class ModelEvents {
 
 		const options = { filter: lastSync ? `updated >= "${lastSync}"` : '' };
 		const records = await pb.collection(table).getFullList(options);
-		console.log({ records });
+		const results = records.reduce(
+			(results, next) => {
+				if (next.deleted) {
+					results.deleted.push(next.id);
+				} else {
+					results.updates.push(next);
+				}
+				return results;
+			},
+			{ deleted: [], updates: [] }
+		);
 
-		await db[table].bulkPut(records);
+		await db[table].bulkPut(results.updates);
+		await db[table].bulkDelete(results.deleted);
+
 		pb.collection(table).subscribe('*', (data) => {
 			if (data.action === 'delete') {
 				db[table].delete(data.record.id);
@@ -101,28 +113,39 @@ export class ModelEvents {
 	}
 
 	private async step() {
-		const records = await db.events.offset(0).limit(50).toArray();
-		for await (let record of records) {
-			if (!this.online) return;
-			switch (record.eventType) {
-				case EventType.Add:
-					await pb.collection(record.modelType).create(record.payload, { $autoCancel: false });
-					break;
-				case EventType.Update:
-					await pb
-						.collection(record.modelType)
-						.update(record.recordId, record.payload, { $autoCancel: false });
-					break;
-				case EventType.Delete:
-					await pb.collection(record.modelType).delete(record.recordId, { $autoCancel: false });
-					break;
-				default:
-					throw new Error('Unexpected error occured during sync');
+		try {
+			const records = await db.events.offset(0).limit(50).toArray();
+			for await (let record of records) {
+				if (!this.online) return;
+				switch (record.eventType) {
+					case EventType.Add:
+						await pb.collection(record.modelType).create(record.payload, { $autoCancel: false });
+						break;
+					case EventType.Update:
+						await pb
+							.collection(record.modelType)
+							.update(record.recordId, record.payload, { $autoCancel: false });
+						break;
+					case EventType.Delete:
+						await pb
+							.collection(record.modelType)
+							.update(record.recordId, { deleted: true }, { $autoCancel: false });
+						break;
+					default:
+						throw new Error('Unexpected error occured during sync');
+				}
+				await db.events.where({ id: record.id }).delete();
 			}
-			await db.events.where({ id: record.id }).delete();
+			if (records.length) return (this.queue = this.step());
+			this.processing = false;
+		} catch (e) {
+			notify({
+				text: 'Failed to sync',
+				detail: e.message,
+				type: NotificationType.Error,
+				timeout: 5000
+			})
 		}
-		if (records.length) return (this.queue = this.step());
-		this.processing = false;
 	}
 }
 

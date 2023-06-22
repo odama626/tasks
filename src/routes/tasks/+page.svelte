@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-	import { db, userStore } from '$lib/storage';
+	import { db, pb, userStore } from '$lib/storage';
 	import { EventType, events } from '$lib/modelEvent';
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import TaskItem from './task.svelte';
 	import { type TasksRecord, type ListsRecord, Collections } from '$lib/db.types';
 	import { ListsUsersAccessOptions } from '$lib/db.types';
-	import { createId } from '$lib/utils';
+	import { createId, withKeys } from '$lib/utils';
 	import CreateTaskForm from './createTaskForm.svelte';
 	import CreateListForm from './createListForm.svelte';
 	import { Shortcuts } from 'shortcuts';
@@ -50,11 +50,12 @@
 	let lists = liveQuery(() => db.lists.toArray());
 	let selectedList: ListsRecord;
 	let isHeaderOpen: boolean = false;
+	let isContextMenuOpen = false;
 	let isCreating: string | undefined = undefined;
 
-	db.users.get(auth.record.id).then(async user => {
+	db.users.get(auth.record.id).then(async (user) => {
 		selectedList = await db.lists.get(user.lastVisitedList);
-	})
+	});
 
 	$: selectedListId = selectedList?.id;
 	$: tasks = liveQuery(() =>
@@ -99,6 +100,13 @@
 		event.target.reset();
 		isCreating = undefined;
 	}
+
+	async function logout() {
+		localStorage.clear();
+		db.delete();
+		pb.authStore.clear();
+		location.reload();
+	}
 </script>
 
 <div class="document">
@@ -113,6 +121,7 @@
 					stroke="currentColor"
 					class="icon"
 					on:click={() => (isHeaderOpen = !isHeaderOpen)}
+					on:keypress={withKeys(['Enter', 'Space'], () => (isHeaderOpen = !isHeaderOpen))}
 				>
 					<path
 						stroke-linecap="round"
@@ -124,22 +133,33 @@
 			<li>Header</li>
 		</ul>
 		<article style="display: flex; justify-content: flex-end;">
-			<button class="ghost icon">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="icon button"
+			<div class="context-container">
+				<button
+					aria-expanded={isContextMenuOpen}
+					class="ghost icon"
+					on:click={() => (isContextMenuOpen = !isContextMenuOpen)}
 				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-					/>
-				</svg>
-			</button>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						class="icon button"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+						/>
+					</svg>
+				</button>
+				{#if isContextMenuOpen}
+					<ul class="context-menu">
+						<li><button on:click={logout}>Logout</button></li>
+					</ul>
+				{/if}
+			</div>
 		</article>
 	</nav>
 	<div class="page">
@@ -215,6 +235,17 @@
 		display: flex;
 		flex-direction: column;
 		height: 100dvh;
+	}
+
+	.context-container {
+		position: relative;
+	}
+
+	.context-menu {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		margin: 0;
 	}
 
 	.inline-create-task {
