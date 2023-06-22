@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { liveQuery } from 'dexie';
-	import { db } from '$lib/storage';
+	import { db, userStore } from '$lib/storage';
 	import { EventType, events } from '$lib/modelEvent';
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import TaskItem from './task.svelte';
-	import type { TasksRecord, ListsRecord } from '$lib/db.types';
+	import { type TasksRecord, type ListsRecord, Collections } from '$lib/db.types';
 	import { ListsUsersAccessOptions } from '$lib/db.types';
 	import { createId } from '$lib/utils';
 	import CreateTaskForm from './createTaskForm.svelte';
@@ -14,6 +14,7 @@
 	import { commands } from '$lib/commands';
 	import type { Command } from '$lib/commands';
 	import { onMount, tick } from 'svelte';
+	import { get } from 'svelte/store';
 
 	export let data;
 	const { auth } = data;
@@ -22,33 +23,39 @@
 
 	// TODO Make the mobile menu a draggable sheet https://github.com/ivteplo/bottom-sheet/blob/main/main.js
 
-	// const commandProcessor = (command: Command) => (event: KeyboardEvent) => {
-	// 	if (isCreating) return;
-	// 	switch (command.action) {
-	// 		case 'task:create':
-	// 			isCreating = 'task';
-	// 			break;
-	// 		case 'list:create':
-	// 			isCreating = 'list';
-	// 			break;
-	// 		default:
-	// 			console.error('unrecognized shortcut', { command, event });
-	// 	}
-	// 	event.preventDefault();
-	// };
+	const commandProcessor = (command: Command) => (event: KeyboardEvent) => {
+		const elementType = document.activeElement?.localName;
+		if (elementType && ['input', 'textarea'].includes(elementType)) return;
+		switch (command.action) {
+			case 'task:create':
+				isCreating = 'task';
+				break;
+			case 'list:create':
+				isCreating = 'list';
+				break;
+			default:
+				console.error('unrecognized shortcut', { command, event });
+		}
+		event.preventDefault();
+	};
 
-	// onMount(() => {
-	// 	const shortcuts = new Shortcuts();
+	onMount(() => {
+		const shortcuts = new Shortcuts();
 
-	// 	commands.forEach((command) => {
-	// 		shortcuts.add({ shortcut: command.shortcut, handler: commandProcessor(command) });
-	// 	});
-	// });
+		commands.forEach((command) => {
+			shortcuts.add({ shortcut: command.shortcut, handler: commandProcessor(command) });
+		});
+	});
 
 	let lists = liveQuery(() => db.lists.toArray());
-	let selectedList;
+	let selectedList: ListsRecord;
 	let isHeaderOpen: boolean = false;
-	let isCreating: string = undefined;
+	let isCreating: string | undefined = undefined;
+
+	db.users.get(auth.record.id).then(async user => {
+		selectedList = await db.lists.get(user.lastVisitedList);
+	})
+
 	$: selectedListId = selectedList?.id;
 	$: tasks = liveQuery(() =>
 		db.tasks.where({ list: selectedListId }).toArray((items) =>
@@ -141,7 +148,17 @@
 				<ul>
 					{#each $lists as list (list.id)}
 						<li in:slide data-selected={list.id === selectedList?.id}>
-							<button on:click={() => (selectedList = list)}>
+							<button
+								on:click={() => {
+									selectedList = list;
+									events.add({
+										eventType: EventType.Update,
+										modelType: Collections.Users,
+										recordId: get(userStore).record.id,
+										payload: { lastVisitedList: selectedList.id }
+									});
+								}}
+							>
 								{list.name}
 							</button>
 						</li>
@@ -159,11 +176,15 @@
 						</li>
 					{/each}
 				{/if}
-				<li class="inline-create-task">
-					<button class="ghost accent" on:click={() => (isCreating = 'task')}>
-						Create a new task
-					</button>
-				</li>
+				{#if selectedList}
+					<li class="inline-create-task">
+						<button class="ghost accent" on:click={() => (isCreating = 'task')}>
+							Create a new task
+						</button>
+					</li>
+				{:else}
+					<li>Create a list to get started</li>
+				{/if}
 			</ul>
 			{#if isCreating}
 				<div
@@ -206,7 +227,7 @@
 		display: grid;
 		grid-template-columns: 200px 1fr;
 		gap: 5rem;
-		padding:  1ch;
+		padding: 1ch;
 		ul {
 			align-items: center;
 		}

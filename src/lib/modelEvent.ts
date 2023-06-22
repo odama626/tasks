@@ -1,4 +1,4 @@
-import type { CollectionRecords } from './db.types';
+import type { CollectionRecords, Collections } from './db.types';
 import { db, pb } from './storage';
 import { DateTime } from 'luxon';
 
@@ -14,22 +14,24 @@ export enum PbEventType {
 	Delete = 'delete'
 }
 
-interface ModelCreateEvent<T> {
+interface ModelEvent {
+	eventType: EventType;
+	modelType: Collections;
+}
+
+interface ModelCreateEvent<T> extends ModelEvent {
 	eventType: EventType.Add;
-	modelType: string;
 	payload: T;
 }
 
-interface ModelUpdateEvent<T> {
+interface ModelUpdateEvent<T> extends ModelEvent {
 	eventType: EventType.Update;
-	modelType: string;
 	payload: Partial<T>;
 	recordId: string;
 }
 
-interface ModelDeleteEvent {
+interface ModelDeleteEvent extends ModelEvent {
 	eventType: EventType.Delete;
-	modelType: keyof CollectionRecords;
 	recordId: string;
 }
 
@@ -53,9 +55,12 @@ export class ModelEvents {
 		if (event.eventType === 'update') {
 			await db[event.modelType][event.eventType](event.recordId, event.payload);
 		} else if (event.eventType === 'delete') {
+			await db[event.modelType][event.eventType](event.recordId);
 		} else {
 			await db[event.modelType][event.eventType](event.payload);
 		}
+
+		console.log(pb.authStore);
 
 		if (this.online) {
 			if (!this.processing)
@@ -64,25 +69,35 @@ export class ModelEvents {
 		}
 	}
 
-	private async syncTable(table: string, options) {
+	private async syncTable(table: string) {
+		const lastSync = localStorage.getItem(`last-sync:${table}`);
+		const currentSync = DateTime.now();
+
+		const options = { filter: lastSync ? `updated >= "${lastSync}"` : '' };
 		const records = await pb.collection(table).getFullList(options);
 		console.log({ records });
+
 		await db[table].bulkPut(records);
+		pb.collection(table).subscribe('*', (data) => {
+			if (data.action === 'delete') {
+				db[table].delete(data.record.id);
+			} else {
+				db[table].put(data.record);
+			}
+		});
+		localStorage.setItem(
+			`last-sync:${table}`,
+			currentSync.setZone('utc').toFormat('yyyy-MM-dd HH:mm:s.u')
+		);
 	}
 
 	async startSync() {
 		await this.step();
-		const lastSync = localStorage.getItem('last-sync');
-		const currentSync = DateTime.now();
 
-		const options = {
-			filter: lastSync ? `updated >= "${lastSync}"` : ''
-		};
-		// await this.syncTable('users');
-		await this.syncTable('lists_users', options);
-		await this.syncTable('lists', options);
-		await this.syncTable('tasks', options);
-		localStorage.setItem('last-sync', currentSync.setZone('utc').toFormat("yyyy-MM-dd HH:mm:s.u"));
+		await this.syncTable('users');
+		await this.syncTable('lists_users');
+		await this.syncTable('lists');
+		await this.syncTable('tasks');
 	}
 
 	private async step() {
@@ -96,7 +111,7 @@ export class ModelEvents {
 				case EventType.Update:
 					await pb
 						.collection(record.modelType)
-						.update(record.recordId, record.payload);
+						.update(record.recordId, record.payload, { $autoCancel: false });
 					break;
 				case EventType.Delete:
 					await pb.collection(record.modelType).delete(record.recordId, { $autoCancel: false });

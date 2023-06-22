@@ -12,6 +12,10 @@ db.version(1).stores({
 	events: '++id, eventType, modelType, payload'
 });
 
+db.version(2).stores({
+	users: '&id, username, email, lastVisitedList',
+})
+
 export function storable<T>(data: T, name: string) {
 	const store = writable(data);
 	const { subscribe, set, update } = store;
@@ -40,3 +44,5 @@ export function storable<T>(data: T, name: string) {
 }
 
 export const userStore = storable(null, 'auth');
+
+
