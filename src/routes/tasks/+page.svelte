@@ -359,5 +359,10 @@
 			justify-content: space-between;
 			background-color: var(--surface-2);
 		}
+
+		.context-menu{
+			top: auto;
+			bottom: 100%;
+		}
 	}
 </style>
