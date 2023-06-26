@@ -1,0 +1,92 @@
+
+.codex-editor {
+	background-color: var(--surface-2);
+  max-width: 80ch;
+  margin: auto;
+  border-radius: 20px;
+  padding: 60px 25px;
+  
+}
+.cdx-block {
+	padding: 0.4rem 1ch;
+}
+.ce-toolbar__content > * > * {
+	color: var(--text-3);
+}
+.ce-popover {
+	--border-radius: 6px;
+	--width: 200px;
+	--max-height: 270px;
+	--padding: 6px;
+	--offset-from-target: 8px;
+	--color-border: var(--surface-4);
+  --color-gray-border: var(--color-border);
+	--color-shadow: rgba(13, 20, 33, 0.13);
+	--color-background: var(--surface-2);
+	--color-text-primary: var(--text-1);
+	--color-text-secondary: var(--text-2);
+	--color-border-icon: rgba(201, 201, 204, 0.48);
+	--color-border-icon-disabled: #eff0f1;
+	--color-text-icon-active: var(--surface-4):;
+	--color-background-icon-active: var(--surface-3);
+	--color-background-item-focus: var(--surface-4);
+	--color-shadow-item-focus: rgba(7, 161, 227, 0.08);
+	--color-background-item-hover: var(--surface-4);
+	--color-background-item-confirm: var(--surface-5);
+	--color-background-item-confirm-hover: var(--text-3);
+}
+.ce-block--selected .ce-block__content {
+  background-color: var(--surface-5);
+}
+
+.ce-toolbar__plus:hover {
+  background-color: var(--surface-5);
+}
+.cdx-search-field.ce-popover__search{
+  background-color: inherit;
+	border: solid 2px var(--surface-4);
+  color: var(--text-1);
+  input::placeholder {
+    color: var(--text-3);
+  }
+
+  &:focus-within  {
+  outline: solid var(--surface-5);
+    input {
+            outline: none;
+      background-color: inherit;
+    }
+  }
+}
+.ce-popover-item__icon {
+	background-color: transparent;
+	box-shadow: none;
+}
+.cdx-search-field__icon svg {
+	color: var(--text-2);
+}
+
+.cdx-block {
+  color: var(--text-1);
+  .link-tool {
+    .link-tool__content--rendered {
+      background-color: var(--surface-2);
+      border-color: var(--surface-3);
+      border-radius: 4px;
+      color: inherit;
+      .link-tool__title {
+        color: var(--text-3);
+      }
+      .link-tool__description {
+        color: var(--text-1);
+      }
+      .link-tool__anchor {
+        color: var(--text-3) !important;
+      }
+    }
+  }
+}
+
+
+
+    

@@ -1,3 +1,4 @@
+@import './reset.scss';
 @import './theme.scss';
 
 html {
@@ -169,5 +170,91 @@ small {
 @media only screen and (max-width: 480px) {
 	html {
 		font-size: 1.5rem;
+	}
+}
+
+strong {
+	font-weight: 600;
+}
+
+h1 {
+	font-size: 2.5rem;
+}
+
+h2 {
+	font-size: 2rem;
+}
+h3 {
+	font-size: 1.75rem;
+}
+h4 {
+	font-size: 1.5rem;
+}
+h5 {
+	font-size: 1.25rem;
+}
+
+blockquote {
+	border-left: 2px solid var(--text-4);
+	padding-left: 1rem;
+}
+
+em {
+	font-style: italic;
+}
+
+.editor ul,
+.editor ol {
+	margin-left: 1rem;
+	li::marker {
+		color: var(--text-3);
+	}
+	li {
+		margin: var(--block-spacing);
+	}
+}
+
+ul {
+	list-style: disc;
+	ul {
+		list-style: circle;
+		ul {
+			list-style: square;
+		}
+	}
+}
+
+ul[data-type='taskList'] {
+	list-style: none;
+	margin-left: 0;
+	> li {
+		display: flex;
+		align-items: start;
+		gap: 8px;
+		margin: 8px 0;
+
+		> label {
+			display: inline-block;
+		}
+
+		> label + * {
+			margin-top: 4px;
+		}
+	}
+}
+
+ol {
+	list-style: decimal;
+	ol {
+		list-style: upper-alpha;
+		ol {
+			list-style: upper-roman;
+			ol {
+				list-style: lower-alpha;
+				ol {
+					list-style: lower-roman;
+				}
+			}
+		}
 	}
 }
