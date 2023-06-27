@@ -24,6 +24,18 @@ const configuration = {
 					}
 				},
 				{
+					title: 'H3',
+					command: ({ editor, range }) => {
+						editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run();
+					}
+				},
+				{
+					title: 'H4',
+					command: ({ editor, range }) => {
+						editor.chain().focus().deleteRange(range).setNode('heading', { level: 4 }).run();
+					}
+				},
+				{
 					title: 'bold',
 					command: ({ editor, range }) => {
 						editor.chain().focus().deleteRange(range).setMark('bold').run();

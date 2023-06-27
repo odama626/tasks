@@ -178,7 +178,7 @@ strong {
 }
 
 h1 {
-	font-size: 2.5rem;
+	font-size: 2.25rem;
 }
 
 h2 {
@@ -192,6 +192,15 @@ h4 {
 }
 h5 {
 	font-size: 1.25rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin-bottom: 0.5rem;
 }
 
 blockquote {
