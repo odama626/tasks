@@ -52,6 +52,7 @@ export class ModelEvents {
 	}
 
 	async add(event: ModelEvent<any>) {
+		try {
 		db.events.add(event);
 		if (event.eventType === 'update') {
 			await db[event.modelType][event.eventType](event.recordId, event.payload);
@@ -66,6 +67,10 @@ export class ModelEvents {
 			if (!this.processing)
 				this.queue = this.queue.then(() => Promise.resolve()).then(() => this.step());
 			// TODO send event to pb
+		}
+			} catch(e) {
+			console.error('Something went wrong');
+			console.error(e)
 		}
 	}
 

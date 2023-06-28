@@ -54,6 +54,7 @@
 		"@tiptap/starter-kit": "^2.0.3",
 		"@tiptap/suggestion": "^2.0.3",
 		"dexie": "^3.2.4",
+		"lodash-es": "^4.17.21",
 		"luxon": "^3.3.0",
 		"nanoid": "^4.0.2",
 		"pocketbase": "^0.15.2",

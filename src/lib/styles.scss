@@ -76,13 +76,20 @@ textarea {
 	}
 }
 
-button {
+button,
+a.button {
 	all: unset;
 	--background-color: var(--surface-3);
 	padding: 0.75rem 1rem;
 	cursor: pointer;
 	border-radius: 4px;
 	background-color: var(--background-color);
+	text-decoration: none;
+	display: block;
+
+	&:visited {
+		color: inherit;
+	}
 
 	&:hover {
 		--background-color: var(--surface-4);
