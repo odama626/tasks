@@ -13,7 +13,7 @@ db.version(1).stores({
 });
 
 db.version(2).stores({
-	users: '&id, username, email, lastVisitedList',
+	users: '&id, username, email, lastVisitedList'
 });
 
 db.version(3).stores({
@@ -21,8 +21,16 @@ db.version(3).stores({
 	docs: '&id, title, createdBy, project',
 	doc_blocks: '&id, type, attrs, order, doc, parent, project',
 	projects_users: '&id, user, project, access',
-	docs_users: '&id, user, doc, access',
-})
+	docs_users: '&id, user, doc, access'
+});
+
+db.version(4).stores({
+	doc_blocks: '&id, type, attrs, doc, parent, [project+path]'
+});
+
+db.version(5).stores({
+	doc_blocks: '&id, type, attrs, doc, parent, project, path'
+});
 
 export enum RecordAccess {
 	Admin = 'admin',

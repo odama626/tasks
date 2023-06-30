@@ -109,9 +109,14 @@ button.icon {
 	padding: 0.25rem 0.5rem;
 }
 
-button.ghost {
+button.ghost,
+.button.ghost {
 	color: var(--background-color);
 	background-color: transparent;
+
+	&:visited {
+		color: var(--background-color);
+	}
 
 	--background-color: var(--surface-7);
 

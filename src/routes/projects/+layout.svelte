@@ -22,7 +22,11 @@
 
 	const commandProcessor = (command: Command) => (event: KeyboardEvent) => {
 		const elementType = document.activeElement?.localName;
-		if (elementType && ['input', 'textarea'].includes(elementType) || document.activeElement?.contentEditable) return;
+		if (
+			(elementType && ['input', 'textarea'].includes(elementType)) ||
+			document.activeElement?.contentEditable
+		)
+			return;
 		switch (command.action) {
 			case 'task:create':
 				isCreating = 'task';
@@ -81,6 +85,7 @@
 			<li>Header</li>
 		</ul>
 		<article style="display: flex; justify-content: flex-end;">
+			<div class='header-context-portal' />
 			<div class="context-container">
 				<button
 					aria-expanded={isContextMenuOpen}
@@ -128,9 +133,9 @@
 					{/each}
 				</ul>
 			{/if}
-			<button class="ghost accent" on:click={() => (isCreating = Collections.Projects)}
-				>Create new Project</button
-			>
+			<button class="ghost accent" on:click={() => (isCreating = Collections.Projects)}>
+				Create new Project
+			</button>
 		</nav>
 		<article>
 			<slot>
@@ -168,6 +173,7 @@
 
 	.context-container {
 		position: relative;
+		display: flex;
 	}
 
 	.context-menu {
@@ -209,6 +215,12 @@
 	nav.sidebar {
 		grid-area: 'sidebar';
 		background-color: var(--surface-2);
+
+		h1 {
+			padding: 0.75rem 1rem;
+			margin: 0;
+			font-size: 1.25rem;
+		}		
 		ul {
 			flex-direction: column;
 
@@ -264,6 +276,7 @@
 		}
 
 		nav.sidebar {
+			z-index: 10;
 			position: fixed;
 			bottom: -85%;
 			left: 0;
@@ -282,7 +295,8 @@
 			flex-direction: column-reverse;
 		}
 		.header {
-			z-index: 1;
+			gap: 0;
+			z-index: 11;
 			display: flex;
 			flex-direction: row;
 			align-items: center;

@@ -53,24 +53,23 @@ export class ModelEvents {
 
 	async add(event: ModelEvent<any>) {
 		try {
-		db.events.add(event);
-		if (event.eventType === 'update') {
-			await db[event.modelType][event.eventType](event.recordId, event.payload);
-		} else if (event.eventType === 'delete') {
-			await db[event.modelType][event.eventType](event.recordId);
-		} else {
-			await db[event.modelType][event.eventType](event.payload);
-		}
+			db.events.add(event);
+			if (event.eventType === 'update') {
+				await db[event.modelType][event.eventType](event.recordId, event.payload);
+			} else if (event.eventType === 'delete') {
+				await db[event.modelType][event.eventType](event.recordId);
+			} else {
+				await db[event.modelType][event.eventType](event.payload);
+			}
 
-
-		if (this.online) {
-			if (!this.processing)
+			if (this.online) {
+				if (!this.processing) this.processing = true;
 				this.queue = this.queue.then(() => Promise.resolve()).then(() => this.step());
-			// TODO send event to pb
-		}
-			} catch(e) {
+				// TODO send event to pb
+			}
+		} catch (e) {
 			console.error('Something went wrong');
-			console.error(e)
+			console.error(e);
 		}
 	}
 
@@ -144,12 +143,13 @@ export class ModelEvents {
 			if (records.length) return (this.queue = this.step());
 			this.processing = false;
 		} catch (e) {
+			this.processing = false;
 			notify({
 				text: 'Failed to sync',
 				detail: e.message,
 				type: NotificationType.Error,
 				timeout: 5000
-			})
+			});
 		}
 	}
 }

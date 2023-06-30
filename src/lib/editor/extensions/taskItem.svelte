@@ -37,7 +37,7 @@
 </script>
 
 <label contenteditable="false">
-	<input {checked} i on:click={onChange} type="checkbox" />
+	<input {checked} on:click={onChange} type="checkbox" />
 
 	<svg
 		class="icon button checkbox"

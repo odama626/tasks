@@ -23,12 +23,12 @@ const initialContent = [
 
 async function rebuildDoc(docId: string) {
 	const blocks = await db.doc_blocks.where({ doc: docId }).toArray();
-	blocks.sort((a, b) => a.path.length - b.path.length)
+	blocks.sort((a, b) => a.path.length - b.path.length);
 	const content = [];
 
 	blocks.forEach((block) => {
 		const { properties, type, id } = block;
-		set(content, block.path, properties);
+		set(content, block.path.split('.').join('.content.'), { ...properties });
 	});
 
 	const doc = {
