@@ -86,12 +86,6 @@ export default TaskItem.extend({
 						checked: updatedNode.attrs.checked
 					});
 
-					// if (updatedNode.attrs.checked) {
-					// 	checkbox.setAttribute('checked', 'checked');
-					// } else {
-					// 	checkbox.removeAttribute('checked');
-					// }
-
 					return true;
 				}
 			};

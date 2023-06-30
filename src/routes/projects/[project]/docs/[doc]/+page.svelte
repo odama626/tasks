@@ -13,8 +13,6 @@
 	export let data;
 	let editor: Editor;
 
-	console.log({ data });
-
 	interface Block {
 		type: string;
 		properties: unknown;
@@ -31,7 +29,6 @@
 
 	async function processBlock(block: Block, options: ProcessBlockOptions): string[] {
 		const { path, parent, doc, project, usedIds } = options;
-		console.log(block.id);
 		const isNew = !(block.attrs?.id && !usedIds.has(block.attrs.id));
 		const id = isNew ? createId() : block.attrs.id;
 		const eventType = isNew ? EventType.Add : EventType.Update;
@@ -59,7 +56,6 @@
 			payload
 		});
 
-		console.log(path, id, isNew);
 		if (block.content) {
 			ids = await Promise.all(
 				block.content.map((innerBlock, index) =>
@@ -74,19 +70,13 @@
 	function getText(content) {
 		if (content.text) return content.text;
 		if (content.content) return getText(content.content[0]);
-
-
-}
+	}
 	async function onSave() {
 		const doc = editor.getJSON();
 		const isNew = data.docId === 'new';
 		const id = isNew ? createId() : data.docId;
 
-		console.log(JSON.stringify({ doc }, null, 2));
-
 		const title = getText(doc);
-
-		console.log({ title });
 
 		const record = {
 			eventType: isNew ? EventType.Add : EventType.Update,
@@ -146,12 +136,6 @@
 			)
 		);
 
-		console.log({ staleRecords });
-
-		console.log({ record });
-
-		console.log({ blockIds });
-
 		// TODO text nodes can't have attributes
 
 		// TODO if there is a tiptap plugin that generates ids, most of them should match so we can collect the ids and diff them with the current records
@@ -180,11 +164,24 @@
 			}
 		]
 	};
-
-	$: console.log({ content });
 </script>
 
-<Portal target='.header-context-portal'>
-<button class='ghost' on:click={onSave}>Save</button>
-</Portal>
-<EditorComponent bind:editor on:destroy={event => onSave(event.detail.editor)} content={data.doc ?? content} />
+<div class="document">
+	<Portal target=".header-context-portal">
+		<button class="ghost" on:click={onSave}>Save</button>
+	</Portal>
+	<EditorComponent
+		bind:editor
+		on:destroy={(event) => onSave(event.detail.editor)}
+		content={data.doc ?? content}
+	/>
+</div>
+
+<style lang="scss">
+	.document {
+		height: 100%;
+		:global(.editor) {
+			height: 100%;
+		}
+	}
+</style>

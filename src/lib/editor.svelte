@@ -40,8 +40,10 @@
 
 <style lang="scss">
 	.editor {
+		box-sizing: border-box;
 		> :global(div) {
 			outline: none;
+			height: 100%;
 		}
 		max-width: 80ch;
 		margin: auto;

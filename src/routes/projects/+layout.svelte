@@ -10,13 +10,13 @@
 	import type { Command } from '$lib/commands';
 	import { onMount, tick } from 'svelte';
 	import CreateProjectForm from './createProjectForm.svelte';
+	import '$lib/styles.scss';
+	import { clickOutside } from '$lib/clickOutside';
 
 	export let data;
 	const { auth } = data;
 
 	events.startSync();
-
-	console.log({ data });
 
 	// TODO Make the mobile menu a draggable sheet https://github.com/ivteplo/bottom-sheet/blob/main/main.js
 
@@ -73,6 +73,7 @@
 					stroke="currentColor"
 					class="icon"
 					on:click={() => (isHeaderOpen = !isHeaderOpen)}
+					id="header-button"
 					on:keypress={withKeys(['Enter', 'Space'], () => (isHeaderOpen = !isHeaderOpen))}
 				>
 					<path
@@ -85,8 +86,13 @@
 			<li>Header</li>
 		</ul>
 		<article style="display: flex; justify-content: flex-end;">
-			<div class='header-context-portal' />
-			<div class="context-container">
+			<div class="header-context-portal" />
+			<div
+				class="context-container select"
+				use:clickOutside={() => {
+					isContextMenuOpen = false;
+				}}
+			>
 				<button
 					aria-expanded={isContextMenuOpen}
 					class="ghost icon"
@@ -116,7 +122,17 @@
 		</article>
 	</nav>
 	<div class="page">
-		<nav class:open={isHeaderOpen} class="sidebar">
+		<nav
+			class:open={isHeaderOpen}
+			on:click={(e) => {
+				if (['A', 'BUTTON'].includes(e.target.tagName)) isHeaderOpen = false;
+			}}
+			use:clickOutside={(e) => {
+				if (!isHeaderOpen || e.target.id === 'header-button') return;
+				isHeaderOpen = false;
+			}}
+			class="sidebar"
+		>
 			<ul>
 				<li><button>Home</button></li>
 			</ul>
@@ -220,7 +236,7 @@
 			padding: 0.75rem 1rem;
 			margin: 0;
 			font-size: 1.25rem;
-		}		
+		}
 		ul {
 			flex-direction: column;
 

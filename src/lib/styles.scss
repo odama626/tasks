@@ -51,11 +51,19 @@ textarea {
 	background-color: transparent;
 	border-radius: 4px;
 	outline: unset;
+	font-size: 1.25rem;
+	padding: 0.5rem 0.75rem;
+	box-sizing: border-box;
 
 	border: solid 2px var(--surface-4);
 	background-color: var(--surface-2);
 	color: var(--text-1);
-	padding: 0.3rem 0.5rem;
+
+	@media only screen and (max-width: 480px) {
+		padding: 0.25rem 0.5rem;
+		font-size: 1.1rem;
+		max-width: 100%;
+	}
 
 	&:hover,
 	&:focus {
@@ -146,6 +154,10 @@ svg.icon {
 	display: inline-block;
 	position: fixed;
 	min-width: 270px;
+
+	@media only screen and (max-width: 480px) {
+		padding: 1.5rem;
+	}
 }
 
 .modal-shade {
@@ -155,18 +167,24 @@ svg.icon {
 	justify-content: center;
 	inset: 0;
 	backdrop-filter: blur(5px);
+	z-index: 20;
 }
 
 form {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
+	gap: var(--block-spacing);
 }
 
 label {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
+	> input:not(:first-child) {
+		margin-top: calc(var(--block-spacing) / 2);
+		width: 100%;
+	}
 }
 
 small {
@@ -191,6 +209,7 @@ strong {
 
 h1 {
 	font-size: 2.25rem;
+	margin-bottom: 1.25rem;
 }
 
 h2 {

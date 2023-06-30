@@ -24,13 +24,18 @@
 			id: createId()
 		};
 
-		console.log({ payload})
+		console.log({ payload });
 
 		await events.add({ eventType: EventType.Add, modelType: Collections.Projects, payload });
 		await events.add({
 			eventType: EventType.Add,
 			modelType: Collections.ProjectsUsers,
-			payload: { id: createId(), user: get(userStore).record.id, project: payload.id, access: RecordAccess.Admin }
+			payload: {
+				id: createId(),
+				user: get(userStore).record.id,
+				project: payload.id,
+				access: RecordAccess.Admin
+			}
 		});
 		event.target.reset();
 		dispatch('submitted');
@@ -38,7 +43,7 @@
 </script>
 
 <form on:submit|preventDefault={createRecord}>
-	Create Project
+	<p>Create Project</p>
 	<Field autofocus name="name" label="Name" {zodError} />
 	<button>Create</button>
 </form>
