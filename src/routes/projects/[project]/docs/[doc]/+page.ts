@@ -36,7 +36,8 @@ async function rebuildDoc(docId: string) {
 		content: content.length ? content : initialContent
 	};
 
-	console.log(blocks);
+	// console.log(blocks);
+	console.log('saved doc', docId);
 	return doc;
 }
 

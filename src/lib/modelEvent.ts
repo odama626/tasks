@@ -107,6 +107,13 @@ export class ModelEvents {
 		);
 	}
 
+	async logout() {
+		localStorage.clear();
+		db.delete();
+		pb.authStore.clear();
+		location.reload();
+	}
+
 	async startSync() {
 		await this.step();
 
@@ -114,6 +121,11 @@ export class ModelEvents {
 		await this.syncTable('lists_users');
 		await this.syncTable('lists');
 		await this.syncTable('tasks');
+		await this.syncTable('projects_users');
+		await this.syncTable('projects');
+		await this.syncTable('docs_users');
+		await this.syncTable('docs');
+		await this.syncTable('docs_blocks');
 	}
 
 	private async step() {

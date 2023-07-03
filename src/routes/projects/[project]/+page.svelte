@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { currentProject, db } from '$lib/storage.js';
 	import { createId } from '$lib/utils.js';
-	import { liveQuery } from 'dexie';
+	import Dexie, { liveQuery } from 'dexie';
 	import { set } from 'lodash-es';
 	import Editor from '$lib/editor.svelte';
 	import Portal from 'svelte-portal';
@@ -13,14 +13,23 @@
 	$: currentProject.set(data.projectId);
 
 	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
-	const taskItems = liveQuery(() =>
-		db.doc_blocks.where({ project: data.projectId, type: 'taskItem' }).toArray()
-	);
 
-	let tasks = [];
-	let taskDoc;
+	$: taskDoc = liveQuery(async () => {
+		const taskItems = await db.doc_blocks
+			.where({ project: data.projectId, type: 'taskItem' })
+			.toArray();
+		return await Dexie.waitFor(() => getTasksFromTaskItems(taskItems));
+	});
 
-	taskItems.subscribe(async (taskItems) => {
+	// const taskItems = liveQuery(() =>
+	// 	db.doc_blocks.where({ project: data.projectId, type: 'taskItem' }).toArray()
+	// );
+
+	// let tasks = [];
+	// let taskDoc;
+
+	async function getTasksFromTaskItems(taskItems) {
+		console.log('items', { taskItems });
 		const parentTasksByParentId = {};
 		const content = await Promise.all(
 			taskItems.map(async (taskItem, i) => {
@@ -66,7 +75,7 @@
 			})
 		);
 
-		taskDoc = {
+		return {
 			type: 'doc',
 			content: [
 				{
@@ -76,9 +85,11 @@
 			]
 		};
 		console.log({ doc: taskDoc });
-	});
+	}
 
-	$: console.log(tasks);
+	// $: console.log(tasks);
+
+	$: console.log({ $taskDoc });
 </script>
 
 <Portal target=".header-context-portal">
@@ -86,8 +97,8 @@
 </Portal>
 
 <h2>Tasks</h2>
-{#if taskDoc}
-	<Editor content={taskDoc} editable={false} />
+{#if $taskDoc}
+	<Editor content={$taskDoc} editable={false} />
 {/if}
 
 <br />

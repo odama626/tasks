@@ -100,13 +100,6 @@
 		event.target.reset();
 		isCreating = undefined;
 	}
-
-	async function logout() {
-		localStorage.clear();
-		db.delete();
-		pb.authStore.clear();
-		location.reload();
-	}
 </script>
 
 <div class="document">
@@ -156,7 +149,7 @@
 				</button>
 				{#if isContextMenuOpen}
 					<ul class="context-menu">
-						<li><button on:click={logout}>Logout</button></li>
+						<li><button on:click={events.lougout}>Logout</button></li>
 					</ul>
 				{/if}
 			</div>
@@ -360,7 +353,7 @@
 			background-color: var(--surface-2);
 		}
 
-		.context-menu{
+		.context-menu {
 			top: auto;
 			bottom: 100%;
 		}

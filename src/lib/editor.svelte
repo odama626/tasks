@@ -15,6 +15,12 @@
 
 	export let content: JSONContent;
 
+	$: {
+		if (editor) {
+			editor.commands.setContent(content);
+		}
+	}
+
 	onMount(() => {
 		editor = new Editor({
 			element,
