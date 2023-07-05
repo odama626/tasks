@@ -95,7 +95,7 @@ export class ModelEvents {
 		await db[table].bulkDelete(results.deleted);
 
 		pb.collection(table).subscribe('*', (data) => {
-			if (data.action === 'delete') {
+			if (data.action === 'delete' || data.record.deleted === true) {
 				db[table].delete(data.record.id);
 			} else {
 				db[table].put(data.record);

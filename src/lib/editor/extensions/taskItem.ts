@@ -11,6 +11,7 @@ export default TaskItem.extend({
 
 	addAttributes() {
 		return {
+			...this.parent?.(),
 			doc: {
 				default: null
 			},
@@ -35,13 +36,7 @@ export default TaskItem.extend({
 				}
 			});
 
-			console.log(node.attrs);
-
 			const content = document.createElement('span');
-
-			console.log(this);
-
-			console.log('rendered');
 
 			// checkboxWrapper.contentEditable = 'false';
 			// checkbox.type = 'checkbox';
