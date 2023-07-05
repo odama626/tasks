@@ -2,6 +2,23 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskItemElement from './taskItem.svelte';
 
 export default TaskItem.extend({
+	addOptions() {
+		return {
+			...this.parent?.(),
+			isOverview: false
+		};
+	},
+
+	addAttributes() {
+		return {
+			doc: {
+				default: null
+			},
+			project: {
+				default: null
+			}
+		};
+	},
 	addNodeView() {
 		return ({ node, HTMLAttributes, getPos, editor }) => {
 			const listItem = document.createElement('li');
@@ -10,10 +27,19 @@ export default TaskItem.extend({
 			// const checkbox = document.createElement('input');
 			const element = new TaskItemElement({
 				target: listItem,
-				props: { editor, options: this.options, getPos, checked: node.attrs.checked }
+				props: {
+					editor,
+					options: this.options,
+					getPos,
+					...node.attrs
+				}
 			});
 
+			console.log(node.attrs);
+
 			const content = document.createElement('span');
+
+			console.log(this);
 
 			console.log('rendered');
 
@@ -60,6 +86,7 @@ export default TaskItem.extend({
 			});
 
 			listItem.dataset.checked = node.attrs.checked;
+			listItem.id = node.attrs.id;
 			// if (node.attrs.checked) {
 			// 	checkbox.setAttribute('checked', 'checked');
 			// }
@@ -79,11 +106,12 @@ export default TaskItem.extend({
 					}
 
 					listItem.dataset.checked = updatedNode.attrs.checked;
+					listItem.id = updatedNode.attrs.id;
 					element.$set({
 						editor,
 						options: this.options,
 						getPos,
-						checked: updatedNode.attrs.checked
+						...updatedNode.attrs
 					});
 
 					return true;

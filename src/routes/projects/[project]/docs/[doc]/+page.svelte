@@ -174,6 +174,7 @@
 		bind:editor
 		on:destroy={(event) => onSave(event.detail.editor)}
 		content={data.doc ?? content}
+		editable={true}
 	/>
 </div>
 

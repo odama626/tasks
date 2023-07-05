@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { withKeys } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
+	import { createEventDispatcher } from 'svelte';
 
 	export let editor: Editor;
 	export let options;
 	export let getPos;
 
 	export let checked: boolean;
+	export let doc: string;
+	export let project: string;
+
+	export let contentRef;
+
+	const dispatch = createEventDispatcher();
+
+	$: dispatch('content-mount', contentRef);
 
 	function onChange(event) {
 		if (!editor.isEditable && !options.onReadOnlyCheckedd) {
@@ -62,7 +71,7 @@
 		/>
 	</svg>
 
-	<span />
+	<span bind:this={contentRef} />
 </label>
 
 <style lang="scss">

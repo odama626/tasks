@@ -3,13 +3,18 @@
 
 	import { Editor, type JSONContent } from '@tiptap/core';
 	import { createEventDispatcher, onMount } from 'svelte';
-
-	import extensions from './editor/extensions/extensions';
+	import StarterKit from '@tiptap/starter-kit';
+	import TaskList from '@tiptap/extension-task-list';
+	import TaskItem from '$lib/editor/extensions/taskItem';
+	import SlashCommand from '$lib/editor/extensions/slash';
+	import Link from '@tiptap/extension-link';
+	import { Id } from './editor/extensions/id';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
 	export let editable: boolean = true;
 	export let autofocus: boolean = false;
+	export let isOverview: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -24,13 +29,20 @@
 	onMount(() => {
 		editor = new Editor({
 			element,
-			extensions,
+			extensions: [
+				StarterKit.configure({ commands: false }),
+				TaskItem.configure({ nested: true, isOverview }),
+				Link,
+				Id,
+				TaskList,
+				SlashCommand
+			],
 			content,
 			editable,
 			autofocus,
 			onTransaction: () => {
 				// force re-render so `editor.isActive` works as expected
-				editor = editor;
+				// editor = editor;
 			}
 		});
 		editor.on('destroy', () => dispatch('destroy', { editor }));

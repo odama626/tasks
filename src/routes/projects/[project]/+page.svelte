@@ -64,10 +64,18 @@
 					});
 
 				console.log({ parentTasksByParentId, parent: taskItem.parent });
+				console.log({ taskItem });
 
 				Object.assign(task, {
 					parent: taskItem.parent,
 					...taskItem.properties,
+					attrs: {
+						...taskItem.properties.attrs,
+						doc: taskItem.doc,
+						project: taskItem.project
+					},
+					doc: taskItem.doc,
+					project: taskItem.project,
 					content
 				});
 
@@ -98,7 +106,7 @@
 
 <h2>Tasks</h2>
 {#if $taskDoc}
-	<Editor content={$taskDoc} editable={false} />
+	<Editor isOverview={true} content={$taskDoc} editable={false} />
 {/if}
 
 <br />
