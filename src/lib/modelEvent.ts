@@ -125,7 +125,7 @@ export class ModelEvents {
 		await this.syncTable('projects');
 		await this.syncTable('docs_users');
 		await this.syncTable('docs');
-		await this.syncTable('docs_blocks');
+		await this.syncTable('doc_blocks');
 	}
 
 	private async step() {
