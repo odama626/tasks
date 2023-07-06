@@ -141,7 +141,8 @@
 		// TODO if there is a tiptap plugin that generates ids, most of them should match so we can collect the ids and diff them with the current records
 		// to know what to delete vs what to update or add, verify that the ids don't change in update
 
-		if (data.docId === 'new') goto(`/projects/${data.projectId}/docs/${id}`);
+		if (data.docId === 'new')
+			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
 	}
 
 	let content = {

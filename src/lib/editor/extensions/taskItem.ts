@@ -1,11 +1,13 @@
 import TaskItem from '@tiptap/extension-task-item';
 import TaskItemElement from './taskItem.svelte';
+import TaskItemOverviewElement from './taskItemOverview.svelte';
 
 export default TaskItem.extend({
 	addOptions() {
 		return {
 			...this.parent?.(),
-			isOverview: false
+			isOverview: false,
+			dispatch: () => {}
 		};
 	},
 
@@ -32,11 +34,26 @@ export default TaskItem.extend({
 					editor,
 					options: this.options,
 					getPos,
+					attrs: node.attrs,
+					dispatch: this.options.dispatch,
 					...node.attrs
 				}
 			});
 
 			const content = document.createElement('span');
+			listItem.append(content);
+
+			const overview =
+				this.options.isOverview &&
+				new TaskItemOverviewElement({
+					target: listItem,
+					props: {
+						editor,
+						options: this.options,
+						getPos,
+						...node.attrs
+					}
+				});
 
 			// checkboxWrapper.contentEditable = 'false';
 			// checkbox.type = 'checkbox';
@@ -86,8 +103,6 @@ export default TaskItem.extend({
 			// 	checkbox.setAttribute('checked', 'checked');
 			// }
 
-			listItem.append(content);
-
 			Object.entries(HTMLAttributes).forEach(([key, value]) => {
 				listItem.setAttribute(key, value);
 			});
@@ -96,6 +111,7 @@ export default TaskItem.extend({
 				dom: listItem,
 				contentDOM: content,
 				update: (updatedNode) => {
+					console.log({ updatedNode });
 					if (updatedNode.type !== this.type) {
 						return false;
 					}
@@ -106,8 +122,19 @@ export default TaskItem.extend({
 						editor,
 						options: this.options,
 						getPos,
+						dispatch: this.options.dispatch,
+						attrs: node.attrs,
 						...updatedNode.attrs
 					});
+
+					if (overview) {
+						overview.$set({
+							editor,
+							options: this.options,
+							getPos,
+							...updatedNode.attrs
+						});
+					}
 
 					return true;
 				}

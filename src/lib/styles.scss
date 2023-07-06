@@ -121,6 +121,7 @@ button.ghost,
 .button.ghost {
 	color: var(--background-color);
 	background-color: transparent;
+	color: var(--text-3);
 
 	&:visited {
 		color: var(--background-color);

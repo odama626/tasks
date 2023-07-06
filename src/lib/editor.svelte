@@ -31,7 +31,7 @@
 			element,
 			extensions: [
 				StarterKit.configure({ commands: false }),
-				TaskItem.configure({ nested: true, isOverview }),
+				TaskItem.configure({ nested: true, isOverview, dispatch }),
 				Link,
 				Id,
 				TaskList,

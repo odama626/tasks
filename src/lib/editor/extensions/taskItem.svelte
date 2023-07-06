@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { withKeys } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
-	import { createEventDispatcher } from 'svelte';
 
 	export let editor: Editor;
 	export let options;
@@ -10,18 +9,20 @@
 	export let checked: boolean;
 	export let doc: string;
 	export let project: string;
+	export let attrs;
+	export let dispatch;
 
 	export let contentRef;
 
-	const dispatch = createEventDispatcher();
-
-	$: dispatch('content-mount', contentRef);
-
 	function onChange(event) {
-		if (!editor.isEditable && !options.onReadOnlyCheckedd) {
+		event.preventDefault();
+		console.log({ options });
+		if (!editor.isEditable && !options.onReadOnlyChecked) {
+			if (options.isOverview) {
+				checked = !checked;
+			}
 			return;
 		}
-
 		if (editor.isEditable && typeof getPos == 'function') {
 			editor
 				.chain()
@@ -30,13 +31,11 @@
 					const position = getPos();
 					const currentNode = tr.doc.nodeAt(position);
 					checked = !checked;
-					console.log({ position, currentNode, checked });
 					tr.setNodeMarkup(position, undefined, { ...currentNode?.attrs, checked });
 				})
 				.run();
 			return true;
 		}
-
 		if (!options.isEditable && options.onReadOnlyChecked) {
 			if (options.onReadOnlyChecked(node, checked)) {
 				checked = !checked;
@@ -45,8 +44,8 @@
 	}
 </script>
 
-<label contenteditable="false">
-	<input {checked} on:click={onChange} type="checkbox" />
+<label contenteditable="false" data-checked={checked}>
+	<input value={checked} on:click={onChange} type="checkbox" />
 
 	<svg
 		class="icon button checkbox"
@@ -92,6 +91,7 @@
 		margin: 0;
 	}
 
+	[data-checked='true'] > .checkbox .checked,
 	input:checked + .checkbox .checked {
 		visibility: visible;
 		color: var(--text-4);
