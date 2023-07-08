@@ -4,7 +4,7 @@
 	import EditorComponent from '$lib/editor.svelte';
 	import { events, EventType } from '$lib/modelEvent.js';
 	import { db, RecordAccess, userStore } from '$lib/storage.js';
-	import { createId } from '$lib/utils.js';
+	import { createId, notify } from '$lib/utils.js';
 	import type { Editor } from '@tiptap/core';
 	import { get } from 'svelte/store';
 	import { set } from 'lodash-es';
@@ -136,6 +136,8 @@
 			)
 		);
 
+		notify({ text: `Saved "${title}"` });
+
 		// TODO text nodes can't have attributes
 
 		// TODO if there is a tiptap plugin that generates ids, most of them should match so we can collect the ids and diff them with the current records
@@ -171,12 +173,7 @@
 	<Portal target=".header-context-portal">
 		<button class="ghost" on:click={onSave}>Save</button>
 	</Portal>
-	<EditorComponent
-		bind:editor
-		on:destroy={(event) => onSave(event.detail.editor)}
-		content={data.doc ?? content}
-		editable={true}
-	/>
+	<EditorComponent bind:editor content={data.doc ?? content} editable={true} />
 </div>
 
 <style lang="scss">

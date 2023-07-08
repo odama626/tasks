@@ -117,20 +117,32 @@ button.icon {
 	padding: 0.25rem 0.5rem;
 }
 
-button.ghost,
-.button.ghost {
-	color: var(--background-color);
-	background-color: transparent;
-	color: var(--text-3);
-
-	&:visited {
+button,
+.button {
+	&.ghost,
+	&.outline {
 		color: var(--background-color);
+		background-color: transparent;
+		color: var(--text-3);
+
+		&:visited {
+			color: var(--background-color);
+		}
+
+		--background-color: var(--surface-7);
+
+		&:hover {
+			--background-color: var(--surface-6);
+		}
+	}
+	&.outline {
+		// border-radius: 8px;
+		background-color: var(--surface-2);
+		border: 1px solid var(--background-color);
 	}
 
-	--background-color: var(--surface-7);
-
-	&:hover {
-		--background-color: var(--surface-6);
+	&.small {
+		padding: 0.15rem 0.5rem;
 	}
 }
 

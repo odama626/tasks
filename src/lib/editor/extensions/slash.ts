@@ -1,67 +1,63 @@
 import tippy from 'tippy.js';
 import CommandsList from './commandsList.svelte';
-import { Extension } from '@tiptap/core';
+import { Extension, type ChainedCommands } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
+
+type Prepare = (chain: ChainedCommands) => unknown;
+
+export const getCommands = (prepare: Prepare) => [
+	{
+		title: 'H1',
+		type: 'inline',
+		command: prepare((chain) => chain.setNode('heading', { level: 1 }).run())
+	},
+	{
+		title: 'H2',
+		type: 'inline',
+		command: prepare((chain) => chain.setNode('heading', { level: 2 }).run())
+	},
+	{
+		title: 'Bold',
+		type: 'bubble',
+		command: prepare((chain) => chain.toggleMark('bold').run())
+	},
+	{
+		title: 'Italic',
+		type: 'bubble',
+		command: prepare((chain) => chain.toggleMark('italic').run())
+	},
+	{
+		title: 'Quote',
+		type: 'inline',
+		command: prepare((chain) => chain.setBlockquote().run())
+	},
+	{
+		title: 'Ordered List',
+		type: 'inline',
+		command: prepare((chain) => chain.toggleOrderedList().run())
+	},
+	{
+		title: 'List',
+		type: 'inline',
+		command: prepare((chain) => chain.toggleBulletList().run())
+	},
+	{
+		title: 'Task list',
+		type: 'inline',
+		command: prepare((chain) => chain.toggleTaskList().run())
+	}
+];
+
+const suggestionCommands = getCommands(
+	(callback) =>
+		({ editor, range }) =>
+			callback(editor.chain().focus().deleteRange(range))
+);
 
 const configuration = {
 	suggestion: {
 		items: ({ query }) => {
-			const prepare =
-				(callback) =>
-				({ editor, range }) =>
-					callback(editor.chain().focus().deleteRange(range));
-			return [
-				{
-					title: 'H1',
-					command: ({ editor, range }) => {
-						editor.chain().focus().deleteRange(range).setNode('heading', { level: 1 }).run();
-					}
-				},
-				{
-					title: 'H2',
-					command: ({ editor, range }) => {
-						editor.chain().focus().deleteRange(range).setNode('heading', { level: 2 }).run();
-					}
-				},
-				{
-					title: 'H3',
-					command: ({ editor, range }) => {
-						editor.chain().focus().deleteRange(range).setNode('heading', { level: 3 }).run();
-					}
-				},
-				{
-					title: 'H4',
-					command: ({ editor, range }) => {
-						editor.chain().focus().deleteRange(range).setNode('heading', { level: 4 }).run();
-					}
-				},
-				{
-					title: 'bold',
-					command: ({ editor, range }) => {
-						editor.chain().focus().deleteRange(range).setMark('bold').run();
-					}
-				},
-				{
-					title: 'italic',
-					command: prepare((chain) => chain.setMark('italic').run())
-				},
-				{
-					title: 'quote',
-					command: prepare((chain) => chain.setBlockquote().run())
-				},
-				{
-					title: 'Ordered List',
-					command: prepare((chain) => chain.toggleOrderedList().run())
-				},
-				{
-					title: 'List',
-					command: prepare((chain) => chain.toggleBulletList().run())
-				},
-				{
-					title: 'Task list',
-					command: prepare((chain) => chain.toggleTaskList().run())
-				}
-			]
+			return suggestionCommands
 				.filter((item) => item.title.toLowerCase().startsWith(query.toLowerCase()))
 				.slice(0, 10);
 		},

@@ -29,11 +29,9 @@
 	// let taskDoc;
 
 	async function getTasksFromTaskItems(taskItems) {
-		console.log('items', { taskItems });
 		const parentTasksByParentId = {};
 		const content = await Promise.all(
 			taskItems.map(async (taskItem, i) => {
-				console.log(taskItem);
 				const taskContent = await db.doc_blocks
 					.where('path')
 					.startsWith(taskItem.path)
@@ -46,8 +44,6 @@
 					.toArray();
 
 				const content = [];
-
-				console.log({ taskContent });
 
 				const ignorePaths = [];
 				let task = {};
@@ -62,9 +58,6 @@
 						}
 						set(content, path.split('.').join('.content.'), properties);
 					});
-
-				console.log({ parentTasksByParentId, parent: taskItem.parent });
-				console.log({ taskItem });
 
 				Object.assign(task, {
 					parent: taskItem.parent,
@@ -92,12 +85,9 @@
 				}
 			]
 		};
-		console.log({ doc: taskDoc });
 	}
 
 	// $: console.log(tasks);
-
-	$: console.log({ $taskDoc });
 </script>
 
 <Portal target=".header-context-portal">
