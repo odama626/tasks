@@ -33,6 +33,8 @@
 		const id = isNew ? createId() : block.attrs.id;
 		const eventType = isNew ? EventType.Add : EventType.Update;
 		set(block, 'attrs.id', id);
+		set(block, 'attrs.project', options.project);
+		set(block, 'attrs.doc', options.doc);
 		usedIds.add(id);
 		let ids: string[] = [];
 

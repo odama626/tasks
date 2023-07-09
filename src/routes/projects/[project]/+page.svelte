@@ -6,6 +6,8 @@
 	import Editor from '$lib/editor.svelte';
 	import Portal from 'svelte-portal';
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
+	import { EventType, events } from '$lib/modelEvent.js';
+	import { Collections } from '$lib/db.types.js';
 
 	export let data;
 	let randomId = createId();
@@ -87,6 +89,18 @@
 		};
 	}
 
+	async function updateTaskItem(event) {
+		const { options, attrs, checked } = event.detail;
+		const existingTask = await db.doc_blocks.get(attrs.id);
+		existingTask.properties.attrs.checked = checked;
+		await events.add({
+			eventType: EventType.Update,
+			modelType: Collections.DocBlocks,
+			recordId: attrs.id,
+			payload: { properties: existingTask.properties }
+		});
+	}
+
 	// $: console.log(tasks);
 </script>
 
@@ -96,7 +110,12 @@
 
 <h2>Tasks</h2>
 {#if $taskDoc}
-	<Editor isOverview={true} content={$taskDoc} editable={false} />
+	<Editor
+		isOverview={true}
+		on:taskItemUpdate={updateTaskItem}
+		content={$taskDoc}
+		editable={false}
+	/>
 {/if}
 
 <br />

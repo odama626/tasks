@@ -5,6 +5,7 @@
 	export let editor: Editor;
 	export let options;
 	export let getPos;
+	export let id;
 
 	export let checked: boolean;
 	export let doc: string;
@@ -16,10 +17,10 @@
 
 	function onChange(event) {
 		event.preventDefault();
-		console.log({ options });
 		if (!editor.isEditable && !options.onReadOnlyChecked) {
 			if (options.isOverview) {
 				checked = !checked;
+				dispatch('taskItemUpdate', { options, attrs, checked });
 			}
 			return;
 		}
@@ -34,6 +35,8 @@
 					tr.setNodeMarkup(position, undefined, { ...currentNode?.attrs, checked });
 				})
 				.run();
+
+			dispatch('taskItemUpdate', { options, attrs, checked });
 			return true;
 		}
 		if (!options.isEditable && options.onReadOnlyChecked) {
@@ -41,6 +44,8 @@
 				checked = !checked;
 			}
 		}
+
+		dispatch('taskItemUpdate', { options, attrs, checked });
 	}
 </script>
 
