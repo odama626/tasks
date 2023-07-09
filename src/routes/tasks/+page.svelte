@@ -156,7 +156,7 @@
 		</article>
 	</nav>
 	<div class="page">
-		<nav class:open={isHeaderOpen} class="sidebar">
+		<nav class:open={isHeaderOpen} on:click={() => (isHeaderOpen = false)} class="sidebar">
 			{#if $lists}
 				<ul>
 					{#each $lists as list (list.id)}
@@ -258,6 +258,7 @@
 	}
 
 	.page {
+		overflow: auto;
 		flex-grow: 1;
 		display: grid;
 		gap: 5rem;

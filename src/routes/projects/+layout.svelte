@@ -217,6 +217,7 @@
 
 	.page {
 		flex-grow: 1;
+		overflow: auto;
 		display: grid;
 		gap: 5rem;
 		padding: 0 1ch;

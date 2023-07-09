@@ -111,7 +111,6 @@ export default TaskItem.extend({
 				dom: listItem,
 				contentDOM: content,
 				update: (updatedNode) => {
-					console.log({ updatedNode });
 					if (updatedNode.type !== this.type) {
 						return false;
 					}

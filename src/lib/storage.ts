@@ -32,6 +32,10 @@ db.version(5).stores({
 	doc_blocks: '&id, type, attrs, doc, parent, project, path'
 });
 
+db.version(6).stores({
+	doc_blocks: '&id, attrs, doc, parent, [type+project], path'
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',
