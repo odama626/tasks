@@ -102,12 +102,15 @@ mark {
 }
 
 a {
-	color: var(--text-3);
+	color: var(--text-2);
 	text-decoration: none;
 
+	&[href*="//"]
+	{
+		box-shadow: 0px 1px 0px var(--text-2);
+	}
 	&:hover {
 		cursor: pointer;
-		box-shadow: 0px 1px 0px var(--text-3);
 	}
 }
 
@@ -253,8 +256,8 @@ h1 {
 }
 
 h2 {
-	font-size: 2rem;
-	color: var(--text-4);
+	font-size: 1.5rem;
+	color: var(--text-3);
 }
 h3 {
 	font-size: 1.75rem;
