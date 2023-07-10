@@ -220,7 +220,7 @@
 		overflow: auto;
 		display: grid;
 		gap: 5rem;
-		padding: 0 1ch;
+		padding: 1ch;
 		grid-template-columns: 200px 1fr;
 		grid-template-areas: 'sidebar content';
 	}

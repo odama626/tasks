@@ -41,6 +41,7 @@ export default TaskItem.extend({
 			});
 
 			const content = document.createElement('span');
+			content.style = 'align-self: center;';
 			listItem.append(content);
 
 			const overview =

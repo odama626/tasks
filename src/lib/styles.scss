@@ -108,6 +108,7 @@ a {
 	&[href*="//"]
 	{
 		box-shadow: 0px 1px 0px var(--text-2);
+		line-height: 1.4;
 	}
 	&:hover {
 		cursor: pointer;
@@ -321,9 +322,9 @@ ul[data-type='taskList'] {
 			display: inline-block;
 		}
 
-		> label + * {
-			margin-top: 4px;
-		}
+		// > label + * {
+		// margin-top: 4px;
+		// }
 	}
 }
 

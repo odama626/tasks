@@ -27,9 +27,9 @@
 		usedIds: Set<string>;
 	}
 
-	async function processBlock(block: Block, options: ProcessBlockOptions): string[] {
+	async function processBlock(block: Block, options: ProcessBlockOptions): Promise<string[]> {
 		const { path, parent, doc, project, usedIds } = options;
-		const isNew = !(block.attrs?.id && !usedIds.has(block.attrs.id));
+		const isNew = !(block.attrs?.id && !usedIds.has(block.attrs?.id));
 		const id = isNew ? createId() : block.attrs.id;
 		const eventType = isNew ? EventType.Add : EventType.Update;
 		set(block, 'attrs.id', id);
@@ -69,8 +69,8 @@
 		return ids;
 	}
 
-	function getText(content) {
-		if (content.text) return content.text;
+	function getText(content): string {
+		if (content.type === 'text' && content.text) return content.text;
 		if (content.content) return getText(content.content[0]);
 	}
 	async function onSave() {
