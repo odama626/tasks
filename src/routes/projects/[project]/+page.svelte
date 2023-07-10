@@ -119,33 +119,49 @@
 	<a class="button ghost accent" href="/projects/{data.projectId}/docs/new">Create Doc</a>
 </Portal>
 
-<h2>Tasks</h2>
-{#if $taskDoc}
-	<Editor
-		isOverview={true}
-		on:taskItemUpdate={updateTaskItem}
-		content={$taskDoc}
-		editable={false}
-	/>
-{/if}
+{#if $taskDoc && $docs && $linkDoc}
+	<h2>Tasks</h2>
+	{#if $taskDoc}
+		<Editor
+			isOverview={true}
+			on:taskItemUpdate={updateTaskItem}
+			content={$taskDoc}
+			editable={false}
+		/>
+	{/if}
 
-<br />
-<h2>Docs</h2>
-<div class="docs">
-	{#if $docs}
-		{#each $docs as doc (doc.id)}
-			<a class="button" href="/projects/{data.projectId}/docs/{doc.id}"> <div>{doc.title}</div></a>
+	<br />
+	<h2>Docs</h2>
+	<div class="docs">
+		{#if $docs}
+			{#each $docs as doc (doc.id)}
+				<a class="button" href="/projects/{data.projectId}/docs/{doc.id}">
+					<div>{doc.title}</div></a
+				>
+			{:else}
+				<EmptyDocs />
+			{/each}
 		{:else}
 			<EmptyDocs />
-		{/each}
-	{:else}
-		<EmptyDocs />
+		{/if}
+	</div>
+	<br />
+	{#if $linkDoc}
+		<h2>Links</h2>
+		<Editor isOverview content={$linkDoc} editable={false} />
 	{/if}
-</div>
-<br />
-{#if $linkDoc}
-	<h2>Links</h2>
-	<Editor isOverview content={$linkDoc} editable={false} />
+{:else}
+	<div class="loading">
+		<h2 />
+		<p />
+		<p />
+		<p />
+		<p />
+		<h2 />
+		<p />
+		<p />
+		<p />
+	</div>
 {/if}
 
 <style lang="scss">

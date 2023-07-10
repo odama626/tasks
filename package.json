@@ -32,6 +32,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@rgossiaux/svelte-headlessui": "^2.0.0",
 		"@tiptap/core": "^2.0.3",
 		"@tiptap/extension-blockquote": "^2.0.3",
 		"@tiptap/extension-bold": "^2.0.3",

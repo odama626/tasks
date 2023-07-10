@@ -102,12 +102,12 @@ mark {
 }
 
 a {
-	color: var(--text-2);
+	color: var(--text-3);
 	text-decoration: none;
 
 	&[href*="//"]
 	{
-		box-shadow: 0px 1px 0px var(--text-2);
+		box-shadow: 0px 1px 0px var(--text-3);
 		line-height: 1.4;
 	}
 	&:hover {
@@ -340,6 +340,58 @@ ol {
 					list-style: lower-roman;
 				}
 			}
+		}
+	}
+}
+
+@keyframes loading-shimmer {
+	0% {
+		background-position: -1000px 0;
+	}
+	100% {
+		background-position: 1000px 0;
+	}
+}
+
+.loading {
+	*:empty {
+		animation: loading-shimmer 2s infinite;
+		background: linear-gradient(
+			to right,
+			var(--surface-2) 4%,
+			var(--surface-1) 25%,
+			var(--surface-2) 36%
+		);
+		background-size: 1000px 100%;
+		min-height: 1ch;
+		border-radius: 50px;
+	}
+
+	@for $i from 1 through 10 {
+		:nth-child(#{$i}) {
+			animation-delay: $i * 20ms;
+		}
+	}
+
+	h2 {
+		width: 10ch;
+		height: 2rem;
+	}
+	p {
+		height: 0.75rem;
+		margin: var(--block-spacing) 0;
+		width: 60%;
+		&:first-child {
+			width: 90%;
+		}
+		&:nth-child(2n) {
+			width: 70%;
+		}
+		&:nth-child(3n) {
+			width: 75%;
+		}
+		&:nth-child(4n) {
+			width: 85%;
 		}
 	}
 }
