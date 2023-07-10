@@ -23,6 +23,17 @@
 		return await Dexie.waitFor(() => getTasksFromTaskItems(taskItems));
 	});
 
+	$: linkDoc = liveQuery(async () => {
+		const links = await db.doc_blocks.where({ project: data.projectId, type: 'text' }).toArray();
+		return {
+			type: 'doc',
+			content: links
+				.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
+				.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
+				.map((link) => ({ type: 'paragraph', content: [link.properties] }))
+		};
+	});
+
 	// const taskItems = liveQuery(() =>
 	// 	db.doc_blocks.where({ project: data.projectId, type: 'taskItem' }).toArray()
 	// );
@@ -131,6 +142,11 @@
 		<EmptyDocs />
 	{/if}
 </div>
+<br />
+{#if $linkDoc}
+	<h2>Links</h2>
+	<Editor isOverview content={$linkDoc} editable={false} />
+{/if}
 
 <style lang="scss">
 	br {

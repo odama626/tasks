@@ -1,52 +1,8 @@
 import tippy from 'tippy.js';
 import CommandsList from './commandsList.svelte';
-import { Extension, type ChainedCommands } from '@tiptap/core';
+import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
-
-type Prepare = (chain: ChainedCommands) => unknown;
-
-export const getCommands = (prepare: Prepare) => [
-	{
-		title: 'H1',
-		type: 'inline',
-		command: prepare((chain) => chain.setNode('heading', { level: 1 }).run())
-	},
-	{
-		title: 'H2',
-		type: 'inline',
-		command: prepare((chain) => chain.setNode('heading', { level: 2 }).run())
-	},
-	{
-		title: 'Bold',
-		type: 'bubble',
-		command: prepare((chain) => chain.toggleMark('bold').run())
-	},
-	{
-		title: 'Italic',
-		type: 'bubble',
-		command: prepare((chain) => chain.toggleMark('italic').run())
-	},
-	{
-		title: 'Quote',
-		type: 'inline',
-		command: prepare((chain) => chain.setBlockquote().run())
-	},
-	{
-		title: 'Ordered List',
-		type: 'inline',
-		command: prepare((chain) => chain.toggleOrderedList().run())
-	},
-	{
-		title: 'List',
-		type: 'inline',
-		command: prepare((chain) => chain.toggleBulletList().run())
-	},
-	{
-		title: 'Task list',
-		type: 'inline',
-		command: prepare((chain) => chain.toggleTaskList().run())
-	}
-];
+import { getCommands } from './commands';
 
 const suggestionCommands = getCommands(
 	(callback) =>

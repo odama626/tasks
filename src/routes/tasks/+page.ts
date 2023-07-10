@@ -1,4 +1,1 @@
-export async function load({ params }) {
-  console.log({ params });
-  
-}
+export async function load({ params }) {}

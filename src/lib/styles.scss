@@ -2,8 +2,11 @@
 @import './theme.scss';
 
 html {
-	--hue: var(--primary-hue);
-	@include computeTheme;
+	@include computePalette(295, primary);
+	@include computePalette(174, accent);
+	@include computePalette(30, error);
+
+	@include selectPalette(primary);
 	min-height: 100dvh;
 
 	--block-spacing: 0.5rem;
@@ -16,14 +19,12 @@ body {
 }
 
 .accent {
-	--hue: var(--accent-hue);
-	@include computeTheme;
+	@include selectPalette(accent);
 }
 
 .error,
 label[aria-invalid='true'] {
-	--hue: var(--error-hue);
-	@include computeTheme;
+	@include selectPalette(error);
 }
 
 html {
@@ -81,6 +82,32 @@ input,
 textarea {
 	&:focus {
 		outline: solid var(--surface-5);
+	}
+}
+
+.divider {
+	border: 0.5px solid var(--text-3);
+	&.vertical {
+		height: 1rem;
+		margin: auto;
+	}
+	&.horizontal {
+		width: 100%;
+	}
+}
+
+mark {
+	background-color: var(--text-3);
+	color: var(--surface-2);
+}
+
+a {
+	color: var(--text-3);
+	text-decoration: none;
+
+	&:hover {
+		cursor: pointer;
+		box-shadow: 0px 1px 0px var(--text-3);
 	}
 }
 
@@ -227,6 +254,7 @@ h1 {
 
 h2 {
 	font-size: 2rem;
+	color: var(--text-4);
 }
 h3 {
 	font-size: 1.75rem;

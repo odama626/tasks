@@ -1,94 +1,57 @@
-@mixin computeTheme {
+$swatchCount: 10;
+
+@mixin selectPalette($palette) {
+	--hue: var(--hue-#{$palette});
+	@for $i from 1 through $swatchCount {
+		--text-#{$i}: var(--text-#{$palette}-#{$i});
+		--surface-#{$i}: var(--surface-#{$palette}-#{$i});
+	}
+}
+
+@mixin computePalette($hue, $name) {
+	--hue-#{$name}: #{$hue};
+
 	/* Change Below */
 	/* Change Here! */
-	--swatch-1: oklch(99% 0.05 var(--hue));
-	--swatch-2: oklch(90% 0.1 var(--hue));
-	--swatch-3: oklch(80% 0.2 var(--hue));
-	--swatch-4: oklch(72% 0.25 var(--hue));
-	--swatch-5: oklch(67% 0.31 var(--hue));
-	--swatch-6: oklch(50% 0.27 var(--hue));
-	--swatch-7: oklch(35% 0.25 var(--hue));
-	--swatch-8: oklch(25% 0.2 var(--hue));
-	--swatch-9: oklch(13% 0.2 var(--hue));
-	--swatch-10: oklch(5% 0.1 var(--hue));
+
+	--swatch-#{$name}-1: oklch(99% 0.05 var(--hue-#{$name}));
+	--swatch-#{$name}-2: oklch(90% 0.1 var(--hue-#{$name}));
+	--swatch-#{$name}-3: oklch(80% 0.2 var(--hue-#{$name}));
+	--swatch-#{$name}-4: oklch(72% 0.25 var(--hue-#{$name}));
+	--swatch-#{$name}-5: oklch(67% 0.31 var(--hue-#{$name}));
+	--swatch-#{$name}-6: oklch(50% 0.27 var(--hue-#{$name}));
+	--swatch-#{$name}-7: oklch(35% 0.25 var(--hue-#{$name}));
+	--swatch-#{$name}-8: oklch(25% 0.2 var(--hue-#{$name}));
+	--swatch-#{$name}-9: oklch(13% 0.2 var(--hue-#{$name}));
+	--swatch-#{$name}-10: oklch(5% 0.1 var(--hue-#{$name}));
 
 	/* End Change Here */
 	/* Change Above! */
 
-	--text-1: var(--swatch-1);
-	--text-2: var(--swatch-2);
-	--text-3: var(--swatch-3);
-	--text-4: var(--swatch-4);
-	--text-5: var(--swatch-5);
-	--text-6: var(--swatch-6);
-
-	--surface-1: var(--swatch-10);
-	--surface-2: var(--swatch-9);
-	--surface-3: var(--swatch-8);
-	--surface-4: var(--swatch-7);
-	--surface-5: var(--swatch-6);
-	--surface-6: var(--swatch-5);
-	--surface-7: var(--swatch-4);
-	--surface-8: var(--swatch-3);
+	@for $i from 1 through $swatchCount {
+		--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
+		--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
+	}
 
 	&.invert,
 	.invert {
-		--text-1: var(--swatch-10);
-		--text-2: var(--swatch-9);
-		--text-3: var(--swatch-8);
-		--text-4: var(--swatch-7);
-		--text-5: var(--swatch-6);
-		--text-6: var(--swatch-5);
-
-		--surface-1: var(--swatch-1);
-		--surface-2: var(--swatch-2);
-		--surface-3: var(--swatch-3);
-		--surface-4: var(--swatch-4);
-		--surface-5: var(--swatch-5);
-		--surface-6: var(--swatch-6);
-		--surface-7: var(--swatch-7);
-		--surface-8: var(--swatch-8);
+		@for $i from 1 through $swatchCount {
+			--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
+			--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
+		}
 	}
 
 	@media (prefers-color-scheme: light) {
-		--text-1: var(--swatch-10);
-		--text-2: var(--swatch-9);
-		--text-3: var(--swatch-8);
-		--text-4: var(--swatch-7);
-		--text-5: var(--swatch-6);
-		--text-6: var(--swatch-5);
-
-		--surface-1: var(--swatch-1);
-		--surface-2: var(--swatch-2);
-		--surface-3: var(--swatch-3);
-		--surface-4: var(--swatch-4);
-		--surface-5: var(--swatch-5);
-		--surface-6: var(--swatch-6);
-		--surface-7: var(--swatch-7);
-		--surface-8: var(--swatch-8);
+		@for $i from 1 through $swatchCount {
+			--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
+			--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
+		}
 		&.invert,
 		.invert {
-			--text-1: var(--swatch-1);
-			--text-2: var(--swatch-2);
-			--text-3: var(--swatch-3);
-			--text-4: var(--swatch-4);
-			--text-5: var(--swatch-5);
-			--text-6: var(--swatch-6);
-
-			--surface-1: var(--swatch-10);
-			--surface-2: var(--swatch-9);
-			--surface-3: var(--swatch-8);
-			--surface-4: var(--swatch-7);
-			--surface-5: var(--swatch-6);
-			--surface-6: var(--swatch-5);
-			--surface-7: var(--swatch-4);
-			--surface-8: var(--swatch-3);
+			@for $i from 1 through $swatchCount {
+				--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
+				--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
+			}
 		}
 	}
-}
-
-:root {
-	--primary-hue: 295;
-	--accent-hue: 174;
-	--error-hue: 30;
 }
