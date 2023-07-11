@@ -28,7 +28,16 @@ async function rebuildDoc(docId: string) {
 
 	blocks.forEach((block) => {
 		const { properties, type, id } = block;
-		set(content, block.path.split('.').join('.content.'), { ...properties });
+		if (type === 'image' && properties?.attrs?.file) {
+			try {
+				console.log(properties?.attrs?.file);
+				const src = URL.createObjectURL(properties?.attrs?.file);
+				properties.attrs.src = src;
+			} catch (e) {
+				console.error(`failed to rebind image`, e);
+			}
+		}
+		set(content, block.path.split('.').join('.content.'), properties);
 	});
 
 	const doc = {

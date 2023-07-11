@@ -2,6 +2,7 @@ $swatchCount: 10;
 
 @mixin selectPalette($palette) {
 	--hue: var(--hue-#{$palette});
+	--surface-disabled: var(--surface-disabled-#{$palette});
 	@for $i from 1 through $swatchCount {
 		--text-#{$i}: var(--text-#{$palette}-#{$i});
 		--surface-#{$i}: var(--surface-#{$palette}-#{$i});
@@ -25,6 +26,8 @@ $swatchCount: 10;
 	--swatch-#{$name}-9: oklch(13% 0.2 var(--hue-#{$name}));
 	--swatch-#{$name}-10: oklch(5% 0.1 var(--hue-#{$name}));
 
+	--surface-disabled-#{$name}: oklch(72% 0.05 var(--hue-#{$name}));
+
 	/* End Change Here */
 	/* Change Above! */
 
@@ -35,6 +38,7 @@ $swatchCount: 10;
 
 	&.invert,
 	.invert {
+		--surface-disabled-#{$name}: oklch(50% 0.05 var(--hue-#{$name}));
 		@for $i from 1 through $swatchCount {
 			--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
 			--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
@@ -42,12 +46,14 @@ $swatchCount: 10;
 	}
 
 	@media (prefers-color-scheme: light) {
+		--surface-disabled-#{$name}: oklch(50% 0.05 var(--hue-#{$name}));
 		@for $i from 1 through $swatchCount {
 			--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});
 			--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
 		}
 		&.invert,
 		.invert {
+			--surface-disabled-#{$name}: oklch(72% 0.05 var(--hue-#{$name}));
 			@for $i from 1 through $swatchCount {
 				--text-#{$name}-#{$i}: var(--swatch-#{$name}-#{$i});
 				--surface-#{$name}-#{$i}: var(--swatch-#{$name}-#{$swatchCount - $i + 1});

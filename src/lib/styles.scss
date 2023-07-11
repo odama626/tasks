@@ -125,6 +125,7 @@ a.button {
 	background-color: var(--background-color);
 	text-decoration: none;
 	display: block;
+	--outline-color: var(--surface-6);
 
 	&:visited {
 		color: inherit;
@@ -139,8 +140,13 @@ a.button {
 	}
 
 	&:focus {
-		outline: solid var(--surface-6);
+		outline: solid var(--outline-color);
 		outline-offset: 2px;
+	}
+
+	&:disabled {
+		--background-color: var(--surface-disabled) !important;
+		--outline-color: var(--surface-disabled);
 	}
 }
 
@@ -152,18 +158,16 @@ button,
 .button {
 	&.ghost,
 	&.outline {
+		--background-color: var(--text-3);
 		color: var(--background-color);
 		background-color: transparent;
-		color: var(--text-3);
 
 		&:visited {
 			color: var(--background-color);
 		}
 
-		--background-color: var(--surface-7);
-
 		&:hover {
-			--background-color: var(--surface-6);
+			--background-color: var(--text-4);
 		}
 	}
 	&.outline {

@@ -12,6 +12,7 @@
 
 	export let data;
 	let editor: Editor;
+	let saving = false;
 
 	interface Block {
 		type: string;
@@ -51,6 +52,7 @@
 			parent,
 			project
 		};
+
 		await events.add({
 			eventType,
 			recordId: id,
@@ -74,6 +76,8 @@
 		if (content.content) return getText(content.content[0]);
 	}
 	async function onSave() {
+		if (saving) return;
+		saving = true;
 		const doc = editor.getJSON();
 		const isNew = data.docId === 'new';
 		const id = isNew ? createId() : data.docId;
@@ -145,6 +149,7 @@
 		// TODO if there is a tiptap plugin that generates ids, most of them should match so we can collect the ids and diff them with the current records
 		// to know what to delete vs what to update or add, verify that the ids don't change in update
 
+		saving = false;
 		if (data.docId === 'new')
 			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
 	}
@@ -173,7 +178,7 @@
 
 <div class="document">
 	<Portal target=".header-context-portal">
-		<button class="ghost" on:click={onSave}>Save</button>
+		<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
 	</Portal>
 	<EditorComponent bind:editor content={data.doc ?? content} editable={true} />
 </div>

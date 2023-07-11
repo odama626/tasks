@@ -208,7 +208,7 @@
 	.header {
 		display: grid;
 		grid-template-columns: 200px 1fr;
-		gap: 5rem;
+		gap: 1ch;
 		padding: 1ch;
 		ul {
 			align-items: center;
@@ -219,7 +219,7 @@
 		flex-grow: 1;
 		overflow: auto;
 		display: grid;
-		gap: 5rem;
+		gap: 1ch;
 		padding: 1ch;
 		grid-template-columns: 200px 1fr;
 		grid-template-areas: 'sidebar content';
