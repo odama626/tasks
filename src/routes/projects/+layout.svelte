@@ -53,29 +53,34 @@
 	let isContextMenuOpen = false;
 	let isCreating: string | undefined = undefined;
 
+	$: console.log({ isHeaderOpen });
 </script>
 
 <div class="document">
 	<nav class="header">
 		<ul>
 			<li>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					stroke-width="1.5"
-					stroke="currentColor"
-					class="icon"
+				<button
+					class="ghost icon"
+					aria-expanded={isHeaderOpen}
 					on:click={() => (isHeaderOpen = !isHeaderOpen)}
-					id="header-button"
-					on:keypress={withKeys(['Enter', 'Space'], () => (isHeaderOpen = !isHeaderOpen))}
 				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-					/>
-				</svg>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						class="icon button"
+						id="header-button"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+						/>
+					</svg>
+				</button>
 			</li>
 			<li>Header</li>
 		</ul>
@@ -118,7 +123,12 @@
 	<div class="page">
 		<nav
 			class:open={isHeaderOpen}
+			on:keypress={withKeys(
+				['Enter', 'Space'],
+				(e) => ['A', 'BUTTON'].includes(e.target.tagName) && (isHeaderOpen = !isHeaderOpen)
+			)}
 			on:click={(e) => {
+				if (!isHeaderOpen || e.target.id === 'header-button') return;
 				if (['A', 'BUTTON'].includes(e.target.tagName)) isHeaderOpen = false;
 			}}
 			use:clickOutside={(e) => {
@@ -148,6 +158,7 @@
 			</button>
 		</nav>
 		<article>
+			<div class="sub-header-slot" />
 			<slot>
 				<ul>
 					<li>Create a new Project to get started</li>

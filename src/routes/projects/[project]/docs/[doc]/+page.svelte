@@ -9,6 +9,7 @@
 	import { get } from 'svelte/store';
 	import { set } from 'lodash-es';
 	import Portal from 'svelte-portal';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 
 	export let data;
 	let editor: Editor;
@@ -53,7 +54,6 @@
 			project,
 			file: properties?.attrs?.file
 		};
-		console.log({ payload });
 
 		delete properties?.attrs?.file;
 
@@ -82,11 +82,11 @@
 	async function onSave() {
 		if (saving) return;
 		saving = true;
-		const doc = editor.getJSON();
+		const content = editor.getJSON();
 		const isNew = data.docId === 'new';
 		const id = isNew ? createId() : data.docId;
 
-		const title = getText(doc);
+		const title = getText(content);
 
 		const record = {
 			eventType: isNew ? EventType.Add : EventType.Update,
@@ -120,7 +120,7 @@
 		const usedIds = new Set();
 
 		const blockIds = await Promise.all(
-			doc.content.map((block, index) =>
+			content.content.map((block, index) =>
 				processBlock(block, { path: `${index}`, doc: id, project: data.projectId, usedIds })
 			)
 		);
@@ -180,11 +180,20 @@
 	};
 </script>
 
+<Portal target=".sub-header-slot">
+	<div class="subheader">
+		<a href="/projects/{data.projectId}" class="button icon ghost">
+			<ChevronLeft class="button" />
+		</a>
+		<div>{data.doc.title}</div>
+	</div>
+</Portal>
+
 <div class="document">
 	<Portal target=".header-context-portal">
 		<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
 	</Portal>
-	<EditorComponent bind:editor content={data.doc ?? content} editable={true} />
+	<EditorComponent bind:editor content={data.content ?? content} editable={true} />
 </div>
 
 <style lang="scss">
@@ -193,5 +202,15 @@
 		:global(.editor) {
 			height: 100%;
 		}
+	}
+
+	.subheader {
+		> :first-child {
+			margin-left: -0.75rem;
+		}
+		display: flex;
+		flex-direction: row;
+		justify-content: start;
+		align-items: center;
 	}
 </style>

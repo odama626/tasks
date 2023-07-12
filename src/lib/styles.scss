@@ -10,6 +10,7 @@ html {
 	min-height: 100dvh;
 
 	--block-spacing: 0.5rem;
+	line-height: 1.5;
 }
 
 body {
@@ -396,6 +397,24 @@ ol {
 		}
 		&:nth-child(4n) {
 			width: 85%;
+		}
+	}
+}
+
+@media only screen and (max-width: 480px) {
+	[data-format='desktop'] {
+		&,
+		* {
+			display: none;
+		}
+	}
+}
+
+@media only screen and (min-width: 481px) {
+	[data-format='mobile'] {
+		&,
+		* {
+			display: none;
 		}
 	}
 }

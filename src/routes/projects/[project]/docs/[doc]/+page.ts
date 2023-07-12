@@ -51,8 +51,15 @@ async function rebuildDoc(docId: string) {
 }
 
 export async function load({ params }) {
+	const [doc, project, content] = await Promise.all([
+		db.docs.get(params.doc),
+		db.projects.get(params.project),
+		rebuildDoc(params.doc)
+	]);
 	return {
-		doc: await rebuildDoc(params.doc),
+		doc,
+		project,
+		content,
 		projectId: params.project,
 		docId: params.doc
 	};

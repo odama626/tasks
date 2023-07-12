@@ -8,6 +8,8 @@
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
 	import { EventType, events } from '$lib/modelEvent.js';
 	import { Collections } from '$lib/db.types.js';
+	import DocumentPlus from '$lib/icons/document-plus.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 
 	export let data;
 	let randomId = createId();
@@ -116,7 +118,16 @@
 </script>
 
 <Portal target=".header-context-portal">
-	<a class="button ghost accent" href="/projects/{data.projectId}/docs/new">Create Doc</a>
+	<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
+</Portal>
+
+<Portal target=".sub-header-slot">
+	<div class="subheader">
+		<a href="/projects" class="button icon ghost">
+			<ChevronLeft class="button" />
+		</a>
+		<div>{data.project?.name}</div>
+	</div>
 </Portal>
 
 {#if $taskDoc && $docs && $linkDoc}
@@ -176,5 +187,15 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--block-spacing);
+	}
+
+	.subheader {
+		> :first-child {
+			margin-left: -0.75rem;
+		}
+		display: flex;
+		flex-direction: row;
+		justify-content: start;
+		align-items: center;
 	}
 </style>
