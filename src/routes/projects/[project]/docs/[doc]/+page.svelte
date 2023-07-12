@@ -185,7 +185,7 @@
 		<a href="/projects/{data.projectId}" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<div>{data.doc.title}</div>
+		<div>{data?.doc?.title}</div>
 	</div>
 </Portal>
 
