@@ -8,11 +8,11 @@ export let ssr = false;
 const unauthenticatedRoutes = ['/', '/user'];
 
 export const load = (async (args) => {
-	console.log({ globalThis })
+	console.log({ globalThis, args });
 	const auth = JSON.parse(localStorage.getItem('auth') ?? 'null');
 
 	if (!auth && !unauthenticatedRoutes.includes(args.url.pathname)) {
-		args.setHeaders({ 'Set-Cookie': args.url.pathname });
+		localStorage.setItem('login-redirect', args.url.pathname);
 		throw redirect(307, '/user');
 	}
 	userStore.set(auth);

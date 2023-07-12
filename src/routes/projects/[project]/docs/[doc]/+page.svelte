@@ -50,8 +50,12 @@
 			path,
 			doc,
 			parent,
-			project
+			project,
+			file: properties?.attrs?.file
 		};
+		console.log({ payload });
+
+		delete properties?.attrs?.file;
 
 		await events.add({
 			eventType,

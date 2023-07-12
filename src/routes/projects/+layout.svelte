@@ -53,12 +53,6 @@
 	let isContextMenuOpen = false;
 	let isCreating: string | undefined = undefined;
 
-	async function logout() {
-		localStorage.clear();
-		db.delete();
-		pb.authStore.clear();
-		location.reload();
-	}
 </script>
 
 <div class="document">
@@ -115,7 +109,7 @@
 				</button>
 				{#if isContextMenuOpen}
 					<ul class="context-menu">
-						<li><button on:click={logout}>Logout</button></li>
+						<li><button on:click={events.logout}>Logout</button></li>
 					</ul>
 				{/if}
 			</div>

@@ -10,9 +10,12 @@ export const collectFormData = (callback) => (e) => {
 export function convertPbErrorToZod(result) {
 	if (result.response.code !== 400) throw result;
 	const { data } = result.response;
+	console.log({ result });
+	const overalMessage = result.response.message;
 	return {
 		success: false,
 		error: {
+			overalMessage,
 			issues: Object.entries(data).map(([name, error]) => {
 				return {
 					path: [name],
@@ -22,6 +25,10 @@ export function convertPbErrorToZod(result) {
 		}
 	};
 }
+
+export const attachRecordToError = (message: string, record) => (e) => {
+	throw new Error(`${message}\n${JSON.stringify(record, null, 2)}`, { cause: e });
+};
 
 export function createId() {
 	return nanoid(15);
@@ -73,3 +80,16 @@ export function notify(notification: Partial<Notification>) {
 notify.dismiss = function (id: string) {
 	notificationStore.update((notifications) => notifications.filter((n) => n.id !== id));
 };
+
+export function prepareRecordFormData(record) {
+	const formData = new FormData();
+	for (const field in record) {
+		let payload = record[field];
+		if (!payload) continue;
+		if (typeof payload === 'object' && !(payload instanceof Blob))
+			payload = JSON.stringify(payload);
+
+		formData.append(field, payload);
+	}
+	return formData;
+}

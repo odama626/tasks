@@ -2,15 +2,19 @@
 	import Task from '../tasks/task.svelte';
 	import Field from '$lib/field.svelte';
 	import { collectFormData, convertPbErrorToZod } from '$lib/utils';
-	import { z } from 'zod';
+	import { z, ZodError } from 'zod';
 	import { pb, userStore } from '$lib/storage';
 	import { goto } from '$app/navigation';
 
-	let registerErrors = {};
-	let loginErrors = {};
+	let registerErrors: ZodError;
+	let loginErrors: ZodError;
 	let isRegistering = false;
 
-	$: console.log({ registerErrors });
+	function handleRedirect() {
+		const redirect = localStorage.getItem('login-redirect') ?? '/';
+		localStorage.removeItem('login-redirect');
+		goto(redirect);
+	}
 
 	const registrationSchema = z
 		.object({
@@ -41,7 +45,7 @@
 			.authWithPassword(result.data.username, result.data.password);
 		userStore.set(auth);
 		event.target.reset();
-		goto('/tasks');
+		handleRedirect();
 	});
 
 	const login = collectFormData(async (data, event) => {
@@ -54,7 +58,7 @@
 		if (auth.error) return (loginErrors = auth.error);
 		userStore.set(auth);
 		event.target.reset();
-		goto('/tasks')
+		handleRedirect();
 	});
 </script>
 
@@ -82,6 +86,8 @@
 					<Field label="Username" name="username" zodError={loginErrors} />
 					<Field label="Password" name="password" type="password" zodError={loginErrors} />
 					<button>Login</button>
+					{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
+						>{/if}
 				</form>
 			{/if}
 		</div>

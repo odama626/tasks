@@ -149,7 +149,7 @@
 				</button>
 				{#if isContextMenuOpen}
 					<ul class="context-menu">
-						<li><button on:click={events.lougout}>Logout</button></li>
+						<li><button on:click={events.logout}>Logout</button></li>
 					</ul>
 				{/if}
 			</div>

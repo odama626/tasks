@@ -1,37 +1,30 @@
 import type { CollectionRecords, Collections } from './db.types';
 import { db, pb } from './storage';
 import { DateTime } from 'luxon';
-import { NotificationType, notify } from './utils';
-
+import { NotificationType, attachRecordToError, notify, prepareRecordFormData } from './utils';
 export enum EventType {
 	Add = 'add',
 	Update = 'update',
 	Delete = 'delete'
 }
 
-export enum PbEventType {
-	Create = 'create',
-	Update = 'update',
-	Delete = 'delete'
-}
-
-interface ModelEvent {
+interface BaseModelEvent {
 	eventType: EventType;
 	modelType: Collections;
 }
 
-interface ModelCreateEvent<T> extends ModelEvent {
+interface ModelCreateEvent<T> extends BaseModelEvent {
 	eventType: EventType.Add;
 	payload: T;
 }
 
-interface ModelUpdateEvent<T> extends ModelEvent {
+interface ModelUpdateEvent<T> extends BaseModelEvent {
 	eventType: EventType.Update;
 	payload: Partial<T>;
 	recordId: string;
 }
 
-interface ModelDeleteEvent extends ModelEvent {
+interface ModelDeleteEvent extends BaseModelEvent {
 	eventType: EventType.Delete;
 	recordId: string;
 }
@@ -108,6 +101,7 @@ export class ModelEvents {
 	}
 
 	async logout() {
+		console.log('logout');
 		localStorage.clear();
 		db.delete();
 		pb.authStore.clear();
@@ -128,24 +122,33 @@ export class ModelEvents {
 		await this.syncTable('doc_blocks');
 	}
 
-	private async step() {
+	private async step(): Promise<void> {
 		try {
 			const records = await db.events.offset(0).limit(50).toArray();
 			for await (let record of records) {
 				if (!this.online) return;
 				switch (record.eventType) {
-					case EventType.Add:
-						await pb.collection(record.modelType).create(record.payload, { $autoCancel: false });
-						break;
-					case EventType.Update:
+					case EventType.Add: {
 						await pb
 							.collection(record.modelType)
-							.update(record.recordId, record.payload, { $autoCancel: false });
+							.create(prepareRecordFormData(record.payload), { $autoCancel: false })
+							.catch(attachRecordToError('Failed to create Record', record));
 						break;
+					}
+					case EventType.Update: {
+						await pb
+							.collection(record.modelType)
+							.update(record.recordId, prepareRecordFormData(record.payload), {
+								$autoCancel: false
+							})
+							.catch(attachRecordToError('Failed to update record', record));
+						break;
+					}
 					case EventType.Delete:
 						await pb
 							.collection(record.modelType)
-							.update(record.recordId, { deleted: true }, { $autoCancel: false });
+							.update(record.recordId, { deleted: true }, { $autoCancel: false })
+							.catch(attachRecordToError('Failed to delete record', record));
 						break;
 					default:
 						throw new Error('Unexpected error occured during sync');
@@ -156,6 +159,7 @@ export class ModelEvents {
 			this.processing = false;
 		} catch (e) {
 			this.processing = false;
+			console.error(e);
 			notify({
 				text: 'Failed to sync',
 				detail: e.message,

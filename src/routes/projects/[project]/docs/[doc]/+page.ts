@@ -1,4 +1,4 @@
-import { db } from '$lib/storage';
+import { db, pb } from '$lib/storage';
 import { set } from 'lodash-es';
 
 export const ssr = false;
@@ -28,10 +28,12 @@ async function rebuildDoc(docId: string) {
 
 	blocks.forEach((block) => {
 		const { properties, type, id } = block;
-		if (type === 'image' && properties?.attrs?.file) {
+
+		const file = block?.file ?? properties?.attrs?.file;
+		if (type === 'image' && file) {
 			try {
-				console.log(properties?.attrs?.file);
-				const src = URL.createObjectURL(properties?.attrs?.file);
+				console.log(block.file, properties?.attrs?.file);
+				const src = block?.file ? pb.files.getUrl(block, block.file) : URL.createObjectURL(file);
 				properties.attrs.src = src;
 			} catch (e) {
 				console.error(`failed to rebind image`, e);

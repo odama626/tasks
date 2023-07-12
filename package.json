@@ -11,16 +11,18 @@
 		"test:unit": "vitest",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
 		"format": "prettier --plugin-search-dir . --write .",
-		"typegen": "source ./.env && pnpm exec pocketbase-typegen --url https://pb.tasks.lilbyte.dev --email $POCKETBASE_SERVICE_USER --password $POCKETBASE_SERVICE_PASSWORD --out ./src/lib/db.types.ts"
+		"typegen": "source ./.env && pnpm exec pocketbase-typegen --url https://pb.tasks.lilbyte.dev --email $POCKETBASE_SERVICE_USER --password $POCKETBASE_SERVICE_PASSWORD --out ./src/lib/db.types.ts && source ./.env && node ./fetchSchema.js"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
 		"@sveltejs/kit": "^1.5.0",
 		"@typescript-eslint/eslint-plugin": "^5.45.0",
 		"@typescript-eslint/parser": "^5.45.0",
+		"dotenv": "^16.3.1",
 		"eslint": "^8.28.0",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte": "^2.26.0",
+		"json-to-ts": "^1.7.0",
 		"prettier": "^2.8.0",
 		"prettier-plugin-svelte": "^2.8.1",
 		"svelte": "^3.54.0",

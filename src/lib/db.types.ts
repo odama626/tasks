@@ -38,19 +38,22 @@ export type AuthSystemFields<T = never> = {
 
 // Record types for each collection
 
-export type DocBlocksRecord<Tattrs = unknown> = {
+export type DocBlocksRecord<Tproperties = unknown> = {
 	type: string
-	attrs?: null | Tattrs
-	order?: number
+	properties?: null | Tproperties
 	doc: RecordIdString
 	project: RecordIdString
 	parent?: RecordIdString
+	path: string
+	deleted?: boolean
+	file?: string
 }
 
 export type DocsRecord = {
 	title?: string
 	createdBy?: RecordIdString
 	project?: RecordIdString
+	deleted?: boolean
 }
 
 export enum DocsUsersAccessOptions {
@@ -62,6 +65,7 @@ export type DocsUsersRecord = {
 	user: RecordIdString
 	doc: RecordIdString
 	access?: DocsUsersAccessOptions
+	deleted?: boolean
 }
 
 export type ListsRecord = {
@@ -85,6 +89,7 @@ export type ListsUsersRecord = {
 export type ProjectsRecord = {
 	name?: string
 	createdBy?: RecordIdString
+	deleted?: boolean
 }
 
 export enum ProjectsUsersAccessOptions {
@@ -96,6 +101,7 @@ export type ProjectsUsersRecord = {
 	user: RecordIdString
 	project: RecordIdString
 	access?: ProjectsUsersAccessOptions
+	deleted?: boolean
 }
 
 export type TasksRecord = {
@@ -114,7 +120,7 @@ export type UsersRecord = {
 }
 
 // Response types include system fields and match responses from the PocketBase API
-export type DocBlocksResponse<Tattrs = unknown, Texpand = unknown> = Required<DocBlocksRecord<Tattrs>> & BaseSystemFields<Texpand>
+export type DocBlocksResponse<Tproperties = unknown, Texpand = unknown> = Required<DocBlocksRecord<Tproperties>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
 export type ListsResponse = Required<ListsRecord> & BaseSystemFields
@@ -148,4 +154,185 @@ export type CollectionResponses = {
 	projects_users: ProjectsUsersResponse
 	tasks: TasksResponse
 	users: UsersResponse
+}
+
+export interface CollectionSchemas {
+  users: Users;
+  lists: Lists;
+  tasks: Tasks;
+  lists_users: Listsusers;
+  projects: Projects;
+  docs: Projects;
+  doc_blocks: Docblocks;
+  projects_users: Listsusers;
+  docs_users: Listsusers;
+}
+
+export interface Docblocks {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema6[];
+}
+
+export interface Schema6 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options6;
+}
+
+export interface Options6 {
+  min?: any;
+  max?: any;
+  pattern?: string;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  maxSelect?: number;
+  displayFields?: any[];
+  maxSize?: number;
+  mimeTypes?: any[];
+  thumbs?: any[];
+  protected?: boolean;
+}
+
+export interface Projects {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema5[];
+}
+
+export interface Schema5 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options5;
+}
+
+export interface Options5 {
+  min?: any;
+  max?: any;
+  pattern?: string;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  maxSelect?: number;
+  displayFields?: any[];
+}
+
+export interface Listsusers {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema4[];
+}
+
+export interface Schema4 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options4;
+}
+
+export interface Options4 {
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  maxSelect?: number;
+  displayFields?: any[];
+  values?: string[];
+}
+
+export interface Tasks {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema3[];
+}
+
+export interface Schema3 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options3;
+}
+
+export interface Options3 {
+  min?: string;
+  max?: string;
+  pattern?: string;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  maxSelect?: number;
+  displayFields?: any[];
+}
+
+export interface Lists {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema2[];
+}
+
+export interface Schema2 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options2;
+}
+
+export interface Options2 {
+  min?: any;
+  max?: any;
+  pattern?: string;
+}
+
+export interface Users {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema[];
+}
+
+export interface Schema {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options;
+}
+
+export interface Options {
+  min?: any;
+  max?: any;
+  pattern?: string;
+  maxSelect?: number;
+  maxSize?: number;
+  mimeTypes?: string[];
+  thumbs?: any;
+  protected?: boolean;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  displayFields?: any[];
 }
