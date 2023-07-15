@@ -26,6 +26,8 @@ async function rebuildDoc(docId: string) {
 	blocks.sort((a, b) => a.path.length - b.path.length);
 	const content = [];
 
+	const fileToken = await pb.files.getToken();
+
 	blocks.forEach((block) => {
 		const { properties, type, id } = block;
 
@@ -33,7 +35,9 @@ async function rebuildDoc(docId: string) {
 		if (type === 'image' && file) {
 			try {
 				console.log(block.file, properties?.attrs?.file);
-				const src = block?.file ? pb.files.getUrl(block, block.file) : URL.createObjectURL(file);
+				const src = block?.file
+					? pb.files.getUrl(block, block.file, { token: fileToken })
+					: URL.createObjectURL(file);
 				properties.attrs.src = src;
 			} catch (e) {
 				console.error(`failed to rebind image`, e);
