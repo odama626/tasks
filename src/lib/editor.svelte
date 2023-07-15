@@ -16,6 +16,7 @@
 	import Highlight from '@tiptap/extension-highlight';
 	import { getCommands } from './editor/extensions/commands';
 	import ImageExtension from '@tiptap/extension-image';
+	import Gapcursor from '@tiptap/extension-gapcursor';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -41,8 +42,7 @@
 	// https://github.com/ueberdosis/tiptap/blob/main/packages/extension-collaboration/src/collaboration.ts
 	// https://tiptap.dev/guide/collaborative-editing
 
-	async function handleDrop(view, event, slice, moved) {
-		console.log({ view, event, slice, moved });
+	function handleDrop(view, event, slice, moved) {
 		if (!moved && event.dataTransfer?.items?.length > 0) {
 			const items = Array.from(event.dataTransfer.items);
 			// if dropping external files
@@ -96,6 +96,9 @@
 						return {
 							...this.parent?.(),
 							file: {
+								default: null
+							},
+							id: {
 								default: null
 							}
 						};

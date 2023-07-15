@@ -52,8 +52,6 @@
 	let isHeaderOpen: boolean = false;
 	let isContextMenuOpen = false;
 	let isCreating: string | undefined = undefined;
-
-	$: console.log({ isHeaderOpen });
 </script>
 
 <div class="document">

@@ -34,7 +34,6 @@ async function rebuildDoc(docId: string) {
 		const file = block?.file ?? properties?.attrs?.file;
 		if (type === 'image' && file) {
 			try {
-				console.log(block.file, properties?.attrs?.file);
 				const src = block?.file
 					? pb.files.getUrl(block, block.file, { token: fileToken })
 					: URL.createObjectURL(file);

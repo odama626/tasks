@@ -44,6 +44,7 @@
 		"@tiptap/extension-code-block": "^2.0.3",
 		"@tiptap/extension-dropcursor": "^2.0.3",
 		"@tiptap/extension-floating-menu": "^2.0.3",
+		"@tiptap/extension-gapcursor": "^2.0.3",
 		"@tiptap/extension-hard-break": "^2.0.3",
 		"@tiptap/extension-heading": "^2.0.3",
 		"@tiptap/extension-highlight": "^2.0.3",

@@ -24,8 +24,6 @@
 			id: createId()
 		};
 
-		console.log({ payload });
-
 		await events.add({ eventType: EventType.Add, modelType: Collections.Projects, payload });
 		await events.add({
 			eventType: EventType.Add,

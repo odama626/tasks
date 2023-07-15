@@ -1,4 +1,4 @@
-import type { CollectionRecords, Collections } from './db.types';
+import { Collections, type CollectionRecords } from './db.types';
 import { db, pb } from './storage';
 import { DateTime } from 'luxon';
 import { NotificationType, attachRecordToError, notify, prepareRecordFormData } from './utils';
