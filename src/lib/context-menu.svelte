@@ -54,7 +54,9 @@
 		display: flex;
 		flex-direction: column;
 		align-items: stretch !important;
-		.menu-item > * {
+		background-color: var(--surface-3);
+
+		:global(.menu-item > *) {
 			box-sizing: border-box;
 			padding: 1rem;
 			width: 100%;

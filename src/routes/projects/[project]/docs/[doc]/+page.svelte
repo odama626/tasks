@@ -190,17 +190,14 @@
 	</div>
 </Portal>
 
-<Portal target=".custom-context-menu">
-	<li class="menu-item">Show tasks in project overview</li>
-</Portal>
-
 <div class="document">
 	<Portal target=".header-context-portal">
-		<div class="portal-items">
+		<div class="header-portal-items">
 			<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
 			<ContextMenu>
-				<div slot="button" />
-				<div slot="panel" />
+				<div slot="items">
+					<div class="menu-item">Another Item</div>
+				</div>
 			</ContextMenu>
 		</div>
 	</Portal>
@@ -208,9 +205,6 @@
 </div>
 
 <style lang="scss">
-	.portal-items {
-		display: flex;
-	}
 	.document {
 		height: 100%;
 		:global(.editor) {

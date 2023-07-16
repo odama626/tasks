@@ -11,6 +11,7 @@
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { groupBy } from 'lodash-es';
+	import ContextMenu from '$lib/context-menu.svelte';
 
 	export let data;
 	let randomId = createId();
@@ -97,15 +98,7 @@
 
 		return {
 			tasksByDocument,
-			all: {
-				type: 'doc',
-				content: [
-					{
-						type: 'taskList',
-						content: content.filter((item) => !parentTasksByParentId[item.parent])
-					}
-				]
-			}
+			overviewTasks: filteredContent.filter((task) => !task?.attrs?.checked)
 		};
 	}
 
@@ -121,7 +114,7 @@
 		});
 	}
 
-	let collapsedDocs = {};
+	let expandedDocs = {};
 
 	// $: console.log(tasks);
 </script>
@@ -139,13 +132,19 @@
 	</div>
 </Portal>
 
+<Portal target=".header-context-portal">
+	<div class="header-portal-items">
+		<ContextMenu />
+	</div>
+</Portal>
+
 {#if $taskDoc && $docs && $linkDoc}
 	<h2>Tasks</h2>
 	{#if $taskDoc}
 		<Editor
 			isOverview={true}
 			on:taskItemUpdate={updateTaskItem}
-			content={$taskDoc?.all}
+			content={{ type: 'doc', content: $taskDoc.overviewTasks }}
 			editable={false}
 		/>
 	{/if}
@@ -156,15 +155,15 @@
 		{#if $docs}
 			{#each $docs as doc (doc.id)}
 				{@const tasks = $taskDoc.tasksByDocument[doc.id]}
-				{@const collapsed = collapsedDocs[doc.id]}
+				{@const expanded = expandedDocs[doc.id]}
 				<a class="button document" href="/projects/{data.projectId}/docs/{doc.id}">
 					<div>{doc.title}</div>
 					<svg
 						on:click={(e) => {
 							e.stopPropagation();
 							e.preventDefault();
-							collapsedDocs[doc.id] = !collapsed;
-							collapsedDocs = collapsedDocs;
+							expandedDocs[doc.id] = !expanded;
+							expandedDocs = expandedDocs;
 						}}
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
@@ -172,12 +171,12 @@
 						stroke-width="1.5"
 						stroke="currentColor"
 						class="icon"
-						style="padding: 1rem; margin: -1rem; {collapsed && 'scale: 1 -1'}"
+						style="padding: 1rem; margin: -1rem; {!expanded && 'scale: 1 -1'}"
 					>
 						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
 					</svg>
 				</a>
-				{#if !collapsed && tasks}
+				{#if expanded && tasks}
 					<div class="tasks-group">
 						<Editor
 							isOverview={true}
