@@ -10,6 +10,7 @@
 	import { Collections } from '$lib/db.types.js';
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import { groupBy } from 'lodash-es';
 
 	export let data;
 	let randomId = createId();
@@ -91,14 +92,20 @@
 			})
 		);
 
+		const filteredContent = content.filter((item) => !parentTasksByParentId[item.parent]);
+		const tasksByDocument = groupBy(content, 'doc');
+
 		return {
-			type: 'doc',
-			content: [
-				{
-					type: 'taskList',
-					content: content.filter((item) => !parentTasksByParentId[item.parent])
-				}
-			]
+			tasksByDocument,
+			all: {
+				type: 'doc',
+				content: [
+					{
+						type: 'taskList',
+						content: content.filter((item) => !parentTasksByParentId[item.parent])
+					}
+				]
+			}
 		};
 	}
 
@@ -113,6 +120,8 @@
 			payload: { properties: existingTask.properties }
 		});
 	}
+
+	let collapsedDocs = {};
 
 	// $: console.log(tasks);
 </script>
@@ -136,7 +145,7 @@
 		<Editor
 			isOverview={true}
 			on:taskItemUpdate={updateTaskItem}
-			content={$taskDoc}
+			content={$taskDoc?.all}
 			editable={false}
 		/>
 	{/if}
@@ -146,9 +155,38 @@
 	<div class="docs">
 		{#if $docs}
 			{#each $docs as doc (doc.id)}
-				<a class="button" href="/projects/{data.projectId}/docs/{doc.id}">
-					<div>{doc.title}</div></a
-				>
+				{@const tasks = $taskDoc.tasksByDocument[doc.id]}
+				{@const collapsed = collapsedDocs[doc.id]}
+				<a class="button document" href="/projects/{data.projectId}/docs/{doc.id}">
+					<div>{doc.title}</div>
+					<svg
+						on:click={(e) => {
+							e.stopPropagation();
+							e.preventDefault();
+							collapsedDocs[doc.id] = !collapsed;
+							collapsedDocs = collapsedDocs;
+						}}
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke-width="1.5"
+						stroke="currentColor"
+						class="icon"
+						style="padding: 1rem; margin: -1rem; {collapsed && 'scale: 1 -1'}"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+					</svg>
+				</a>
+				{#if !collapsed && tasks}
+					<div class="tasks-group">
+						<Editor
+							isOverview={true}
+							on:taskItemUpdate={updateTaskItem}
+							content={{ type: 'doc', content: tasks }}
+							editable={false}
+						/>
+					</div>
+				{/if}
 			{:else}
 				<EmptyDocs />
 			{/each}
@@ -181,6 +219,11 @@
 	}
 	h2 {
 		color: var(--text-2);
+	}
+
+	.document {
+		display: flex;
+		justify-content: space-between;
 	}
 
 	.docs {

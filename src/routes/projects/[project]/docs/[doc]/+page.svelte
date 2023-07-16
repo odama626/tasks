@@ -10,6 +10,7 @@
 	import { set } from 'lodash-es';
 	import Portal from 'svelte-portal';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import ContextMenu from '$lib/context-menu.svelte';
 
 	export let data;
 	let editor: Editor;
@@ -189,14 +190,27 @@
 	</div>
 </Portal>
 
+<Portal target=".custom-context-menu">
+	<li class="menu-item">Show tasks in project overview</li>
+</Portal>
+
 <div class="document">
 	<Portal target=".header-context-portal">
-		<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
+		<div class="portal-items">
+			<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
+			<ContextMenu>
+				<div slot="button" />
+				<div slot="panel" />
+			</ContextMenu>
+		</div>
 	</Portal>
 	<EditorComponent bind:editor content={data.content ?? content} editable={true} />
 </div>
 
 <style lang="scss">
+	.portal-items {
+		display: flex;
+	}
 	.document {
 		height: 100%;
 		:global(.editor) {

@@ -177,6 +177,11 @@ button,
 		border: 1px solid var(--background-color);
 	}
 
+	&[aria-expanded='true'] {
+		background-color: var(--surface-3);
+		color: var(--text-1);
+	}
+
 	&.small {
 		padding: 0.15rem 0.5rem;
 	}
@@ -302,14 +307,13 @@ em {
 	li {
 		margin: var(--block-spacing);
 	}
-}
-
-ul {
-	list-style: disc;
 	ul {
-		list-style: circle;
+		list-style: disc;
 		ul {
-			list-style: square;
+			list-style: circle;
+			ul {
+				list-style: square;
+			}
 		}
 	}
 }
@@ -417,4 +421,13 @@ ol {
 			display: none;
 		}
 	}
+}
+
+.popper-menu {
+	position: relative;
+}
+
+.popper-menu-items {
+	position: absolute;
+	z-index: 10;
 }

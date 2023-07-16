@@ -2,7 +2,7 @@
 	import { liveQuery } from 'dexie';
 	import { currentProject, db, pb, userStore } from '$lib/storage';
 	import { EventType, events } from '$lib/modelEvent';
-	import { slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { Collections } from '$lib/db.types';
 	import { createId, withKeys } from '$lib/utils';
 	import { Shortcuts } from 'shortcuts';
@@ -12,6 +12,16 @@
 	import CreateProjectForm from './createProjectForm.svelte';
 	import '$lib/styles.scss';
 	import { clickOutside } from '$lib/clickOutside';
+	import {
+		Menu,
+		MenuButton,
+		MenuItems,
+		MenuItem,
+		Popover,
+		PopoverButton,
+		PopoverPanel
+	} from '@rgossiaux/svelte-headlessui';
+	import ContextMenu from '$lib/context-menu.svelte';
 
 	export let data;
 	const { auth } = data;
@@ -84,17 +94,8 @@
 		</ul>
 		<article style="display: flex; justify-content: flex-end;">
 			<div class="header-context-portal" />
-			<div
-				class="context-container select"
-				use:clickOutside={() => {
-					isContextMenuOpen = false;
-				}}
-			>
-				<button
-					aria-expanded={isContextMenuOpen}
-					class="ghost icon"
-					on:click={() => (isContextMenuOpen = !isContextMenuOpen)}
-				>
+			<ContextMenu>
+				<div slot="button">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
@@ -109,13 +110,9 @@
 							d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
 						/>
 					</svg>
-				</button>
-				{#if isContextMenuOpen}
-					<ul class="context-menu">
-						<li><button on:click={events.logout}>Logout</button></li>
-					</ul>
-				{/if}
-			</div>
+				</div>
+				<div slot="panel" />
+			</ContextMenu>
 		</article>
 	</nav>
 	<div class="page">
@@ -184,6 +181,9 @@
 </div>
 
 <style lang="scss">
+	.header-context-portal {
+		display: flex;
+	}
 	.document {
 		display: flex;
 		flex-direction: column;
