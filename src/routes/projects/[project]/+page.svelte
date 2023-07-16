@@ -10,8 +10,9 @@
 	import { Collections } from '$lib/db.types.js';
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import { groupBy } from 'lodash-es';
+	import { groupBy, keyBy } from 'lodash-es';
 	import ContextMenu from '$lib/context-menu.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data;
 	let randomId = createId();
@@ -27,26 +28,17 @@
 		return await Dexie.waitFor(() => getTasksFromTaskItems(taskItems));
 	});
 
-	$: linkDoc = liveQuery(async () => {
+	$: linkDocContent = liveQuery(async () => {
 		const links = await db.doc_blocks.where({ project: data.projectId, type: 'text' }).toArray();
-		return {
-			type: 'doc',
-			content: links
-				.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
-				.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
-				.map((link) => ({ type: 'paragraph', content: [link.properties] }))
-		};
+		return links
+			.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
+			.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
+			.map((link) => ({ type: 'paragraph', content: [link.properties] }));
 	});
-
-	// const taskItems = liveQuery(() =>
-	// 	db.doc_blocks.where({ project: data.projectId, type: 'taskItem' }).toArray()
-	// );
-
-	// let tasks = [];
-	// let taskDoc;
 
 	async function getTasksFromTaskItems(taskItems) {
 		const parentTasksByParentId = {};
+		const docsById = keyBy(await db.docs.where({ project: data.projectId }).toArray(), 'id');
 		const content = await Promise.all(
 			taskItems.map(async (taskItem, i) => {
 				const taskContent = await db.doc_blocks
@@ -98,7 +90,13 @@
 
 		return {
 			tasksByDocument,
-			overviewTasks: filteredContent.filter((task) => !task?.attrs?.checked)
+			overviewTasks: filteredContent.filter((task) => {
+				if (task?.attrs?.checked) return false;
+				const doc = docsById[task.doc];
+				if (doc.excludeFromOverview) return false;
+
+				return true;
+			})
 		};
 	}
 
@@ -119,10 +117,6 @@
 	// $: console.log(tasks);
 </script>
 
-<Portal target=".header-context-portal">
-	<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
-</Portal>
-
 <Portal target=".sub-header-slot">
 	<div class="subheader">
 		<a href="/projects" class="button icon ghost">
@@ -134,13 +128,14 @@
 
 <Portal target=".header-context-portal">
 	<div class="header-portal-items">
+		<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
 		<ContextMenu />
 	</div>
 </Portal>
 
-{#if $taskDoc && $docs && $linkDoc}
-	<h2>Tasks</h2>
-	{#if $taskDoc}
+{#if $taskDoc && $docs && $linkDocContent}
+	{#if $taskDoc?.overviewTasks?.length}
+		<h2>Tasks</h2>
 		<Editor
 			isOverview={true}
 			on:taskItemUpdate={updateTaskItem}
@@ -156,26 +151,38 @@
 			{#each $docs as doc (doc.id)}
 				{@const tasks = $taskDoc.tasksByDocument[doc.id]}
 				{@const expanded = expandedDocs[doc.id]}
-				<a class="button document" href="/projects/{data.projectId}/docs/{doc.id}">
-					<div>{doc.title}</div>
-					<svg
-						on:click={(e) => {
-							e.stopPropagation();
-							e.preventDefault();
-							expandedDocs[doc.id] = !expanded;
-							expandedDocs = expandedDocs;
-						}}
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke-width="1.5"
-						stroke="currentColor"
-						class="icon"
-						style="padding: 1rem; margin: -1rem; {!expanded && 'scale: 1 -1'}"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-					</svg>
-				</a>
+				<button
+					on:click={(e) => {
+						if (!tasks) {
+							return goto('/projects/{data.projectId}/docs/{doc.id}');
+						}
+						expandedDocs[doc.id] = !expanded;
+						expandedDocs = expandedDocs;
+					}}
+					class="document"
+				>
+					<a href="/projects/{data.projectId}/docs/{doc.id}">
+						<div class="title">{doc.title}</div>
+					</a>
+					<div class="actions">
+						<svg
+							class:empty={!tasks}
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							class="icon doc-expand"
+							style={!expanded && 'scale: 1 -1'}
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+							/>
+						</svg>
+					</div>
+				</button>
 				{#if expanded && tasks}
 					<div class="tasks-group">
 						<Editor
@@ -194,9 +201,9 @@
 		{/if}
 	</div>
 	<br />
-	{#if $linkDoc}
+	{#if $linkDocContent?.length}
 		<h2>Links</h2>
-		<Editor isOverview content={$linkDoc} editable={false} />
+		<Editor isOverview content={{ type: 'doc', content: $linkDocContent }} editable={false} />
 	{/if}
 {:else}
 	<div class="loading">
@@ -213,6 +220,18 @@
 {/if}
 
 <style lang="scss">
+	.doc-expand {
+		color: var(--text-3);
+		&.empty {
+			visibility: hidden;
+			pointer-events: none;
+		}
+		padding: calc(var(--spacing));
+	}
+	.tasks-group {
+		padding: 0 0.75rem;
+	}
+
 	br {
 		line-height: calc(var(--block-spacing) * 4);
 	}
@@ -223,6 +242,11 @@
 	.document {
 		display: flex;
 		justify-content: space-between;
+		.actions {
+			--spacing: 8px;
+			margin: calc(var(--spacing) * -1 - 4px);
+			display: flex;
+		}
 	}
 
 	.docs {

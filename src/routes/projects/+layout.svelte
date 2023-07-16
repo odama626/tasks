@@ -270,6 +270,11 @@
 		}
 	}
 
+	.header {
+		border-bottom: 1px solid var(--surface-3);
+		background: var(--surface-2);
+	}
+
 	@media only screen and (max-width: 480px) {
 		.page {
 			grid-template-columns: 1fr;
@@ -303,6 +308,8 @@
 			align-items: center;
 			justify-content: space-between;
 			background-color: var(--surface-2);
+			border-top: 1px solid var(--surface-3);
+			border-bottom: none;
 		}
 
 		.context-menu {

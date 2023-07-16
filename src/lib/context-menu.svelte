@@ -3,13 +3,19 @@
 	import { createPopperActions } from 'svelte-popperjs';
 	import { events } from './modelEvent';
 
-	const [popperRef, popperContent] = createPopperActions();
-	export let open;
-
-	const popperOptions = {
+	const [popperRef, popperContent] = createPopperActions({
 		placement: 'bottom-end',
-		strategy: 'fixed'
-	};
+		strategy: 'fixed',
+		modifiers: [
+			{
+				name: 'offset',
+				options: {
+					offset: [0, 14]
+				}
+			}
+		]
+	});
+	export let open: boolean = false;
 </script>
 
 <Popover bind:open class="popper">
@@ -31,10 +37,10 @@
 			</svg>
 		</slot>
 	</PopoverButton>
-	<PopoverPanel use={[[popperContent, popperOptions]]} class="panel">
+	<PopoverPanel use={[popperContent]} style="z-index: 100;" class="panel">
 		<ul class="menu">
 			<slot name="items" />
-			<div class="divider" />
+			{#if $$slots.items}<div class="divider" />{/if}
 			<li class="menu-item">
 				<button on:click={events.logout}>Logout</button>
 			</li>
@@ -49,17 +55,30 @@
 		justify-content: center;
 	}
 
+	.divider {
+		margin: 0 0.75rem;
+		border-width: 1px;
+		border-color: var(--surface-4);
+	}
+
 	ul.menu {
+		z-index: 100;
 		min-width: 7rem;
 		display: flex;
 		flex-direction: column;
 		align-items: stretch !important;
 		background-color: var(--surface-3);
+		border-radius: 4px;
+		overflow: hidden;
 
 		:global(.menu-item > *) {
 			box-sizing: border-box;
 			padding: 1rem;
 			width: 100%;
+			margin: 0;
+			&:hover {
+				background-color: var(--surface-4);
+			}
 		}
 	}
 </style>

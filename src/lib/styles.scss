@@ -76,7 +76,7 @@ textarea {
 label {
 	display: block;
 	margin-bottom: 0.75rem;
-	color: var(--text-3);
+	// color: var(--text-3);
 }
 
 input,
@@ -307,6 +307,9 @@ em {
 	li {
 		margin: var(--block-spacing);
 	}
+}
+
+.editor {
 	ul {
 		list-style: disc;
 		ul {

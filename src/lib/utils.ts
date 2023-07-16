@@ -10,7 +10,6 @@ export const collectFormData = (callback) => (e) => {
 export function convertPbErrorToZod(result) {
 	if (result.response.code !== 400) throw result;
 	const { data } = result.response;
-	console.log({ result });
 	const overalMessage = result.response.message;
 	return {
 		success: false,
@@ -85,7 +84,7 @@ export function prepareRecordFormData(record) {
 	const formData = new FormData();
 	for (const field in record) {
 		let payload = record[field];
-		if (!payload) continue;
+		if (payload === undefined) continue;
 		if (typeof payload === 'object' && !(payload instanceof Blob))
 			payload = JSON.stringify(payload);
 
