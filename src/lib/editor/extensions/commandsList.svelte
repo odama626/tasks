@@ -18,8 +18,6 @@
 		}
 	}
 
-	console.log($$restProps, { items });
-
 	let selectedIndex = 0;
 </script>
 

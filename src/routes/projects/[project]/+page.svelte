@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { currentProject, db } from '$lib/storage.js';
-	import { createId } from '$lib/utils.js';
+	import { collectFormData, createId } from '$lib/utils.js';
 	import Dexie, { liveQuery } from 'dexie';
 	import { set } from 'lodash-es';
 	import Editor from '$lib/editor.svelte';
@@ -10,11 +10,21 @@
 	import { Collections } from '$lib/db.types.js';
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import { groupBy, keyBy } from 'lodash-es';
+	import ContextMenu from '$lib/context-menu.svelte';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	export let data;
 	let randomId = createId();
+	let expandedDocs = {};
+	let isEditingName = false;
 
 	$: currentProject.set(data.projectId);
+
+	currentProject.subscribe(() => {
+		isEditingName = false;
+	});
 
 	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
 
@@ -25,26 +35,17 @@
 		return await Dexie.waitFor(() => getTasksFromTaskItems(taskItems));
 	});
 
-	$: linkDoc = liveQuery(async () => {
+	$: linkDocContent = liveQuery(async () => {
 		const links = await db.doc_blocks.where({ project: data.projectId, type: 'text' }).toArray();
-		return {
-			type: 'doc',
-			content: links
-				.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
-				.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
-				.map((link) => ({ type: 'paragraph', content: [link.properties] }))
-		};
+		return links
+			.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
+			.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
+			.map((link) => ({ type: 'paragraph', content: [link.properties] }));
 	});
-
-	// const taskItems = liveQuery(() =>
-	// 	db.doc_blocks.where({ project: data.projectId, type: 'taskItem' }).toArray()
-	// );
-
-	// let tasks = [];
-	// let taskDoc;
 
 	async function getTasksFromTaskItems(taskItems) {
 		const parentTasksByParentId = {};
+		const docsById = keyBy(await db.docs.where({ project: data.projectId }).toArray(), 'id');
 		const content = await Promise.all(
 			taskItems.map(async (taskItem, i) => {
 				const taskContent = await db.doc_blocks
@@ -91,14 +92,18 @@
 			})
 		);
 
+		const filteredContent = content.filter((item) => !parentTasksByParentId[item.parent]);
+		const tasksByDocument = groupBy(content, 'doc');
+
 		return {
-			type: 'doc',
-			content: [
-				{
-					type: 'taskList',
-					content: content.filter((item) => !parentTasksByParentId[item.parent])
-				}
-			]
+			tasksByDocument,
+			overviewTasks: filteredContent.filter((task) => {
+				if (task?.attrs?.checked) return false;
+				const doc = docsById[task.doc];
+				if (doc.excludeFromOverview) return false;
+
+				return true;
+			})
 		};
 	}
 
@@ -117,38 +122,109 @@
 	// $: console.log(tasks);
 </script>
 
-<Portal target=".header-context-portal">
-	<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
-</Portal>
-
 <Portal target=".sub-header-slot">
 	<div class="subheader">
 		<a href="/projects" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<div>{data.project?.name}</div>
+		{#if isEditingName}
+			<form
+				on:submit|preventDefault={collectFormData((formData) => {
+					console.log(formData);
+					events.add({
+						modelType: Collections.Projects,
+						eventType: EventType.Update,
+						recordId: data.projectId,
+						payload: formData
+					});
+					isEditingName = false;
+				})}
+				style="flex-direction: row"
+			>
+				<input
+					class="ghost"
+					style="width: 100%;"
+					autofocus
+					value={data.project?.name}
+					name="name"
+				/>
+				<button>Update</button>
+			</form>
+		{:else}
+			<button style="padding-left: 0;" on:click={() => (isEditingName = true)} class="ghost">
+				<div>{data.project?.name}</div>
+			</button>
+		{/if}
 	</div>
 </Portal>
 
-{#if $taskDoc && $docs && $linkDoc}
-	<h2>Tasks</h2>
-	{#if $taskDoc}
+<Portal target=".header-context-portal">
+	<div class="header-portal-items">
+		<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
+		<ContextMenu />
+	</div>
+</Portal>
+
+{#if $taskDoc && $docs && $linkDocContent}
+	{#if $taskDoc?.overviewTasks?.length}
+		<h2>Tasks</h2>
 		<Editor
 			isOverview={true}
 			on:taskItemUpdate={updateTaskItem}
-			content={$taskDoc}
+			content={{ type: 'doc', content: $taskDoc.overviewTasks }}
 			editable={false}
 		/>
+		<br />
 	{/if}
 
-	<br />
 	<h2>Docs</h2>
 	<div class="docs">
 		{#if $docs}
 			{#each $docs as doc (doc.id)}
-				<a class="button" href="/projects/{data.projectId}/docs/{doc.id}">
-					<div>{doc.title}</div></a
+				{@const tasks = $taskDoc.tasksByDocument[doc.id]}
+				{@const expanded = expandedDocs[doc.id]}
+				<button
+					on:click={(e) => {
+						if (!tasks) {
+							return goto(`/projects/${data.projectId}/docs/${doc.id}`);
+						}
+						expandedDocs[doc.id] = !expanded;
+						expandedDocs = expandedDocs;
+					}}
+					class="document"
 				>
+					<a href="/projects/{data.projectId}/docs/{doc.id}">
+						<div class="title">{doc.title}</div>
+					</a>
+					<div class="actions">
+						<svg
+							class:empty={!tasks}
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke-width="1.5"
+							stroke="currentColor"
+							class="icon doc-expand"
+							style={expanded && 'scale: 1 -1'}
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								d="M19.5 8.25l-7.5 7.5-7.5-7.5"
+							/>
+						</svg>
+					</div>
+				</button>
+				{#if expanded && tasks}
+					<div class="tasks-group">
+						<Editor
+							isOverview={true}
+							on:taskItemUpdate={updateTaskItem}
+							content={{ type: 'doc', content: tasks }}
+							editable={false}
+						/>
+					</div>
+				{/if}
 			{:else}
 				<EmptyDocs />
 			{/each}
@@ -157,9 +233,9 @@
 		{/if}
 	</div>
 	<br />
-	{#if $linkDoc}
+	{#if $linkDocContent?.length}
 		<h2>Links</h2>
-		<Editor isOverview content={$linkDoc} editable={false} />
+		<Editor isOverview content={{ type: 'doc', content: $linkDocContent }} editable={false} />
 	{/if}
 {:else}
 	<div class="loading">
@@ -176,11 +252,33 @@
 {/if}
 
 <style lang="scss">
+	.doc-expand {
+		color: var(--text-3);
+		&.empty {
+			visibility: hidden;
+			pointer-events: none;
+		}
+		padding: calc(var(--spacing));
+	}
+	.tasks-group {
+		padding: 0 0.75rem;
+	}
+
 	br {
 		line-height: calc(var(--block-spacing) * 4);
 	}
 	h2 {
 		color: var(--text-2);
+	}
+
+	.document {
+		display: flex;
+		justify-content: space-between;
+		.actions {
+			--spacing: 8px;
+			margin: calc(var(--spacing) * -1 - 4px);
+			display: flex;
+		}
 	}
 
 	.docs {

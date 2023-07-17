@@ -1,56 +1,10 @@
 <script lang="ts">
-	import { withKeys } from '$lib/utils';
-	import type { Editor } from '@tiptap/core';
-
-	export let editor: Editor;
-	export let options;
-	export let getPos;
-	export let id;
-
-	export let checked: boolean;
-	export let doc: string;
-	export let project: string;
-	export let attrs;
-	export let dispatch;
-
-	export let contentRef;
-
-	function onChange(event) {
-		event.preventDefault();
-		if (!editor.isEditable && !options.onReadOnlyChecked) {
-			if (options.isOverview) {
-				checked = !checked;
-				dispatch('taskItemUpdate', { options, attrs, checked });
-			}
-			return;
-		}
-		if (editor.isEditable && typeof getPos == 'function') {
-			editor
-				.chain()
-				.focus(undefined, { scrollIntoView: false })
-				.command(({ tr }) => {
-					const position = getPos();
-					const currentNode = tr.doc.nodeAt(position);
-					checked = !checked;
-					tr.setNodeMarkup(position, undefined, { ...currentNode?.attrs, checked });
-				})
-				.run();
-
-			dispatch('taskItemUpdate', { options, attrs, checked });
-			return true;
-		}
-		if (!options.isEditable && options.onReadOnlyChecked) {
-			if (options.onReadOnlyChecked(node, checked)) {
-				checked = !checked;
-			}
-		}
-
-		dispatch('taskItemUpdate', { options, attrs, checked });
-	}
+	export let checked: boolean = false;
+	export let label: string | null = null;
 </script>
 
 <label contenteditable="false" data-checked={checked}>
-	<input value={checked} on:click={onChange} type="checkbox" />
+	<input bind:checked on:change type="checkbox" />
 
 	<svg
 		class="icon button checkbox"
@@ -74,12 +28,14 @@
 			fill="currentColor"
 		/>
 	</svg>
-	<span bind:this={contentRef} />
+	<slot name="label">
+		<span class="label-content">
+			{label}
+		</span>
+	</slot>
 </label>
 
 <style lang="scss">
-	.checkbox:hover {
-	}
 	.checkbox {
 		.checked {
 			visibility: hidden;
@@ -89,6 +45,14 @@
 
 	label {
 		margin: 0;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--block-spacing);
+		cursor: pointer;
+	}
+	.label-content {
+		user-select: none;
 	}
 
 	[data-checked='true'] > .checkbox .checked,
