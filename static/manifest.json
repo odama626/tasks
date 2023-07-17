@@ -1,7 +1,7 @@
 {
 	"name": "Tasks",
 	"short_name": "tasks",
-	"theme_color": "#B147FF",
+	"theme_color": "#330072",
 	"background_color": "#330072",
 	"display": "standalone",
 	"orientation": "portrait",

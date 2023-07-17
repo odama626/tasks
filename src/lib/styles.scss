@@ -105,6 +105,8 @@ mark {
 a {
 	color: var(--text-3);
 	text-decoration: none;
+	overflow-wrap: break-word;
+	word-break: break-all;
 
 	&[href*="//"]
 	{
