@@ -1,24 +1,23 @@
 <script lang="ts">
-	import { currentProject, db } from '$lib/storage.js';
-	import { collectFormData, createId } from '$lib/utils.js';
-	import Dexie, { liveQuery } from 'dexie';
-	import { set } from 'lodash-es';
+	import { goto } from '$app/navigation';
+	import ContextMenu from '$lib/context-menu.svelte';
+	import { Collections } from '$lib/db.types.js';
 	import Editor from '$lib/editor.svelte';
-	import Portal from 'svelte-portal';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
+	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
 	import { EventType, events } from '$lib/modelEvent.js';
-	import { Collections } from '$lib/db.types.js';
-	import DocumentPlus from '$lib/icons/document-plus.svelte';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import { groupBy, keyBy } from 'lodash-es';
-	import ContextMenu from '$lib/context-menu.svelte';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
+	import { currentProject, db } from '$lib/storage.js';
+	import { collectFormData } from '$lib/utils.js';
+	import Dexie, { liveQuery } from 'dexie';
+	import { groupBy, keyBy, set } from 'lodash-es';
+	import Portal from 'svelte-portal';
+	import ShareForm from './share-form.svelte';
 
 	export let data;
-	let randomId = createId();
 	let expandedDocs = {};
 	let isEditingName = false;
+	let isShareMenuOpen = false;
 
 	$: currentProject.set(data.projectId);
 
@@ -60,8 +59,6 @@
 					.toArray();
 
 				const content = [];
-
-				const ignorePaths = [];
 				let task = {};
 
 				taskContent
@@ -161,9 +158,29 @@
 <Portal target=".header-context-portal">
 	<div class="header-portal-items">
 		<a class="button ghost icon" href="/projects/{data.projectId}/docs/new"><DocumentPlus /></a>
-		<ContextMenu />
+		<ContextMenu>
+			<div slot="items">
+				<div class="menu-item">
+					<button on:click={() => (isShareMenuOpen = !isShareMenuOpen)}>Share</button>
+				</div>
+			</div>
+		</ContextMenu>
 	</div>
 </Portal>
+
+{#if isShareMenuOpen}
+	<div
+		class="modal-shade"
+		on:keyup={(e) => {
+			if (e.code === 'Escape') isShareMenuOpen = false;
+		}}
+		on:click={() => (isShareMenuOpen = false)}
+	>
+		<div class="modal">
+			<ShareForm projectId={data.projectId} />
+		</div>
+	</div>
+{/if}
 
 {#if $taskDoc && $docs && $linkDocContent}
 	{#if $taskDoc?.overviewTasks?.length}

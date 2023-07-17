@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Checkbox from '$lib/checkbox.svelte';
+	import ContextMenu from '$lib/context-menu.svelte';
 	import { Collections } from '$lib/db.types.js';
 	import EditorComponent from '$lib/editor.svelte';
+	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { events, EventType } from '$lib/modelEvent.js';
 	import type { Editor } from '@tiptap/core';
 	import Portal from 'svelte-portal';
-	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import ContextMenu from '$lib/context-menu.svelte';
-	import Checkbox from '$lib/checkbox.svelte';
 	import { saveDocument } from './saveDocument';
-	import { collectFormData } from '$lib/utils';
 
 	export let data;
 	let editor: Editor;
@@ -68,7 +67,6 @@
 							label="Exclude from project overview"
 							checked={data.doc.excludeFromOverview}
 							on:change={(e) => {
-								console.log(e.target.checked);
 								events.add({
 									modelType: Collections.Docs,
 									eventType: EventType.Update,

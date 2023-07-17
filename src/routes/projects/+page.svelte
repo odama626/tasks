@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { currentProject, db } from '$lib/storage';
+	import { db } from '$lib/storage';
 	import { liveQuery } from 'dexie';
 
 	$: projects = liveQuery(() => db.projects.toCollection().toArray());

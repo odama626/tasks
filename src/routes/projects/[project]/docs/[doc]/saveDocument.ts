@@ -1,11 +1,10 @@
-import { goto } from '$app/navigation';
-import { Collections, type DocsRecord, type DocsResponse } from '$lib/db.types';
+import { Collections, type DocsResponse } from '$lib/db.types';
 import { EventType, events } from '$lib/modelEvent';
 import { RecordAccess, db, userStore } from '$lib/storage';
 import { createId, notify } from '$lib/utils';
 import type { JSONContent } from '@tiptap/core';
-import { get } from 'svelte/store';
 import { set } from 'lodash-es';
+import { get } from 'svelte/store';
 interface Block {
 	type: string;
 	properties: unknown;
@@ -18,11 +17,6 @@ interface ProcessBlockOptions {
 	doc: string;
 	project: string;
 	usedIds: Set<string>;
-}
-
-function getText(content): string {
-	if (content.type === 'text' && content.text) return content.text;
-	if (content.content) return getText(content.content[0]);
 }
 
 async function processBlock(block: Block, options: ProcessBlockOptions): Promise<string[]> {
@@ -103,7 +97,6 @@ export async function saveDocument(
 		await events.add({
 			eventType: EventType.Add,
 			modelType: Collections.DocsUsers,
-			recordId: docsUsersId,
 			payload: {
 				id: docsUsersId,
 				user: user.id,

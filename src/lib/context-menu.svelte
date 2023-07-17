@@ -29,7 +29,7 @@
 			</svg>
 		</slot>
 	</PopoverButton>
-	<PopoverPanel use={[popperContent]} style="z-index: 100;" class="panel">
+	<PopoverPanel use={[popperContent]} style="z-index: 15;" class="panel">
 		<ul class="menu">
 			<slot name="items" />
 			{#if $$slots.items}<div class="divider" />{/if}
@@ -54,7 +54,7 @@
 	}
 
 	ul.menu {
-		z-index: 100;
+		z-index: 15;
 		min-width: 7rem;
 		display: flex;
 		flex-direction: column;
