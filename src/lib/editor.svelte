@@ -96,10 +96,10 @@
 						return {
 							...this.parent?.(),
 							file: {
-								default: null
+								default: undefined
 							},
 							id: {
-								default: null
+								default: undefined
 							}
 						};
 					}

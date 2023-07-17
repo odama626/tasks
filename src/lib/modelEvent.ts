@@ -71,7 +71,7 @@ export class ModelEvents {
 		const currentSync = DateTime.now();
 
 		const options = { filter: lastSync ? `updated >= "${lastSync}"` : '' };
-		const records = await pb.collection(table).getFullList(options);
+		const records = await pb.collection(table).getFullList(options, { $autoCancel: false });
 		const results = records.reduce(
 			(results, next) => {
 				if (next.deleted) {
