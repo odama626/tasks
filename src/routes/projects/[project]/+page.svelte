@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { currentProject, db } from '$lib/storage.js';
-	import { createId } from '$lib/utils.js';
+	import { collectFormData, createId } from '$lib/utils.js';
 	import Dexie, { liveQuery } from 'dexie';
 	import { set } from 'lodash-es';
 	import Editor from '$lib/editor.svelte';
@@ -13,11 +13,18 @@
 	import { groupBy, keyBy } from 'lodash-es';
 	import ContextMenu from '$lib/context-menu.svelte';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	export let data;
 	let randomId = createId();
+	let expandedDocs = {};
+	let isEditingName = false;
 
 	$: currentProject.set(data.projectId);
+
+	currentProject.subscribe(() => {
+		isEditingName = false;
+	});
 
 	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
 
@@ -112,8 +119,6 @@
 		});
 	}
 
-	let expandedDocs = {};
-
 	// $: console.log(tasks);
 </script>
 
@@ -122,7 +127,34 @@
 		<a href="/projects" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<div>{data.project?.name}</div>
+		{#if isEditingName}
+			<form
+				on:submit|preventDefault={collectFormData((formData) => {
+					console.log(formData);
+					events.add({
+						modelType: Collections.Projects,
+						eventType: EventType.Update,
+						recordId: data.projectId,
+						payload: formData
+					});
+					isEditingName = false;
+				})}
+				style="flex-direction: row"
+			>
+				<input
+					class="ghost"
+					style="width: 100%;"
+					autofocus
+					value={data.project?.name}
+					name="name"
+				/>
+				<button>Update</button>
+			</form>
+		{:else}
+			<button style="padding-left: 0;" on:click={() => (isEditingName = true)} class="ghost">
+				<div>{data.project?.name}</div>
+			</button>
+		{/if}
 	</div>
 </Portal>
 
@@ -142,9 +174,9 @@
 			content={{ type: 'doc', content: $taskDoc.overviewTasks }}
 			editable={false}
 		/>
+		<br />
 	{/if}
 
-	<br />
 	<h2>Docs</h2>
 	<div class="docs">
 		{#if $docs}
@@ -154,7 +186,7 @@
 				<button
 					on:click={(e) => {
 						if (!tasks) {
-							return goto('/projects/{data.projectId}/docs/{doc.id}');
+							return goto(`/projects/${data.projectId}/docs/${doc.id}`);
 						}
 						expandedDocs[doc.id] = !expanded;
 						expandedDocs = expandedDocs;
@@ -173,7 +205,7 @@
 							stroke-width="1.5"
 							stroke="currentColor"
 							class="icon doc-expand"
-							style={!expanded && 'scale: 1 -1'}
+							style={expanded && 'scale: 1 -1'}
 						>
 							<path
 								stroke-linecap="round"

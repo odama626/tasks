@@ -71,12 +71,18 @@ async function processBlock(block: Block, options: ProcessBlockOptions): Promise
 	return ids;
 }
 
-export async function saveDocument(docId: string, projectId: string, editorContent: JSONContent) {
+export async function saveDocument(
+	title: string,
+	docId: string,
+	projectId: string,
+	editorContent: JSONContent
+) {
 	if (!editorContent.content) throw new Error('Cannot save an empty document');
 	const isNew = docId === 'new';
 	const id = isNew ? createId() : docId;
+	const user = get(userStore).record;
 
-	const title = getText(editorContent);
+	// const title = getText(editorContent);
 
 	const record = {
 		eventType: isNew ? EventType.Add : EventType.Update,
@@ -84,7 +90,7 @@ export async function saveDocument(docId: string, projectId: string, editorConte
 		recordId: id,
 		payload: {
 			title,
-			createdBy: get(userStore).record.id,
+			createdBy: user.id,
 			project: projectId,
 			id
 		}
@@ -100,7 +106,7 @@ export async function saveDocument(docId: string, projectId: string, editorConte
 			recordId: docsUsersId,
 			payload: {
 				id: docsUsersId,
-				user: get(userStore).record.id,
+				user: user.id,
 				doc: id,
 				access: RecordAccess.Admin
 			}

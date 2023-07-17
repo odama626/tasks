@@ -71,6 +71,20 @@ textarea {
 	&:focus {
 		border-color: var(--surface-5);
 	}
+
+	&:focus {
+		outline: solid var(--surface-5);
+	}
+
+	&.ghost {
+		border-width: 0;
+		border-radius: 0;
+		background-color: transparent;
+		border-bottom-width: 2px;
+		&:focus {
+			outline: none;
+		}
+	}
 }
 
 label {
@@ -151,9 +165,9 @@ a.button {
 	}
 }
 
-button.icon {
-	padding: 0.25rem 0.5rem;
-}
+// button.icon {
+// 	padding: 0.25rem 0.5rem;
+// }
 
 button,
 .button {
@@ -286,7 +300,7 @@ h3,
 h4,
 h5,
 h6 {
-	margin-bottom: 0.5rem;
+	margin-bottom: 0.75rem;
 }
 
 blockquote {
@@ -424,6 +438,10 @@ ol {
 			display: none;
 		}
 	}
+}
+
+.subheader {
+	margin-bottom: 0.75rem;
 }
 
 .popper-menu {

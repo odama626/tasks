@@ -5,15 +5,7 @@
 
 	const [popperRef, popperContent] = createPopperActions({
 		placement: 'bottom-end',
-		strategy: 'fixed',
-		modifiers: [
-			{
-				name: 'offset',
-				options: {
-					offset: [0, 14]
-				}
-			}
-		]
+		strategy: 'fixed'
 	});
 	export let open: boolean = false;
 </script>

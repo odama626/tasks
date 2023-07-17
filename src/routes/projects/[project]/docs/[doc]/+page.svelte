@@ -9,15 +9,17 @@
 	import ContextMenu from '$lib/context-menu.svelte';
 	import Checkbox from '$lib/checkbox.svelte';
 	import { saveDocument } from './saveDocument';
+	import { collectFormData } from '$lib/utils';
 
 	export let data;
 	let editor: Editor;
 	let saving = false;
+	let title = data?.doc?.title ?? 'Untitled Document';
 
 	async function onSave() {
 		if (saving) return;
 		saving = true;
-		const id = await saveDocument(data.docId, data.projectId, editor.getJSON());
+		const id = await saveDocument(title, data.docId, data.projectId, editor.getJSON());
 
 		if (data.docId === 'new')
 			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
@@ -51,7 +53,7 @@
 		<a href="/projects/{data.projectId}" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<div>{data?.doc?.title}</div>
+		<input class="ghost" bind:value={title} />
 	</div>
 </Portal>
 

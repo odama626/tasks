@@ -193,7 +193,7 @@
 		display: grid;
 		grid-template-columns: 200px 1fr;
 		gap: 1ch;
-		padding: 1ch;
+		// padding: 1ch;
 		ul {
 			align-items: center;
 		}

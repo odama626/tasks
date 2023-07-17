@@ -36,12 +36,6 @@
 </label>
 
 <style lang="scss">
-	.checkbox:hover {
-		.checked {
-			color: var(--text-6);
-			visibility: visible;
-		}
-	}
 	.checkbox {
 		.checked {
 			visibility: hidden;
