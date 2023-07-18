@@ -27,6 +27,8 @@
 
 	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
 
+	$: project = liveQuery(() => db.projects.get(data.projectId));
+
 	$: taskDoc = liveQuery(async () => {
 		const taskItems = await db.doc_blocks
 			.where({ project: data.projectId, type: 'taskItem' })
@@ -138,18 +140,12 @@
 				})}
 				style="flex-direction: row"
 			>
-				<input
-					class="ghost"
-					style="width: 100%;"
-					autofocus
-					value={data.project?.name}
-					name="name"
-				/>
+				<input class="ghost" style="width: 100%;" autofocus value={$project?.name} name="name" />
 				<button>Update</button>
 			</form>
 		{:else}
 			<button style="padding-left: 0;" on:click={() => (isEditingName = true)} class="ghost">
-				<div>{data.project?.name}</div>
+				<div>{$project?.name}</div>
 			</button>
 		{/if}
 	</div>
