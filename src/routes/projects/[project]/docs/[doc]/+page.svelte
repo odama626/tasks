@@ -15,6 +15,15 @@
 	let saving = false;
 	let title = data?.doc?.title ?? 'Untitled Document';
 
+	async function exportMarkdown(markdown: string) {
+		const a = document.createElement('a');
+		const file = new File([markdown], title + '.md', { type: 'text/markdown' });
+		const url = URL.createObjectURL(file);
+		a.setAttribute('href', url);
+		a.click();
+		setTimeout(() => URL.revokeObjectURL(url), 500);
+	}
+
 	async function onSave() {
 		if (saving) return;
 		saving = true;
@@ -75,6 +84,11 @@
 								});
 							}}
 						/>
+					</div>
+					<div class="menu-item">
+						<button on:click={() => exportMarkdown(editor.storage.markdown.getMarkdown())}>
+							Export as markdown
+						</button>
 					</div>
 				</div>
 			</ContextMenu>

@@ -17,6 +17,7 @@
 	import { getCommands } from './editor/extensions/commands';
 	import ImageExtension from '@tiptap/extension-image';
 	import Gapcursor from '@tiptap/extension-gapcursor';
+	import { Markdown } from 'tiptap-markdown';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -91,6 +92,7 @@
 				Id,
 				TaskList,
 				SlashCommand,
+				Markdown,
 				ImageExtension.extend({
 					addAttributes() {
 						return {
