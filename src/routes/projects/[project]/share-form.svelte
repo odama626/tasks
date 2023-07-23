@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Select from '$lib/select.svelte';
 	import { db } from '$lib/storage';
 	import {
 		Listbox,
@@ -24,14 +25,14 @@
 				{user?.name || user?.username}
 			</div>
 			<div class="access">
-				<Listbox>
-					<ListboxButton>{permission.access}</ListboxButton>
-					<ListboxOptions>
+				<Select>
+					<div slot="button">{permission.access}</div>
+					<div slot="options">
 						{#each options as option}
 							<ListboxOption value={option}>{option}</ListboxOption>
 						{/each}
-					</ListboxOptions>
-				</Listbox>
+					</div>
+				</Select>
 			</div>
 		{/each}
 	</div>
