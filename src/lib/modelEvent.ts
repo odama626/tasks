@@ -66,6 +66,35 @@ export class ModelEvents {
 		}
 	}
 
+	async create<T>(modelType: BaseModelEvent['modelType'], payload: ModelCreateEvent<T>['payload']) {
+		return this.add({
+			modelType,
+			eventType: EventType.Add,
+			payload
+		});
+	}
+
+	async update<T>(
+		modelType: BaseModelEvent['modelType'],
+		recordId: ModelUpdateEvent<T>['recordId'],
+		payload: ModelUpdateEvent<T>['payload']
+	) {
+		return this.add({
+			eventType: EventType.Update,
+			modelType,
+			recordId,
+			payload
+		});
+	}
+
+	async delete(modelType: BaseModelEvent['modelType'], recordId: ModelDeleteEvent['recordId']) {
+		return this.add({
+			eventType: EventType.Delete,
+			modelType: modelType,
+			recordId
+		});
+	}
+
 	private async syncTable(table: string) {
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();

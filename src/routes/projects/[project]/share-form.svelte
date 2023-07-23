@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
 	import { db } from '$lib/storage';
+	import { collectFormData, withKeys } from '$lib/utils';
 	import { ListboxOption } from '@rgossiaux/svelte-headlessui';
 	import { liveQuery } from 'dexie';
 
@@ -9,45 +11,76 @@
 	$: users = liveQuery(() => db.users.toCollection().toArray());
 
 	let options = ['admin', 'editor', 'viewer'];
+
+	const createInvite = collectFormData(async (data, event) => {
+		console.log({ data });
+	});
 </script>
 
-{#if $permissions}
-	<div class="permissions" on:click={(e) => e.stopPropagation()}>
-		{#each $permissions as permission (permission.id)}
-			{@const user = $users.find((user) => user.id === permission.user)}
-			<div class="name">
-				{user?.name || user?.username}
-			</div>
-			<div class="access">
-				<Select value={permission.access}>
-					<div slot="button">{permission.access}</div>
-					<div slot="options">
-						{#each options as option}
-							<ListboxOption value={option}>{option}</ListboxOption>
-						{/each}
-					</div>
-				</Select>
-			</div>
-		{/each}
-		<p>Add</p>
-		<p />
-		<input />
-		<Select>
-			<div slot="button">viewer</div>
-			<div slot="options">
+<div
+	class="form"
+	on:click={(e) => e.stopPropagation()}
+	on:keypress={withKeys(['Enter', 'Space'], (e) => {})}
+>
+	<p>Invite</p>
+	<form on:submit|preventDefault={createInvite}>
+		<div class="input-group">
+			<input name="user" placeholder="username or email" />
+			<Select>
 				{#each options as option}
-					<ListboxOption value={option}>{option}</ListboxOption>
+					<option value={option}>{option}</option>
 				{/each}
-			</div>
-		</Select>
-	</div>
-{/if}
+			</Select>
+		</div>
+		<button class="outline">Invite</button>
+	</form>
+	<div class="divider horizontal" />
+	{#if $permissions}
+		<div class="permissions">
+			{#each $permissions as permission (permission.id)}
+				{@const user = $users.find((user) => user.id === permission.user)}
+				<div class="name">
+					{user?.name || user?.username}
+				</div>
+				<Select class="ghost" name="access" value={permission.access}>
+					{#each options as option}
+						<option value={option}>{option}</option>
+					{/each}
+				</Select>
+			{/each}
+		</div>
+	{/if}
+</div>
 
 <style lang="scss">
 	.permissions {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: 1fr auto;
 		gap: var(--block-spacing);
+	}
+	.form {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--block-spacing);
+	}
+
+	button.outline {
+		text-align: center;
+	}
+
+	form {
+		display: flex;
+		flex-direction: row;
+
+		@media only screen and (max-width: 480px) {
+			flex-direction: column;
+
+			.input-group {
+				flex-direction: column;
+				display: contents;
+			}
+		}
 	}
 
 	.name,

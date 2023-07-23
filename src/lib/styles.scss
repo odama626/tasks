@@ -49,15 +49,17 @@ input[type='checkbox'] {
 }
 
 input,
-textarea {
+textarea,
+select {
 	background-color: transparent;
 	border-radius: 4px;
 	outline: unset;
 	font-size: 1.25rem;
 	padding: 0.5rem 0.75rem;
 	box-sizing: border-box;
+	--border-color: var(--surface-4);
 
-	border: solid 2px var(--surface-4);
+	border: solid 2px var(--border-color);
 	background-color: var(--surface-2);
 	color: var(--text-1);
 
@@ -69,7 +71,7 @@ textarea {
 
 	&:hover,
 	&:focus {
-		border-color: var(--surface-5);
+		--border-color: var(--surface-5);
 	}
 
 	&:focus {
@@ -83,6 +85,36 @@ textarea {
 		border-bottom-width: 2px;
 		&:focus {
 			outline: none;
+		}
+	}
+}
+
+select.ghost {
+	border: none;
+}
+
+.input-group {
+	display: contents;
+
+	@media only screen and (min-width: 481px) {
+		display: flex;
+		flex-direction: row;
+		> *:not(:last-child) {
+			&,
+			> select {
+				border-right: none;
+				border-bottom-right-radius: 0;
+				border-top-right-radius: 0;
+			}
+		}
+
+		> *:not(:first-child) {
+			&,
+			> select {
+				border-left: none;
+				border-bottom-left-radius: 0;
+				border-top-left-radius: 0;
+			}
 		}
 	}
 }
@@ -101,13 +133,14 @@ textarea {
 }
 
 .divider {
-	border: 0.5px solid var(--text-3);
+	border: 0.5px solid var(--surface-4);
 	&.vertical {
 		height: 1rem;
 		margin: auto;
 	}
 	&.horizontal {
 		width: 100%;
+		margin: var(--block-spacing) 0;
 	}
 }
 
@@ -143,6 +176,10 @@ a.button {
 	text-decoration: none;
 	display: block;
 	--outline-color: var(--surface-6);
+
+	@media only screen and (max-width: 480px) {
+		padding: 0.25rem 0.5rem;
+	}
 
 	&:visited {
 		color: inherit;
