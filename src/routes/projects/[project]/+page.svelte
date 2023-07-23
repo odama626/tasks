@@ -287,6 +287,7 @@
 	.document {
 		display: flex;
 		justify-content: space-between;
+		align-items: center;
 		.actions {
 			--spacing: 8px;
 			margin: calc(var(--spacing) * -1 - 4px);

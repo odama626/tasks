@@ -1,13 +1,7 @@
 <script lang="ts">
 	import Select from '$lib/select.svelte';
 	import { db } from '$lib/storage';
-	import {
-		Listbox,
-		ListboxButton,
-		ListboxLabel,
-		ListboxOption,
-		ListboxOptions
-	} from '@rgossiaux/svelte-headlessui';
+	import { ListboxOption } from '@rgossiaux/svelte-headlessui';
 	import { liveQuery } from 'dexie';
 
 	export let projectId: string;
@@ -25,7 +19,7 @@
 				{user?.name || user?.username}
 			</div>
 			<div class="access">
-				<Select>
+				<Select value={permission.access}>
 					<div slot="button">{permission.access}</div>
 					<div slot="options">
 						{#each options as option}
@@ -35,6 +29,17 @@
 				</Select>
 			</div>
 		{/each}
+		<p>Add</p>
+		<p />
+		<input />
+		<Select>
+			<div slot="button">viewer</div>
+			<div slot="options">
+				{#each options as option}
+					<ListboxOption value={option}>{option}</ListboxOption>
+				{/each}
+			</div>
+		</Select>
 	</div>
 {/if}
 

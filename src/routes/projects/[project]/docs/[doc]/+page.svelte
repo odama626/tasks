@@ -61,7 +61,7 @@
 		<a href="/projects/{data.projectId}" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<input class="ghost" bind:value={title} />
+		<input class="ghost title" bind:value={title} />
 	</div>
 </Portal>
 
@@ -103,6 +103,13 @@
 		:global(.editor) {
 			height: 100%;
 		}
+	}
+
+	.title {
+		font-size: 2rem;
+		padding-bottom: 0;
+		margin-bottom: 1rem;
+		width: 100%;
 	}
 
 	.subheader {

@@ -5,7 +5,8 @@
 
 	let containerRef;
 	let contentRef;
-	let open = false;
+	export let open = false;
+	export let value;
 
 	function updatePosition() {
 		console.log({ containerRef, contentRef });
@@ -33,10 +34,10 @@
 </script>
 
 <div bind:this={containerRef} class="select">
-	<Listbox bind:open>
-		<ListboxButton style="width: 100%; box-sizing: border-box" on:click={() => (open = !open)}
-			><slot name="button" /></ListboxButton
-		>
+	<Listbox bind:open {value} on:change={(e) => console.log({ e })}>
+		<ListboxButton style="width: 100%; box-sizing: border-box" on:click={() => (open = !open)}>
+			<slot name="button" />
+		</ListboxButton>
 		<div class="options" bind:this={contentRef}>
 			<ListboxOptions>
 				<slot name="options" />
@@ -52,6 +53,10 @@
 		border: 2px solid var(--surface-1);
 		border-radius: 4px;
 		overflow: hidden;
+
+		:global([aria-selected='true']) {
+			font-weight: bold;
+		}
 
 		:global(> * > *) {
 			display: flex;
