@@ -2,7 +2,7 @@
 </script>
 
 <div class="select">
-	<select {...$$restProps}>
+	<select {...$$restProps} on:change>
 		<slot />
 	</select>
 	<svg

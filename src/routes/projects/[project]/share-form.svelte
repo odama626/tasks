@@ -1,17 +1,16 @@
 <script lang="ts">
-	import { Collections } from '$lib/db.types';
+	import { Collections, ProjectsUsersAccessOptions } from '$lib/db.types';
 	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
-	import { db } from '$lib/storage';
+	import { db, userStore } from '$lib/storage';
 	import { collectFormData, withKeys } from '$lib/utils';
 	import { ListboxOption } from '@rgossiaux/svelte-headlessui';
 	import { liveQuery } from 'dexie';
+	import { get } from 'svelte/store';
 
 	export let projectId: string;
 	$: permissions = liveQuery(() => db.projects_users.where({ project: projectId }).toArray());
 	$: users = liveQuery(() => db.users.toCollection().toArray());
-
-	let options = ['admin', 'editor', 'viewer'];
 
 	const createInvite = collectFormData(async (data, event) => {
 		let user = await db.users
@@ -28,6 +27,16 @@
 		// })
 		console.log({ data });
 	});
+
+	let options = ['admin', 'editor', 'viewer'];
+	let allowedOptions = [];
+	let currentUserPermission = {};
+
+	const currentUser = get(userStore).record;
+	db.projects_users.where({ project: projectId, user: currentUser.id }).first((permission) => {
+		currentUserPermission = permission;
+		allowedOptions = options.slice(options.indexOf(currentUserPermission.access));
+	});
 </script>
 
 <div
@@ -40,7 +49,7 @@
 		<div class="input-group">
 			<input name="user" placeholder="username or email" />
 			<Select>
-				{#each options as option}
+				{#each allowedOptions as option}
 					<option value={option}>{option}</option>
 				{/each}
 			</Select>
@@ -55,8 +64,15 @@
 				<div class="name">
 					{user?.name || user?.username}
 				</div>
-				<Select class="ghost" name="access" value={permission.access}>
-					{#each options as option}
+				<Select
+					disabled={currentUserPermission.id === permission.id}
+					on:change={(e) =>
+						events.update(Collections.ProjectsUsers, permission.id, { access: e.target.value })}
+					class="ghost"
+					name="access"
+					value={permission.access}
+				>
+					{#each allowedOptions as option}
 						<option value={option}>{option}</option>
 					{/each}
 				</Select>
