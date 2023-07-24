@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Collections } from '$lib/db.types';
 	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
 	import { db } from '$lib/storage';
@@ -13,6 +14,18 @@
 	let options = ['admin', 'editor', 'viewer'];
 
 	const createInvite = collectFormData(async (data, event) => {
+		let user = await db.users
+			.where('username')
+			.equalsIgnoreCase(data.user)
+			.or('email')
+			.equalsIgnoreCase(data.user)
+			.first();
+
+		// TODO: create an invite record and send an email instead of querying pb
+		// if (!user) user = pb.collection(Collections.Users).		console.log({ user });
+		// events.create(Collections.ProjectsUsers {
+
+		// })
 		console.log({ data });
 	});
 </script>
