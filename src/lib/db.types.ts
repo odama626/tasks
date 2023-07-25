@@ -6,12 +6,14 @@ export enum Collections {
 	DocBlocks = "doc_blocks",
 	Docs = "docs",
 	DocsUsers = "docs_users",
+	Invites = "invites",
 	Lists = "lists",
 	ListsUsers = "lists_users",
 	Projects = "projects",
 	ProjectsUsers = "projects_users",
 	Tasks = "tasks",
 	Users = "users",
+	UsersConnections = "users_connections",
 }
 
 // Alias types for improved usability
@@ -54,6 +56,7 @@ export type DocsRecord = {
 	createdBy?: RecordIdString
 	project?: RecordIdString
 	deleted?: boolean
+	excludeFromOverview?: boolean
 }
 
 export enum DocsUsersAccessOptions {
@@ -66,6 +69,12 @@ export type DocsUsersRecord = {
 	doc: RecordIdString
 	access?: DocsUsersAccessOptions
 	deleted?: boolean
+}
+
+export type InvitesRecord = {
+	invited_by?: RecordIdString
+	project?: RecordIdString
+	doc?: RecordIdString
 }
 
 export type ListsRecord = {
@@ -119,16 +128,22 @@ export type UsersRecord = {
 	lastVisitedList?: RecordIdString
 }
 
+export type UsersConnectionsRecord<Tconnection = unknown> = {
+	connection?: null | Tconnection
+}
+
 // Response types include system fields and match responses from the PocketBase API
 export type DocBlocksResponse<Tproperties = unknown, Texpand = unknown> = Required<DocBlocksRecord<Tproperties>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
+export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> & BaseSystemFields<Texpand>
 export type ListsResponse = Required<ListsRecord> & BaseSystemFields
 export type ListsUsersResponse<Texpand = unknown> = Required<ListsUsersRecord> & BaseSystemFields<Texpand>
 export type ProjectsResponse<Texpand = unknown> = Required<ProjectsRecord> & BaseSystemFields<Texpand>
 export type ProjectsUsersResponse<Texpand = unknown> = Required<ProjectsUsersRecord> & BaseSystemFields<Texpand>
 export type TasksResponse<Texpand = unknown> = Required<TasksRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
+export type UsersConnectionsResponse<Tconnection = unknown> = Required<UsersConnectionsRecord<Tconnection>> & BaseSystemFields
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 
@@ -136,24 +151,28 @@ export type CollectionRecords = {
 	doc_blocks: DocBlocksRecord
 	docs: DocsRecord
 	docs_users: DocsUsersRecord
+	invites: InvitesRecord
 	lists: ListsRecord
 	lists_users: ListsUsersRecord
 	projects: ProjectsRecord
 	projects_users: ProjectsUsersRecord
 	tasks: TasksRecord
 	users: UsersRecord
+	users_connections: UsersConnectionsRecord
 }
 
 export type CollectionResponses = {
 	doc_blocks: DocBlocksResponse
 	docs: DocsResponse
 	docs_users: DocsUsersResponse
+	invites: InvitesResponse
 	lists: ListsResponse
 	lists_users: ListsUsersResponse
 	projects: ProjectsResponse
 	projects_users: ProjectsUsersResponse
 	tasks: TasksResponse
 	users: UsersResponse
+	users_connections: UsersConnectionsResponse
 }
 
 export interface CollectionSchemas {
@@ -166,6 +185,53 @@ export interface CollectionSchemas {
   doc_blocks: Docblocks;
   projects_users: Listsusers;
   docs_users: Listsusers;
+  users_connections: Usersconnections;
+  invites: Invites;
+}
+
+export interface Invites {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema8[];
+}
+
+export interface Schema8 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options8;
+}
+
+export interface Options8 {
+  collectionId: string;
+  cascadeDelete: boolean;
+  minSelect?: any;
+  maxSelect: number;
+  displayFields: any[];
+}
+
+export interface Usersconnections {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema7[];
+}
+
+export interface Schema7 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options7;
+}
+
+export interface Options7 {
 }
 
 export interface Docblocks {

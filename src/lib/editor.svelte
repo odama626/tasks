@@ -16,8 +16,14 @@
 	import Highlight from '@tiptap/extension-highlight';
 	import { getCommands } from './editor/extensions/commands';
 	import ImageExtension from '@tiptap/extension-image';
-	import Gapcursor from '@tiptap/extension-gapcursor';
 	import { Markdown } from 'tiptap-markdown';
+	import Collaboration from '@tiptap/extension-collaboration';
+	import Placeholder from '@tiptap/extension-placeholder';
+	import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+	import { WebrtcProvider } from 'y-webrtc';
+	import * as Y from 'yjs';
+	import { userStore } from './storage';
+	import { get } from 'svelte/store';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -27,8 +33,20 @@
 
 	let floatingMenuRef: HTMLDivElement;
 	let bubbleMenuRef: HTMLDivElement;
+	let provider;
 
 	const dispatch = createEventDispatcher();
+
+	const ydoc = new Y.Doc();
+
+	onMount(() => {
+		provider = new WebrtcProvider(window.location.href, ydoc);
+		ydoc.getXmlFragment('body');
+
+		return () => {
+			provider.destroy();
+		};
+	});
 
 	export let content: JSONContent;
 
@@ -86,8 +104,19 @@
 		editor = new Editor({
 			element,
 			extensions: [
-				StarterKit.configure({ commands: false }),
+				StarterKit.configure({ commands: false, history: false }),
 				TaskItem.configure({ nested: true, isOverview, dispatch }),
+				Collaboration.configure({ fragment: ydoc.getXmlFragment('body') }),
+				CollaborationCursor.configure({
+					provider,
+					user: {
+						name: get(userStore).record?.name,
+						color: getComputedStyle(document.documentElement).getPropertyValue('--surface-4')
+					}
+				}),
+				Placeholder.configure({
+					placeholder: 'Write something...'
+				}),
 				Link,
 				Id,
 				TaskList,
@@ -231,5 +260,33 @@
 
 	[data-title='italic'] {
 		font-style: oblique;
+	}
+
+	/* Give a remote user a caret */
+	:global(.collaboration-cursor__caret) {
+		border-left: 1px solid #0d0d0d;
+		border-right: 1px solid #0d0d0d;
+		margin-left: -1px;
+		margin-right: -1px;
+		pointer-events: none;
+		position: relative;
+		word-break: normal;
+	}
+
+	/* Render the username above the caret */
+	:global(.collaboration-cursor__label) {
+		border-radius: 3px 3px 3px 0;
+		background-color: var(--surface-accent-3);
+		color: var(--text-3);
+		font-size: 12px;
+		font-style: normal;
+		font-weight: 600;
+		left: -1px;
+		line-height: normal;
+		padding: 0.1rem 0.3rem;
+		position: absolute;
+		top: -1.4em;
+		user-select: none;
+		white-space: nowrap;
 	}
 </style>
