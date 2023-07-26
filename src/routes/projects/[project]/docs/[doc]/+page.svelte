@@ -8,12 +8,16 @@
 	import { events, EventType } from '$lib/modelEvent.js';
 	import type { Editor } from '@tiptap/core';
 	import Portal from 'svelte-portal';
+	import { WebrtcProvider } from 'y-webrtc';
 	import { saveDocument } from './saveDocument';
+	import * as Y from 'yjs';
 
 	export let data;
 	let editor: Editor;
 	let saving = false;
 	let title = data?.doc?.title ?? 'Untitled Document';
+	let ydoc = new Y.Doc();
+	let provider = new WebrtcProvider(window.location.href, ydoc);
 
 	async function exportMarkdown(markdown: string) {
 		const a = document.createElement('a');
@@ -27,6 +31,8 @@
 	async function onSave() {
 		if (saving) return;
 		saving = true;
+		const body = Y.encodeStateAsUpdateV2(ydoc);
+		console.log(body);
 		const id = await saveDocument(title, data.docId, data.projectId, editor.getJSON());
 
 		if (data.docId === 'new')
@@ -94,7 +100,7 @@
 			</ContextMenu>
 		</div>
 	</Portal>
-	<EditorComponent bind:editor content={data.content ?? content} editable={true} />
+	<EditorComponent bind:editor {ydoc} {provider} content={data.content} editable={true} />
 </div>
 
 <style lang="scss">

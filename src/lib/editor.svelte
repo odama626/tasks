@@ -30,23 +30,13 @@
 	export let editable: boolean = true;
 	export let autofocus: boolean = false;
 	export let isOverview: boolean = false;
+	export let ydoc = new Y.Doc();
+	export let provider;
 
 	let floatingMenuRef: HTMLDivElement;
 	let bubbleMenuRef: HTMLDivElement;
-	let provider;
 
 	const dispatch = createEventDispatcher();
-
-	const ydoc = new Y.Doc();
-
-	onMount(() => {
-		provider = new WebrtcProvider(window.location.href, ydoc);
-		ydoc.getXmlFragment('body');
-
-		return () => {
-			provider.destroy();
-		};
-	});
 
 	export let content: JSONContent;
 
@@ -57,7 +47,10 @@
 	}
 
 	// TODO use collaboration plugin and yjs to sync data
-	// store data as blocks by providing a yjs document then convert it to json before save
+	// Store docs as T.Doc, store tasks from docs only to be able to reference them outside of the doc
+	// Checking or unchecking a task will require loading doc, modifying content and then resaving the doc
+	// https://discuss.yjs.dev/t/appropriate-way-to-load-initial-data-fallback-to-current-yjs-doc-data/1189/10
+
 	// https://github.com/ueberdosis/tiptap/blob/main/packages/extension-collaboration/src/collaboration.ts
 	// https://tiptap.dev/guide/collaborative-editing
 
@@ -106,14 +99,15 @@
 			extensions: [
 				StarterKit.configure({ commands: false, history: false }),
 				TaskItem.configure({ nested: true, isOverview, dispatch }),
-				Collaboration.configure({ fragment: ydoc.getXmlFragment('body') }),
-				CollaborationCursor.configure({
-					provider,
-					user: {
-						name: get(userStore).record?.name,
-						color: getComputedStyle(document.documentElement).getPropertyValue('--surface-4')
-					}
-				}),
+				Collaboration.configure({ document: ydoc, field: 'content' }),
+				provider &&
+					CollaborationCursor.configure({
+						provider,
+						user: {
+							name: get(userStore).record?.name,
+							color: getComputedStyle(document.documentElement).getPropertyValue('--surface-4')
+						}
+					}),
 				Placeholder.configure({
 					placeholder: 'Write something...'
 				}),
@@ -167,6 +161,7 @@
 
 		return () => {
 			editor.destroy();
+			if (provider) provider.destroy();
 		};
 	});
 
