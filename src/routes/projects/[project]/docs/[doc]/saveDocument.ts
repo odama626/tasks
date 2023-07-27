@@ -5,6 +5,8 @@ import { createId, notify } from '$lib/utils';
 import type { JSONContent } from '@tiptap/core';
 import { set } from 'lodash-es';
 import { get } from 'svelte/store';
+import * as Y from 'yjs';
+
 interface Block {
 	type: string;
 	properties: unknown;
@@ -68,6 +70,7 @@ async function processBlock(block: Block, options: ProcessBlockOptions): Promise
 export async function saveDocument(
 	title: string,
 	docId: string,
+	ydoc: Y.Doc,
 	projectId: string,
 	editorContent: JSONContent
 ) {
@@ -78,6 +81,33 @@ export async function saveDocument(
 
 	// const title = getText(editorContent);
 
+	const ydocContent = ydoc.getXmlFragment('doc');
+	let attachments = [];
+
+	// TODO create an attachments table to make it possible to relate files to blocks
+	for (const image of ydocContent.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
+		console.log({ image });
+		// const file = image.get('file');
+		const buffer = image.getAttribute('file');
+		if (buffer) {
+			const id = image.getAttribute('id') ?? createId();
+			image.setAttribute('id', id);
+			const file = new File([buffer], id, { type: image.getAttribute('fileType') });
+			attachments.push(file);
+			console.log({ buffer, file });
+			image.removeAttribute('file');
+		}
+	}
+
+	console.log(ydocContent.toDOM());
+	console.log(ydoc.getMap());
+
+	const ydocFile = new File([Y.encodeStateAsUpdate(ydoc)], title + '.ydoc', {
+		type: 'application/ydoc'
+	});
+
+	console.log({ attachments });
+
 	const record = {
 		eventType: isNew ? EventType.Add : EventType.Update,
 		modelType: Collections.Docs,
@@ -86,7 +116,9 @@ export async function saveDocument(
 			title,
 			createdBy: user.id,
 			project: projectId,
-			id
+			id,
+			ydoc: ydocFile,
+			attachments
 		}
 	};
 
@@ -105,6 +137,8 @@ export async function saveDocument(
 			}
 		});
 	}
+
+	// if (ydoc) return notify({ text: `Saved "${title}"` });
 
 	const usedIds = new Set();
 

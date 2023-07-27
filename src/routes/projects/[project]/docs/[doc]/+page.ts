@@ -3,24 +3,6 @@ import { set } from 'lodash-es';
 
 export const ssr = false;
 
-const initialContent = [
-	{
-		type: 'heading',
-		attrs: {
-			level: 1
-		},
-		content: [
-			{
-				type: 'text',
-				text: 'Untitled Document'
-			}
-		]
-	},
-	{
-		type: 'paragraph'
-	}
-];
-
 async function rebuildDoc(docId: string) {
 	const blocks = await db.doc_blocks.where({ doc: docId }).toArray();
 	blocks.sort((a, b) => a.path.length - b.path.length);
@@ -47,22 +29,39 @@ async function rebuildDoc(docId: string) {
 
 	const doc = {
 		type: 'doc',
-		content: content.length ? content : initialContent
+		content: content.length ? content : []
 	};
 
 	return doc;
 }
 
 export async function load({ params }) {
-	const [doc, project, content] = await Promise.all([
+	const [doc, project] = await Promise.all([
 		db.docs.get(params.doc),
-		db.projects.get(params.project),
-		rebuildDoc(params.doc)
+		db.projects.get(params.project)
 	]);
+
+	let content = !doc?.ydoc && (await rebuildDoc(params.doc));
+	let ydoc;
+	try {
+		if (doc?.ydoc) {
+			console.log(doc?.ydoc);
+			const token = await pb.files.getToken();
+			const url = pb.files.getUrl(doc, doc.ydoc, { token });
+			const arrayBuffer = await fetch(url).then((r) => r.arrayBuffer());
+			console.log(arrayBuffer);
+			ydoc = new Uint8Array(arrayBuffer);
+		}
+	} catch (e) {
+		console.error(e);
+		content = await rebuildDoc(params.doc);
+	}
+
 	return {
 		doc,
 		project,
 		content,
+		ydoc,
 		projectId: params.project,
 		docId: params.doc
 	};

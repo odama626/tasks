@@ -68,9 +68,15 @@
 					image.src = URL.createObjectURL(file);
 					await new Promise((resolve) => (image.onload = resolve));
 					console.log(image.src);
+					const uintArray = new Uint8Array(await file.arrayBuffer());
 					const { schema } = view.state;
 					const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-					const node = schema.nodes.image.create({ src: image.src, file }); // creates the image element
+					console.log(file.type);
+					const node = schema.nodes.image.create({
+						src: image.src,
+						file: uintArray,
+						fileType: file.type
+					}); // creates the image element
 					const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
 					return view.dispatch(transaction);
 				}
@@ -99,7 +105,7 @@
 			extensions: [
 				StarterKit.configure({ commands: false, history: false }),
 				TaskItem.configure({ nested: true, isOverview, dispatch }),
-				Collaboration.configure({ document: ydoc, field: 'content' }),
+				Collaboration.configure({ document: ydoc, field: 'doc' }),
 				provider &&
 					CollaborationCursor.configure({
 						provider,
@@ -121,6 +127,9 @@
 						return {
 							...this.parent?.(),
 							file: {
+								default: undefined
+							},
+							fileType: {
 								default: undefined
 							},
 							id: {

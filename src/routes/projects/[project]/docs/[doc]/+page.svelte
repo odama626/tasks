@@ -11,12 +11,34 @@
 	import { WebrtcProvider } from 'y-webrtc';
 	import { saveDocument } from './saveDocument';
 	import * as Y from 'yjs';
+	import { pb } from '$lib/storage';
 
 	export let data;
 	let editor: Editor;
 	let saving = false;
 	let title = data?.doc?.title ?? 'Untitled Document';
 	let ydoc = new Y.Doc();
+	if (data.ydoc) {
+		console.log(data.doc);
+		try {
+			Y.applyUpdate(ydoc, data.ydoc);
+			for (const image of ydoc
+				.getXmlFragment('doc')
+				.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
+				console.log(image.toDOM());
+				const id = image.getAttribute('id').replace(/([A-Z])/g, (_, m) => '_' + m.toLowerCase());
+				const attachment = data.doc.attachments.find((a) => a.startsWith(id));
+				pb.files.getToken().then((token) => {
+					const src = pb.files.getUrl(data.doc, attachment, { token });
+					console.log({ attachment, src });
+					image.setAttribute('src', src);
+				});
+				console.log(id);
+			}
+		} catch (e) {
+			console.error(e);
+		}
+	}
 	let provider = new WebrtcProvider(window.location.href, ydoc);
 
 	async function exportMarkdown(markdown: string) {
@@ -33,33 +55,12 @@
 		saving = true;
 		const body = Y.encodeStateAsUpdateV2(ydoc);
 		console.log(body);
-		const id = await saveDocument(title, data.docId, data.projectId, editor.getJSON());
+		const id = await saveDocument(title, data.docId, ydoc, data.projectId, editor.getJSON());
 
 		if (data.docId === 'new')
 			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
 		saving = false;
 	}
-
-	let content = {
-		type: 'doc',
-		content: [
-			{
-				type: 'heading',
-				attrs: {
-					level: 1
-				},
-				content: [
-					{
-						type: 'text',
-						text: 'Untitled Document'
-					}
-				]
-			},
-			{
-				type: 'paragraph'
-			}
-		]
-	};
 </script>
 
 <Portal target=".sub-header-slot">
@@ -100,7 +101,13 @@
 			</ContextMenu>
 		</div>
 	</Portal>
-	<EditorComponent bind:editor {ydoc} {provider} content={data.content} editable={true} />
+	<EditorComponent
+		bind:editor
+		{ydoc}
+		{provider}
+		content={data?.ydoc ? undefined : data.content}
+		editable={true}
+	/>
 </div>
 
 <style lang="scss">

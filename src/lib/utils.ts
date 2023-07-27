@@ -85,6 +85,12 @@ export function prepareRecordFormData(record) {
 	for (const field in record) {
 		let payload = record[field];
 		if (payload === undefined) continue;
+		if (Array.isArray(payload)) {
+			for (const item of payload) {
+				formData.append(field, item);
+			}
+			continue;
+		}
 		if (typeof payload === 'object' && !(payload instanceof Blob))
 			payload = JSON.stringify(payload);
 
