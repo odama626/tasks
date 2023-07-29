@@ -36,6 +36,10 @@ db.version(6).stores({
 	doc_blocks: '&id, attrs, doc, parent, [type+project], path'
 });
 
+db.version(7).stores({
+	doc_attachments: '&id, file, doc, createdBy'
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',

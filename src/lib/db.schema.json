@@ -334,6 +334,34 @@
         "system": false,
         "required": false,
         "options": {}
+      },
+      {
+        "id": "ruueucdi",
+        "name": "ydoc",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": false
+        }
+      },
+      {
+        "id": "sh2tpobo",
+        "name": "attachments",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 99,
+          "maxSize": 5242880,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": false
+        }
       }
     ]
   },
@@ -617,6 +645,56 @@
         "required": false,
         "options": {
           "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      }
+    ]
+  },
+  "doc_attachments": {
+    "id": "fklznn1u1b9szgq",
+    "name": "doc_attachments",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "brvdwqh9",
+        "name": "file",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": false
+        }
+      },
+      {
+        "id": "mszjmw7d",
+        "name": "doc",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "gxktabqm",
+        "name": "createdBy",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
           "cascadeDelete": false,
           "minSelect": null,
           "maxSelect": 1,

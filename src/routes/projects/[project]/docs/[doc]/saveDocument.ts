@@ -82,22 +82,6 @@ export async function saveDocument(
 	// const title = getText(editorContent);
 
 	const ydocContent = ydoc.getXmlFragment('doc');
-	let attachments = [];
-
-	// TODO create an attachments table to make it possible to relate files to blocks
-	for (const image of ydocContent.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
-		console.log({ image });
-		// const file = image.get('file');
-		const buffer = image.getAttribute('file');
-		if (buffer) {
-			const id = image.getAttribute('id') ?? createId();
-			image.setAttribute('id', id);
-			const file = new File([buffer], id, { type: image.getAttribute('fileType') });
-			attachments.push(file);
-			console.log({ buffer, file });
-			image.removeAttribute('file');
-		}
-	}
 
 	console.log(ydocContent.toDOM());
 	console.log(ydoc.getMap());
@@ -105,8 +89,6 @@ export async function saveDocument(
 	const ydocFile = new File([Y.encodeStateAsUpdate(ydoc)], title + '.ydoc', {
 		type: 'application/ydoc'
 	});
-
-	console.log({ attachments });
 
 	const record = {
 		eventType: isNew ? EventType.Add : EventType.Update,
@@ -117,8 +99,7 @@ export async function saveDocument(
 			createdBy: user.id,
 			project: projectId,
 			id,
-			ydoc: ydocFile,
-			attachments
+			ydoc: ydocFile
 		}
 	};
 
@@ -138,7 +119,20 @@ export async function saveDocument(
 		});
 	}
 
-	// if (ydoc) return notify({ text: `Saved "${title}"` });
+	if (ydoc) {
+		const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
+		const referencedAttachments = {};
+		const fragment = ydoc.getXmlFragment('doc');
+		for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
+			const id = image.getAttribute('docAttachment');
+			referencedAttachments[id] = true;
+		}
+		attachments.forEach((attachment) => {
+			if (referencedAttachments[attachment.id]) return;
+			events.delete(Collections.DocAttachments, attachment.id, { file: null });
+		});
+		// return notify({ text: `Saved "${title}"` });
+	}
 
 	const usedIds = new Set();
 

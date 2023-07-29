@@ -15,15 +15,16 @@
 	import Typography from '@tiptap/extension-typography';
 	import Highlight from '@tiptap/extension-highlight';
 	import { getCommands } from './editor/extensions/commands';
-	import ImageExtension from '@tiptap/extension-image';
 	import { Markdown } from 'tiptap-markdown';
 	import Collaboration from '@tiptap/extension-collaboration';
 	import Placeholder from '@tiptap/extension-placeholder';
-	import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+	import CollaborationCursor from './editor/extensions/CollaborationCursor';
 	import { WebrtcProvider } from 'y-webrtc';
+	import { ImageExtension } from './editor/extensions/image';
 	import * as Y from 'yjs';
 	import { userStore } from './storage';
 	import { get } from 'svelte/store';
+	import { events } from './modelEvent';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -31,6 +32,7 @@
 	export let autofocus: boolean = false;
 	export let isOverview: boolean = false;
 	export let ydoc = new Y.Doc();
+	export let editorProps = {};
 	export let provider;
 
 	let floatingMenuRef: HTMLDivElement;
@@ -54,52 +56,9 @@
 	// https://github.com/ueberdosis/tiptap/blob/main/packages/extension-collaboration/src/collaboration.ts
 	// https://tiptap.dev/guide/collaborative-editing
 
-	function handleDrop(view, event, slice, moved) {
-		if (!moved && event.dataTransfer?.items?.length > 0) {
-			const items = Array.from(event.dataTransfer.items);
-			// if dropping external files
-			// handle the image upload
-			items.map(async (item) => {
-				console.log({ item });
-				if (item.kind === 'file' && item.type.startsWith('image/')) {
-					const image = new Image();
-					const file = item.getAsFile();
-					console.log({ file, image });
-					image.src = URL.createObjectURL(file);
-					await new Promise((resolve) => (image.onload = resolve));
-					console.log(image.src);
-					const uintArray = new Uint8Array(await file.arrayBuffer());
-					const { schema } = view.state;
-					const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-					console.log(file.type);
-					const node = schema.nodes.image.create({
-						src: image.src,
-						file: uintArray,
-						fileType: file.type
-					}); // creates the image element
-					const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-					return view.dispatch(transaction);
-				}
-				if (item.kind === 'string' && item.type === 'text/uri-list') {
-					const text = await new Promise((resolve) => item.getAsString(resolve));
-					console.log({ text });
-					const blob = await fetch(text).then((r) => r.blob());
-					if (blob.type.startsWith('image/')) {
-						const { schema } = view.state;
-						const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-						const node = schema.nodes.image.create({ src: text, file: blob }); // creates the image element
-						const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-						return view.dispatch(transaction);
-					}
-				}
-			});
-
-			return true; // handled
-		}
-		return false; // not handled use default behaviour
-	}
-
 	onMount(() => {
+		const style = getComputedStyle(document.documentElement);
+
 		editor = new Editor({
 			element,
 			extensions: [
@@ -111,7 +70,8 @@
 						provider,
 						user: {
 							name: get(userStore).record?.name,
-							color: getComputedStyle(document.documentElement).getPropertyValue('--surface-4')
+							color: style.getPropertyValue('--text-3'),
+							backgroundColor: style.getPropertyValue('--surface-4')
 						}
 					}),
 				Placeholder.configure({
@@ -122,22 +82,7 @@
 				TaskList,
 				SlashCommand,
 				Markdown,
-				ImageExtension.extend({
-					addAttributes() {
-						return {
-							...this.parent?.(),
-							file: {
-								default: undefined
-							},
-							fileType: {
-								default: undefined
-							},
-							id: {
-								default: undefined
-							}
-						};
-					}
-				}).configure({ allowBase64: true }),
+				ImageExtension,
 				Typography,
 				Highlight.configure({ HTMLAttributes: { class: 'accent' } }),
 				FloatingMenu.configure({
@@ -157,9 +102,7 @@
 			content,
 			editable,
 			autofocus,
-			editorProps: {
-				handleDrop
-			},
+			editorProps,
 			onTransaction: () => {
 				// force re-render so `editor.isActive` works as expected
 				// editor = editor;
@@ -170,7 +113,6 @@
 
 		return () => {
 			editor.destroy();
-			if (provider) provider.destroy();
 		};
 	});
 

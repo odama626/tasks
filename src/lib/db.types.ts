@@ -3,6 +3,7 @@
 */
 
 export enum Collections {
+	DocAttachments = "doc_attachments",
 	DocBlocks = "doc_blocks",
 	Docs = "docs",
 	DocsUsers = "docs_users",
@@ -40,6 +41,12 @@ export type AuthSystemFields<T = never> = {
 
 // Record types for each collection
 
+export type DocAttachmentsRecord = {
+	file?: string
+	doc?: RecordIdString
+	createdBy?: RecordIdString
+}
+
 export type DocBlocksRecord<Tproperties = unknown> = {
 	type: string
 	properties?: null | Tproperties
@@ -57,6 +64,8 @@ export type DocsRecord = {
 	project?: RecordIdString
 	deleted?: boolean
 	excludeFromOverview?: boolean
+	ydoc?: string
+	attachments?: string[]
 }
 
 export enum DocsUsersAccessOptions {
@@ -133,6 +142,7 @@ export type UsersConnectionsRecord<Tconnection = unknown> = {
 }
 
 // Response types include system fields and match responses from the PocketBase API
+export type DocAttachmentsResponse<Texpand = unknown> = Required<DocAttachmentsRecord> & BaseSystemFields<Texpand>
 export type DocBlocksResponse<Tproperties = unknown, Texpand = unknown> = Required<DocBlocksRecord<Tproperties>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
@@ -148,6 +158,7 @@ export type UsersConnectionsResponse<Tconnection = unknown> = Required<UsersConn
 // Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
+	doc_attachments: DocAttachmentsRecord
 	doc_blocks: DocBlocksRecord
 	docs: DocsRecord
 	docs_users: DocsUsersRecord
@@ -162,6 +173,7 @@ export type CollectionRecords = {
 }
 
 export type CollectionResponses = {
+	doc_attachments: DocAttachmentsResponse
 	doc_blocks: DocBlocksResponse
 	docs: DocsResponse
 	docs_users: DocsUsersResponse
@@ -181,12 +193,42 @@ export interface CollectionSchemas {
   tasks: Tasks;
   lists_users: Listsusers;
   projects: Projects;
-  docs: Projects;
-  doc_blocks: Docblocks;
+  docs: Docs;
+  doc_blocks: Docs;
   projects_users: Listsusers;
   docs_users: Listsusers;
   users_connections: Usersconnections;
   invites: Invites;
+  doc_attachments: Docattachments;
+}
+
+export interface Docattachments {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema9[];
+}
+
+export interface Schema9 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options9;
+}
+
+export interface Options9 {
+  maxSelect: number;
+  maxSize?: number;
+  mimeTypes?: any[];
+  thumbs?: any[];
+  protected?: boolean;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  displayFields?: any[];
 }
 
 export interface Invites {
@@ -234,7 +276,7 @@ export interface Schema7 {
 export interface Options7 {
 }
 
-export interface Docblocks {
+export interface Docs {
   id: string;
   name: string;
   type: string;

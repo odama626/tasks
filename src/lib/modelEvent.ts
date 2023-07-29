@@ -24,9 +24,10 @@ interface ModelUpdateEvent<T> extends BaseModelEvent {
 	recordId: string;
 }
 
-interface ModelDeleteEvent extends BaseModelEvent {
+interface ModelDeleteEvent<T> extends BaseModelEvent {
 	eventType: EventType.Delete;
 	recordId: string;
+	payload?: Partial<T>;
 }
 
 export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent;
@@ -87,11 +88,16 @@ export class ModelEvents {
 		});
 	}
 
-	async delete(modelType: BaseModelEvent['modelType'], recordId: ModelDeleteEvent['recordId']) {
+	async delete<T>(
+		modelType: BaseModelEvent['modelType'],
+		recordId: ModelDeleteEvent['recordId'],
+		payload?: Partial<T>
+	) {
 		return this.add({
 			eventType: EventType.Delete,
 			modelType: modelType,
-			recordId
+			recordId,
+			payload
 		});
 	}
 
@@ -149,6 +155,7 @@ export class ModelEvents {
 		await this.syncTable('docs_users');
 		await this.syncTable('docs');
 		await this.syncTable('doc_blocks');
+		await this.syncTable('doc_attachments');
 	}
 
 	private async step(): Promise<void> {
@@ -176,7 +183,11 @@ export class ModelEvents {
 					case EventType.Delete:
 						await pb
 							.collection(record.modelType)
-							.update(record.recordId, { deleted: true }, { $autoCancel: false })
+							.update(
+								record.recordId,
+								{ ...(record.payload ?? {}), deleted: true },
+								{ $autoCancel: false }
+							)
 							.catch(attachRecordToError('Failed to delete record', record));
 						break;
 					default:
