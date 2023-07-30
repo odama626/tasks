@@ -1,16 +1,17 @@
 {
-  "name": "yjs-signaling-server",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "lib0": "^0.2.78",
-    "typescript": "^5.1.6"
-  }
+	"name": "yjs-signaling-server",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"build": "tsc src/ --out ./dist/main.ts"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"lib0": "^0.2.78",
+		"typescript": "^5.1.6"
+	}
 }
