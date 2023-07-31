@@ -43,7 +43,7 @@
 	export let content: JSONContent;
 
 	$: {
-		if (editor) {
+		if (editor && content) {
 			editor.commands.setContent(content);
 		}
 	}
