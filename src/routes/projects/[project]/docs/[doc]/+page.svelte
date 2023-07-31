@@ -68,7 +68,9 @@
 		}
 	}
 
-	let provider = new WebrtcProvider(window.location.href, ydoc);
+	let provider = new WebrtcProvider(window.location.href, ydoc, {
+		signaling: ['wss://signals.tasks.lilbyte.dev']
+	});
 	// let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
 
 	onMount(() => {

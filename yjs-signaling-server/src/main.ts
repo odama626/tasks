@@ -83,13 +83,16 @@ const onconnection = (conn) => {
 	conn.on(
 		'message',
 		/** @param {object} message */ (message) => {
+			console.log('message', message);
 			if (typeof message === 'string') {
 				message = JSON.parse(message);
 			}
+			console.log('message.type', message && message.type);
 			if (message && message.type && !closed) {
 				switch (message.type) {
 					case 'subscribe':
-						/** @type {Array<string>} */ (message.topics || []).forEach((topicName) => {
+						console.log('subscribe');
+						/** @type {Array<string>} */ (message.topics || []).forEach((topicName: string) => {
 							if (typeof topicName === 'string') {
 								// add conn to topic
 								const topic = map.setIfUndefined(topics, topicName, () => new Set());
@@ -108,6 +111,7 @@ const onconnection = (conn) => {
 						});
 						break;
 					case 'publish':
+						console.log('publish');
 						if (message.topic) {
 							const receivers = topics.get(message.topic);
 							if (receivers) {
@@ -117,6 +121,7 @@ const onconnection = (conn) => {
 						}
 						break;
 					case 'ping':
+						console.log('received ping');
 						send(conn, { type: 'pong' });
 				}
 			}
@@ -130,7 +135,9 @@ server.on('upgrade', (request, socket, head) => {
 	/**
 	 * @param {any} ws
 	 */
-	const handleAuth = (ws) => {
+	console.log('upgrade');
+	const handleAuth = (ws: WebSocket) => {
+		console.log('handleAuth');
 		wss.emit('connection', ws, request);
 	};
 	wss.handleUpgrade(request, socket, head, handleAuth);
