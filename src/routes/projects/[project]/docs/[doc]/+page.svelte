@@ -81,7 +81,7 @@
 		return () => {
 			provider.destroy();
 			// offlineProvider.destroy();
-			if (!hasCollaborators) onSave();
+			// if (!hasCollaborators) onSave();
 		};
 	});
 
