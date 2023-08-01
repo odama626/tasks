@@ -35,7 +35,6 @@
 	let ydoc = new Y.Doc();
 	let title = data?.doc?.title ?? 'Untitled Document';
 	let hasCollaborators = false;
-	let inputRef;
 
 	if (data.ydoc) {
 		try {
@@ -167,7 +166,6 @@
 		</a>
 		<input
 			class="ghost title"
-			bind:this={inputRef}
 			value={title}
 			on:input={(e) => {
 				const text = ydoc.getText('title');
