@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { writable } from 'svelte/store';
-import type * as Y from 'yjs';
-import { db } from './storage';
+import * as Y from 'yjs';
+import { db, type DocsInstance } from './storage';
 import type { DocAttachmentsResponse, DocsResponse } from './db.types';
 
 export const collectFormData = (callback) => (e) => {
@@ -123,6 +123,25 @@ export async function rehydrateImages(ydoc: Y.Doc, docId: string) {
 	}
 }
 
+export async function getYdoc(doc: DocsInstance) {
+	const ydoc = new Y.Doc();
+	let arrayBuffer: ArrayBuffer;
+
+	if (doc?.ydoc instanceof File) {
+		arrayBuffer = await doc.ydoc.arrayBuffer();
+	} else if (doc?.cache_ydoc) {
+		arrayBuffer = await fetch(doc?.cache_ydoc).then((r) => r.arrayBuffer());
+	}
+
+	if (arrayBuffer) {
+		Y.applyUpdate(ydoc, new Uint8Array(arrayBuffer));
+		rehydrateImages(ydoc, doc.id);
+	}
+	const metadata = ydoc.getMap('metadata');
+	if (!metadata.get('docId')) metadata.set('docId', doc.id);
+	return ydoc;
+}
+
 export function getDocSyncRoom(doc: DocsResponse) {
-	return `${location.host}/project/${doc.project}/doc/${doc.id}`;
+	return `${location.host}/project/${doc?.project}/doc/${doc?.id}`;
 }
