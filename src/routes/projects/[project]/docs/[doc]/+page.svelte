@@ -2,23 +2,18 @@
 	import { goto } from '$app/navigation';
 	import Checkbox from '$lib/checkbox.svelte';
 	import ContextMenu from '$lib/context-menu.svelte';
-	import {
-		Collections,
-		type DocAttachmentsRecord,
-		type DocAttachmentsResponse
-	} from '$lib/db.types.js';
+	import { Collections } from '$lib/db.types.js';
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { events, EventType } from '$lib/modelEvent.js';
 	import type { Editor } from '@tiptap/core';
 	import Portal from 'svelte-portal';
 	import { WebrtcProvider } from 'y-webrtc';
-	import { IndexeddbPersistence } from 'y-indexeddb';
 	import { saveDocument } from './saveDocument';
 	import * as Y from 'yjs';
-	import { db, pb, userStore } from '$lib/storage';
+	import { pb, userStore } from '$lib/storage';
 	import { onMount } from 'svelte';
-	import { createId } from '$lib/utils';
+	import { createId, rehydrateImages } from '$lib/utils';
 	import { get } from 'svelte/store';
 
 	$: {
@@ -41,45 +36,30 @@
 	let ydoc = new Y.Doc();
 	let hasCollaborators = false;
 
-	async function rehydrateImages() {
-		const token = await pb.files.getToken();
-
-		const fragment = ydoc.getXmlFragment('doc');
-
-		for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
-			if (!image.getAttribute('src').startsWith('blob')) continue;
-
-			const attachmentId = image.getAttribute('docAttachment');
-			const attachment = attachments.find(
-				(attachment: DocAttachmentsResponse) => attachment.id === attachmentId
-			);
-			const src = pb.files.getUrl(attachment, attachment.file, { token });
-			image.setAttribute('src', src);
-		}
-	}
-
 	if (data.ydoc) {
 		console.log(data.doc);
 		try {
 			Y.applyUpdate(ydoc, data.ydoc);
-			rehydrateImages();
+			rehydrateImages(ydoc, data.docId);
 		} catch (e) {
 			console.error(e);
 		}
 	}
 
-	let provider = new WebrtcProvider(window.location.href, ydoc, {
-		signaling: ['wss://signals.tasks.lilbyte.dev']
-	});
-	// let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
+	let provider: WebrtcProvider;
+	console.log('online', events.online);
+	if (events.online) {
+		provider = new WebrtcProvider(window.location.href, ydoc, {
+			signaling: ['wss://signals.tasks.lilbyte.dev']
+		});
+	} // let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
 
 	onMount(() => {
-		provider.awareness.on('change', (change) => {
-			console.log({ change });
+		provider?.awareness.on('change', (change) => {
 			hasCollaborators = provider.awareness.getStates().size !== 1;
 		});
 		return () => {
-			provider.destroy();
+			provider?.destroy();
 			// offlineProvider.destroy();
 			// if (!hasCollaborators) onSave();
 		};

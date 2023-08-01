@@ -1,6 +1,8 @@
-import type { ZodError } from 'zod';
 import { nanoid } from 'nanoid';
 import { writable } from 'svelte/store';
+import type * as Y from 'yjs';
+import { db } from './storage';
+import type { DocAttachmentsResponse } from './db.types';
 
 export const collectFormData = (callback) => (e) => {
 	const data = new FormData(e.target);
@@ -97,4 +99,26 @@ export function prepareRecordFormData(record) {
 		formData.append(field, payload);
 	}
 	return formData;
+}
+
+export async function rehydrateImages(ydoc: Y.Doc, docId: string) {
+	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
+
+	const fragment = ydoc.getXmlFragment('doc');
+
+	for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
+		if (!image.getAttribute('src').startsWith('blob')) continue;
+
+		const attachmentId = image.getAttribute('docAttachment');
+		const attachment = attachments.find(
+			(attachment: DocAttachmentsResponse) => attachment.id === attachmentId
+		);
+		let src;
+		if (attachment.file instanceof File) {
+			src = URL.createObjectURL(attachment.file);
+		} else if (attachment.cache_file) {
+			src = attachment.cache_file;
+		}
+		image.setAttribute('src', src);
+	}
 }

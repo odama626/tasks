@@ -1,5 +1,17 @@
-import { Collections, type CollectionRecords } from './db.types';
-import { db, pb } from './storage';
+import {
+	Collections,
+	type CollectionRecords,
+	type DocsResponse,
+	type DocAttachmentsResponse,
+	type CollectionResponses
+} from './db.types';
+import {
+	db,
+	pb,
+	type DocAttachmentsInstance,
+	type DocsInstance,
+	type CollectionInstances
+} from './storage';
 import { DateTime } from 'luxon';
 import { NotificationType, attachRecordToError, notify, prepareRecordFormData } from './utils';
 export enum EventType {
@@ -7,6 +19,8 @@ export enum EventType {
 	Update = 'update',
 	Delete = 'delete'
 }
+
+type ValueOf<T> = T[keyof T];
 
 interface BaseModelEvent {
 	eventType: EventType;
@@ -33,14 +47,14 @@ interface ModelDeleteEvent<T> extends BaseModelEvent {
 export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent;
 
 export class ModelEvents {
-	private online: boolean = navigator.onLine;
+	public online: boolean = navigator.onLine;
 	private processing: boolean = false;
 	private queue: Promise<any> = Promise.resolve();
 
 	constructor() {
 		window.addEventListener('online', () => {
 			this.online = true;
-			this.queue = this.queue.then(() => this.step());
+			this.startSync();
 		});
 		window.addEventListener('offline', () => (this.online = false));
 	}
@@ -101,7 +115,8 @@ export class ModelEvents {
 		});
 	}
 
-	private async syncTable(table: string) {
+	private async syncTable(table: string, { cacheFileFields = [], token } = {}) {
+		if (!this.online) return;
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();
 
@@ -119,20 +134,41 @@ export class ModelEvents {
 			{ deleted: [], updates: [] }
 		);
 
+		if (cacheFileFields.length) {
+			results.updates = await Promise.all(
+				results.updates.map(async (update) => this.cacheFields(update, cacheFileFields, token))
+			);
+		}
+
 		await db[table].bulkPut(results.updates);
 		await db[table].bulkDelete(results.deleted);
 
-		pb.collection(table).subscribe('*', (data) => {
+		pb.collection(table).subscribe('*', async (data) => {
 			if (data.action === 'delete' || data.record.deleted === true) {
 				db[table].delete(data.record.id);
 			} else {
-				db[table].put(data.record);
+				const record = await this.cacheFields(data.record, cacheFileFields, token);
+				db[table].put(record);
 			}
 		});
 		localStorage.setItem(
 			`last-sync:${table}`,
 			currentSync.setZone('utc').toFormat('yyyy-MM-dd HH:mm:s.u')
 		);
+
+		return results.updates;
+	}
+
+	private async cacheFields<
+		T extends ValueOf<CollectionResponses>,
+		R extends ValueOf<CollectionInstances>
+	>(record: T, fields: string[], token: string): Promise<R> {
+		for (const field of fields) {
+			const url = pb.files.getUrl(record, record[field], { token });
+			await fetch(url);
+			record[`cache_${field}`] = url;
+		}
+		return record as unknown as R;
 	}
 
 	async logout() {
@@ -144,7 +180,10 @@ export class ModelEvents {
 	}
 
 	async startSync() {
+		if (!this.online) return;
 		await this.step();
+
+		const token = await pb.files.getToken();
 
 		await this.syncTable('users');
 		await this.syncTable('lists_users');
@@ -153,9 +192,13 @@ export class ModelEvents {
 		await this.syncTable('projects_users');
 		await this.syncTable('projects');
 		await this.syncTable('docs_users');
-		await this.syncTable('docs');
+		await this.syncTable('docs', { cacheFileFields: ['ydoc'], token });
+
 		await this.syncTable('doc_blocks');
-		await this.syncTable('doc_attachments');
+		await this.syncTable('doc_attachments', { cacheFileFields: ['file'], token });
+
+		// await this.cacheYdocs(docs as DocsInstance[], token);
+		// await this.cacheAttachments(attachments as DocAttachmentsInstance[], token);
 	}
 
 	private async step(): Promise<void> {

@@ -1,5 +1,4 @@
 import { db, pb } from '$lib/storage';
-import { set } from 'lodash-es';
 
 export const ssr = false;
 
@@ -7,25 +6,6 @@ async function rebuildDoc(docId: string) {
 	const blocks = await db.doc_blocks.where({ doc: docId }).toArray();
 	blocks.sort((a, b) => a.path.length - b.path.length);
 	const content = [];
-
-	const fileToken = await pb.files.getToken();
-
-	blocks.forEach((block) => {
-		const { properties, type, id } = block;
-
-		const file = block?.file ?? properties?.attrs?.file;
-		if (type === 'image' && file) {
-			try {
-				const src = block?.file
-					? pb.files.getUrl(block, block.file, { token: fileToken })
-					: URL.createObjectURL(file);
-				properties.attrs.src = src;
-			} catch (e) {
-				console.error(`failed to rebind image`, e);
-			}
-		}
-		set(content, block.path.split('.').join('.content.'), properties);
-	});
 
 	const doc = {
 		type: 'doc',
@@ -44,11 +24,11 @@ export async function load({ params }) {
 	let content = !doc?.ydoc && (await rebuildDoc(params.doc));
 	let ydoc;
 	try {
-		if (doc?.ydoc) {
-			console.log(doc?.ydoc);
-			const token = await pb.files.getToken();
-			const url = pb.files.getUrl(doc, doc.ydoc, { token });
-			const arrayBuffer = await fetch(url).then((r) => r.arrayBuffer());
+		console.log(doc.ydoc instanceof File);
+		if (doc?.ydoc instanceof File) {
+			ydoc = new Uint8Array(await doc.ydoc.arrayBuffer());
+		} else if (doc?.cache_ydoc) {
+			const arrayBuffer = await fetch(doc?.cache_ydoc).then((r) => r.arrayBuffer());
 			console.log(arrayBuffer);
 			ydoc = new Uint8Array(arrayBuffer);
 		}
