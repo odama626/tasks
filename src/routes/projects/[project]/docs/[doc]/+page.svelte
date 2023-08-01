@@ -169,8 +169,8 @@
 			value={title}
 			on:input={(e) => {
 				const text = ydoc.getText('title');
-				text.delete(0, text.toString().length);
 				const value = e.target.value;
+				text.delete(0, text.toString().length);
 				text.insert(0, value);
 			}}
 		/>
