@@ -1,4 +1,5 @@
 import { db, pb } from '$lib/storage';
+import { getYdoc } from '$lib/utils';
 
 export const ssr = false;
 
@@ -22,20 +23,7 @@ export async function load({ params }) {
 	]);
 
 	let content = !doc?.ydoc && (await rebuildDoc(params.doc));
-	let ydoc;
-	try {
-		console.log(doc.ydoc instanceof File);
-		if (doc?.ydoc instanceof File) {
-			ydoc = new Uint8Array(await doc.ydoc.arrayBuffer());
-		} else if (doc?.cache_ydoc) {
-			const arrayBuffer = await fetch(doc?.cache_ydoc).then((r) => r.arrayBuffer());
-			console.log(arrayBuffer);
-			ydoc = new Uint8Array(arrayBuffer);
-		}
-	} catch (e) {
-		console.error(e);
-		content = await rebuildDoc(params.doc);
-	}
+	let ydoc = getYdoc(doc);
 
 	return {
 		doc,

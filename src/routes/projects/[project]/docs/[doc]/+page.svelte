@@ -32,17 +32,15 @@
 	export let data;
 	let editor: Editor;
 	let saving = false;
-	let ydoc = new Y.Doc();
+	let ydoc = data.ydoc;
 	let title = data?.doc?.title ?? 'Untitled Document';
 	let hasCollaborators = false;
 
 	if (data.ydoc) {
 		try {
-			Y.applyUpdate(ydoc, data.ydoc);
 			if (!ydoc.getText('title').toString().length) {
 				ydoc.getText('title').insert(0, title);
 			}
-			rehydrateImages(ydoc, data.docId);
 		} catch (e) {
 			console.error(e);
 		}
