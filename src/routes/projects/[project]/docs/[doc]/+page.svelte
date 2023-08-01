@@ -13,7 +13,7 @@
 	import * as Y from 'yjs';
 	import { pb, userStore } from '$lib/storage';
 	import { onMount } from 'svelte';
-	import { createId, rehydrateImages } from '$lib/utils';
+	import { createId, getDocSyncRoom, rehydrateImages } from '$lib/utils';
 	import { get } from 'svelte/store';
 
 	$: {
@@ -32,14 +32,17 @@
 	export let data;
 	let editor: Editor;
 	let saving = false;
-	let title = data?.doc?.title ?? 'Untitled Document';
 	let ydoc = new Y.Doc();
+	let title = data?.doc?.title ?? 'Untitled Document';
 	let hasCollaborators = false;
+	let inputRef;
 
 	if (data.ydoc) {
-		console.log(data.doc);
 		try {
 			Y.applyUpdate(ydoc, data.ydoc);
+			if (!ydoc.getText('title').toString().length) {
+				ydoc.getText('title').insert(0, title);
+			}
 			rehydrateImages(ydoc, data.docId);
 		} catch (e) {
 			console.error(e);
@@ -47,14 +50,18 @@
 	}
 
 	let provider: WebrtcProvider;
-	console.log('online', events.online);
 	if (events.online) {
-		provider = new WebrtcProvider(window.location.href, ydoc, {
+		provider = new WebrtcProvider(getDocSyncRoom(data.doc), ydoc, {
 			signaling: ['wss://signals.tasks.lilbyte.dev']
 		});
 	} // let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
 
 	onMount(() => {
+		ydoc.getText('title').observe((event) => {
+			const value = event.target.toString();
+			title = value;
+			// inputRef.value = event.target.toString();
+		});
 		provider?.awareness.on('change', (change) => {
 			hasCollaborators = provider.awareness.getStates().size !== 1;
 		});
@@ -78,7 +85,6 @@
 		if (saving) return;
 		saving = true;
 		const body = Y.encodeStateAsUpdateV2(ydoc);
-		console.log(body);
 		const id = await saveDocument(title, data.docId, ydoc, data.projectId, editor.getJSON());
 
 		if (data.docId === 'new')
@@ -102,7 +108,6 @@
 
 		const { schema } = view.state;
 		const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-		console.log(file.type);
 		const node = schema.nodes.image.create({
 			src: image.src,
 			docAttachment: attachmentId
@@ -129,14 +134,12 @@
 			// if dropping external files
 			// handle the image upload
 			items.map(async (item) => {
-				console.log({ item });
 				if (item.kind === 'file' && item.type.startsWith('image/')) {
 					const file = item.getAsFile();
 					await insertImage(file, view, event, slice, moved);
 				}
 				if (item.kind === 'string' && item.type === 'text/uri-list') {
 					const text = await new Promise((resolve) => item.getAsString(resolve));
-					console.log({ text });
 					const blob = await fetch(text).then((r) => r.blob());
 					if (blob.type.startsWith('image/')) {
 						const { schema } = view.state;
@@ -162,7 +165,17 @@
 		<a href="/projects/{data.projectId}" class="button icon ghost">
 			<ChevronLeft class="button" />
 		</a>
-		<input class="ghost title" bind:value={title} />
+		<input
+			class="ghost title"
+			bind:this={inputRef}
+			value={title}
+			on:input={(e) => {
+				const text = ydoc.getText('title');
+				text.delete(0, text.toString().length);
+				const value = e.target.value;
+				text.insert(0, value);
+			}}
+		/>
 	</div>
 </Portal>
 

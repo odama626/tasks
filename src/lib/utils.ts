@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { writable } from 'svelte/store';
 import type * as Y from 'yjs';
 import { db } from './storage';
-import type { DocAttachmentsResponse } from './db.types';
+import type { DocAttachmentsResponse, DocsResponse } from './db.types';
 
 export const collectFormData = (callback) => (e) => {
 	const data = new FormData(e.target);
@@ -121,4 +121,8 @@ export async function rehydrateImages(ydoc: Y.Doc, docId: string) {
 		}
 		image.setAttribute('src', src);
 	}
+}
+
+export function getDocSyncRoom(doc: DocsResponse) {
+	return `${location.host}/project/${doc.project}/doc/${doc.id}`;
 }

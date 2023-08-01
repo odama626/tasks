@@ -26,7 +26,6 @@
 	});
 
 	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
-
 	$: project = liveQuery(() => db.projects.get(data.projectId));
 
 	$: taskDoc = liveQuery(async () => {
