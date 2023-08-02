@@ -205,6 +205,7 @@
 {#if tasks && docs && links}
 	{#if tasks.length}
 		<h2>Tasks</h2>
+		<!-- TODO: wrap tasks in a tasklist to fix spacing -->
 		<Editor isOverview={true} editable={false} content={{ type: 'doc', content: tasks }} />
 		<br />
 	{/if}
