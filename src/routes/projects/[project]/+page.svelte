@@ -7,12 +7,20 @@
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
 	import { EventType, events } from '$lib/modelEvent.js';
-	import { currentProject, db } from '$lib/storage.js';
-	import { collectFormData } from '$lib/utils.js';
-	import Dexie, { liveQuery } from 'dexie';
-	import { groupBy, keyBy, set } from 'lodash-es';
+	import { currentProject, db, type DocsInstance } from '$lib/storage.js';
+	import {
+		collectFormData,
+		getDocProvider,
+		getYdoc,
+		serializeXmlToJson,
+		type TiptapNode
+	} from '$lib/utils.js';
+	import { liveQuery, type Observable } from 'dexie';
 	import Portal from 'svelte-portal';
+	import { WebrtcProvider } from 'y-webrtc';
+	import type * as Y from 'yjs';
 	import ShareForm from './share-form.svelte';
+	import { onDestroy } from 'svelte';
 
 	export let data;
 	let expandedDocs = {};
@@ -25,85 +33,102 @@
 		isEditingName = false;
 	});
 
-	$: docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
+	let docs: Observable<DocsInstance[]>;
+
 	$: project = liveQuery(() => db.projects.get(data.projectId));
 
-	$: taskDoc = liveQuery(async () => {
-		const taskItems = await db.doc_blocks
-			.where({ project: data.projectId, type: 'taskItem' })
-			.toArray();
-		return await Dexie.waitFor(() => getTasksFromTaskItems(taskItems));
-	});
+	let tasks: TiptapNode<'taskItem'>[] = [];
+	let links: TiptapNode<'text'>[] = [];
+	let ydocs: { doc: DocsInstance; ydoc: Y.Doc }[];
+	let tasksByDoc = {};
+	let providersByDocId: Map<string, WebrtcProvider> = new Map();
 
-	$: linkDocContent = liveQuery(async () => {
-		const links = await db.doc_blocks.where({ project: data.projectId, type: 'text' }).toArray();
-		return links
-			.filter((link) => link.properties.marks?.some((mark) => mark.type === 'link'))
-			.sort((a, b) => a.properties.text.localeCompare(b.properties.text))
-			.map((link) => ({ type: 'paragraph', content: [link.properties] }));
-	});
-
-	async function getTasksFromTaskItems(taskItems) {
-		const parentTasksByParentId = {};
-		const docsById = keyBy(await db.docs.where({ project: data.projectId }).toArray(), 'id');
-		const content = await Promise.all(
-			taskItems.map(async (taskItem, i) => {
-				const taskContent = await db.doc_blocks
-					.where('path')
-					.startsWith(taskItem.path)
-					.and(
-						(item) =>
-							item.project === data.projectId &&
-							item.doc === taskItem.doc &&
-							item.id !== taskItem.id
-					)
-					.toArray();
-
-				const content = [];
-				let task = {};
-
-				taskContent
-					.sort((a, b) => a.path.length - b.path.length)
-					.forEach((block) => {
-						const path = block.path.slice(taskItem.path.length + 1);
-						const { properties, type, id, parent } = block;
-						if (type === 'taskList') {
-							parentTasksByParentId[id] = task;
-						}
-						set(content, path.split('.').join('.content.'), properties);
-					});
-
-				Object.assign(task, {
-					parent: taskItem.parent,
-					...taskItem.properties,
-					attrs: {
-						...taskItem.properties.attrs,
-						doc: taskItem.doc,
-						project: taskItem.project
-					},
-					doc: taskItem.doc,
-					project: taskItem.project,
-					content
-				});
-
-				return task;
-			})
-		);
-
-		const filteredContent = content.filter((item) => !parentTasksByParentId[item.parent]);
-		const tasksByDocument = groupBy(content, 'doc');
-
-		return {
-			tasksByDocument,
-			overviewTasks: filteredContent.filter((task) => {
-				if (task?.attrs?.checked) return false;
-				const doc = docsById[task.doc];
-				if (doc.excludeFromOverview) return false;
-
-				return true;
-			})
-		};
+	function fetchDocs() {
+		docs = liveQuery(() => db.docs.where({ project: data.projectId }).toArray());
+		return docs;
 	}
+
+	onDestroy(() => {
+		providersByDocId.forEach((value, key) => {
+			value.destroy();
+			providersByDocId.delete(key);
+		});
+	});
+
+	function fetchTasks() {
+		docs.subscribe(async (docs) => {
+			console.log({ docs });
+			let newTasks: TiptapNode<'taskItem'>[] = [];
+			let newTasksByDoc = {};
+			let newLinks: TiptapNode<'text'>[] = [];
+			let docsToUnsubscribe = new Set(providersByDocId.keys());
+			ydocs = await Promise.all(
+				docs.map(async (doc) => {
+					const ydoc = await getYdoc(doc);
+					const fragment = ydoc.getXmlFragment('doc');
+					let children = new Set();
+					let allTaskItems: Y.XmlElement[] = [];
+
+					docsToUnsubscribe.delete(doc.id);
+					if (!providersByDocId.has(doc.id)) {
+						const provider = getDocProvider(doc, ydoc);
+						providersByDocId.set(doc.id, provider);
+						provider;
+					}
+
+					for (const taskItem of fragment.createTreeWalker(
+						(yxml) => yxml.nodeName === 'taskItem'
+					)) {
+						if (children.has(taskItem.getAttribute('id'))) continue;
+						for (const childItem of taskItem.createTreeWalker(
+							(yxml) => yxml.nodeName === 'taskItem'
+						)) {
+							children.add(childItem.getAttribute('id'));
+						}
+						allTaskItems.push(taskItem);
+					}
+
+					const taskItems = allTaskItems
+						.filter((taskItem) => !children.has(taskItem.getAttribute('id')))
+						.map(serializeXmlToJson<'taskItem'>);
+
+					newTasksByDoc[doc.id] = taskItems;
+
+					if (!doc.excludeFromOverview) {
+						newTasks.push(...taskItems.filter((item) => !item.attrs?.checked));
+					}
+
+					for (const linkItem of fragment.createTreeWalker((yxml) => !yxml.nodeType)) {
+						const linkContent = serializeXmlToJson(linkItem);
+						const linkContents = Array.isArray(linkContent) ? linkContent : [linkContent];
+						newLinks.push(
+							...linkContents.filter((link) => link.marks?.some((mark) => mark.type === 'link'))
+						);
+					}
+					links = newLinks
+						.sort((a, b) => a.text.localeCompare(b.text))
+						.map((link) => ({ type: 'paragraph', content: [link] }));
+
+					return { doc, ydoc };
+				})
+			);
+
+			docsToUnsubscribe.forEach((docId: string) => {
+				const provider = providersByDocId.get(docId);
+				provider?.destroy();
+				providersByDocId.delete(docId);
+			});
+
+			tasks = newTasks;
+			tasksByDoc = newTasksByDoc;
+			console.log({ tasks });
+		});
+	}
+
+	// Subscriptions
+	fetchDocs();
+	$: $docs, fetchTasks();
+	$: data.projectId, fetchDocs();
 
 	async function updateTaskItem(event) {
 		const { options, attrs, checked } = event.detail;
@@ -177,15 +202,10 @@
 	</div>
 {/if}
 
-{#if $taskDoc && $docs && $linkDocContent}
-	{#if $taskDoc?.overviewTasks?.length}
+{#if tasks && docs && links}
+	{#if tasks.length}
 		<h2>Tasks</h2>
-		<Editor
-			isOverview={true}
-			on:taskItemUpdate={updateTaskItem}
-			content={{ type: 'doc', content: $taskDoc.overviewTasks }}
-			editable={false}
-		/>
+		<Editor isOverview={true} editable={false} content={{ type: 'doc', content: tasks }} />
 		<br />
 	{/if}
 
@@ -193,11 +213,11 @@
 	<div class="docs">
 		{#if $docs}
 			{#each $docs as doc (doc.id)}
-				{@const tasks = $taskDoc.tasksByDocument[doc.id]}
+				{@const tasks = tasksByDoc[doc.id]}
 				{@const expanded = expandedDocs[doc.id]}
 				<button
 					on:click={(e) => {
-						if (!tasks) {
+						if (!tasks?.length) {
 							return goto(`/projects/${data.projectId}/docs/${doc.id}`);
 						}
 						expandedDocs[doc.id] = !expanded;
@@ -210,7 +230,7 @@
 					</a>
 					<div class="actions">
 						<svg
-							class:empty={!tasks}
+							class:empty={!tasks?.length}
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
@@ -227,7 +247,7 @@
 						</svg>
 					</div>
 				</button>
-				{#if expanded && tasks}
+				{#if expanded && tasks?.length}
 					<div class="tasks-group">
 						<Editor
 							isOverview={true}
@@ -245,9 +265,9 @@
 		{/if}
 	</div>
 	<br />
-	{#if $linkDocContent?.length}
+	{#if links.length}
 		<h2>Links</h2>
-		<Editor isOverview content={{ type: 'doc', content: $linkDocContent }} editable={false} />
+		<Editor isOverview content={{ type: 'doc', content: links }} editable={false} />
 	{/if}
 {:else}
 	<div class="loading">

@@ -3,6 +3,8 @@ import { writable } from 'svelte/store';
 import * as Y from 'yjs';
 import { db, type DocsInstance } from './storage';
 import type { DocAttachmentsResponse, DocsResponse } from './db.types';
+import type { YXmlElement } from 'yjs/dist/src/internals';
+import { WebrtcProvider } from 'y-webrtc';
 
 export const collectFormData = (callback) => (e) => {
 	const data = new FormData(e.target);
@@ -138,10 +140,79 @@ export async function getYdoc(doc: DocsInstance) {
 		rehydrateImages(ydoc, doc.id);
 	}
 	const metadata = ydoc.getMap('metadata');
-	if (!metadata.get('docId')) metadata.set('docId', doc.id);
+	if (doc && !metadata.get('docId')) metadata.set('docId', doc.id);
 	return ydoc;
 }
 
 export function getDocSyncRoom(doc: DocsResponse) {
 	return `${location.host}/project/${doc?.project}/doc/${doc?.id}`;
+}
+
+export function getDocProvider(doc: DocsResponse, ydoc: Y.Doc) {
+	return new WebrtcProvider(getDocSyncRoom(doc), ydoc, {
+		signaling: ['wss://signals.tasks.lilbyte.dev']
+	});
+}
+
+export interface TiptapNode<T> {
+	type: T;
+	content: TiptapNode<any>[];
+	marks: unknown[];
+	attrs: {
+		id: string;
+		[key: string]: unknown;
+	};
+}
+
+export function serializeXmlToJson<T>(item: YXmlElement): TiptapNode<T> {
+	/**
+	 * @type {Object} NodeObject
+	 * @property {string} NodeObject.type
+	 * @property {Record<string, string>=} NodeObject.attrs
+	 * @property {Array<NodeObject>=} NodeObject.content
+	 */
+	let response;
+
+	// TODO: Must be a better way to detect text nodes than this
+	if (!item.nodeName) {
+		const delta = item.toDelta();
+		response = delta.map((d) => {
+			const text = {
+				type: 'text',
+				text: d.insert
+			};
+
+			if (d.attributes) {
+				text.marks = Object.keys(d.attributes).map((type) => {
+					const attrs = d.attributes[type];
+					const mark = {
+						type
+					};
+
+					if (Object.keys(attrs)) {
+						mark.attrs = attrs;
+					}
+
+					return mark;
+				});
+			}
+			return text;
+		});
+	} else {
+		response = {
+			type: item.nodeName
+		};
+
+		const attrs = item.getAttributes();
+		if (Object.keys(attrs).length) {
+			response.attrs = attrs;
+		}
+
+		const children = item.toArray();
+		if (children.length) {
+			response.content = children.map(serializeXmlToJson).flat();
+		}
+	}
+
+	return response;
 }

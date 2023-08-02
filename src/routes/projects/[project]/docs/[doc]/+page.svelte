@@ -6,15 +6,15 @@
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { events, EventType } from '$lib/modelEvent.js';
-	import type { Editor } from '@tiptap/core';
-	import Portal from 'svelte-portal';
-	import { WebrtcProvider } from 'y-webrtc';
-	import { saveDocument } from './saveDocument';
-	import * as Y from 'yjs';
 	import { pb, userStore } from '$lib/storage';
+	import { createId, getDocProvider } from '$lib/utils';
+	import type { Editor } from '@tiptap/core';
 	import { onMount } from 'svelte';
-	import { createId, getDocSyncRoom, rehydrateImages } from '$lib/utils';
+	import Portal from 'svelte-portal';
 	import { get } from 'svelte/store';
+	import { WebrtcProvider } from 'y-webrtc';
+	import * as Y from 'yjs';
+	import { saveDocument } from './saveDocument';
 
 	$: {
 		if (data.docId === 'new') {
@@ -48,9 +48,7 @@
 
 	let provider: WebrtcProvider;
 	if (events.online) {
-		provider = new WebrtcProvider(getDocSyncRoom(data.doc), ydoc, {
-			signaling: ['wss://signals.tasks.lilbyte.dev']
-		});
+		provider = getDocProvider(data.doc, ydoc);
 	} // let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
 
 	onMount(() => {
