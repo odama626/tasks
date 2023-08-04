@@ -3,15 +3,18 @@
 */
 
 export enum Collections {
+	DocAttachments = "doc_attachments",
 	DocBlocks = "doc_blocks",
 	Docs = "docs",
 	DocsUsers = "docs_users",
+	Invites = "invites",
 	Lists = "lists",
 	ListsUsers = "lists_users",
 	Projects = "projects",
 	ProjectsUsers = "projects_users",
 	Tasks = "tasks",
 	Users = "users",
+	UsersConnections = "users_connections",
 }
 
 // Alias types for improved usability
@@ -38,6 +41,12 @@ export type AuthSystemFields<T = never> = {
 
 // Record types for each collection
 
+export type DocAttachmentsRecord = {
+	file?: string
+	doc?: RecordIdString
+	createdBy?: RecordIdString
+}
+
 export type DocBlocksRecord<Tproperties = unknown> = {
 	type: string
 	properties?: null | Tproperties
@@ -54,6 +63,9 @@ export type DocsRecord = {
 	createdBy?: RecordIdString
 	project?: RecordIdString
 	deleted?: boolean
+	excludeFromOverview?: boolean
+	ydoc?: string
+	attachments?: string[]
 }
 
 export enum DocsUsersAccessOptions {
@@ -66,6 +78,12 @@ export type DocsUsersRecord = {
 	doc: RecordIdString
 	access?: DocsUsersAccessOptions
 	deleted?: boolean
+}
+
+export type InvitesRecord = {
+	invited_by?: RecordIdString
+	project?: RecordIdString
+	doc?: RecordIdString
 }
 
 export type ListsRecord = {
@@ -119,41 +137,54 @@ export type UsersRecord = {
 	lastVisitedList?: RecordIdString
 }
 
+export type UsersConnectionsRecord<Tconnection = unknown> = {
+	connection?: null | Tconnection
+}
+
 // Response types include system fields and match responses from the PocketBase API
+export type DocAttachmentsResponse<Texpand = unknown> = Required<DocAttachmentsRecord> & BaseSystemFields<Texpand>
 export type DocBlocksResponse<Tproperties = unknown, Texpand = unknown> = Required<DocBlocksRecord<Tproperties>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
+export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> & BaseSystemFields<Texpand>
 export type ListsResponse = Required<ListsRecord> & BaseSystemFields
 export type ListsUsersResponse<Texpand = unknown> = Required<ListsUsersRecord> & BaseSystemFields<Texpand>
 export type ProjectsResponse<Texpand = unknown> = Required<ProjectsRecord> & BaseSystemFields<Texpand>
 export type ProjectsUsersResponse<Texpand = unknown> = Required<ProjectsUsersRecord> & BaseSystemFields<Texpand>
 export type TasksResponse<Texpand = unknown> = Required<TasksRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
+export type UsersConnectionsResponse<Tconnection = unknown> = Required<UsersConnectionsRecord<Tconnection>> & BaseSystemFields
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
+	doc_attachments: DocAttachmentsRecord
 	doc_blocks: DocBlocksRecord
 	docs: DocsRecord
 	docs_users: DocsUsersRecord
+	invites: InvitesRecord
 	lists: ListsRecord
 	lists_users: ListsUsersRecord
 	projects: ProjectsRecord
 	projects_users: ProjectsUsersRecord
 	tasks: TasksRecord
 	users: UsersRecord
+	users_connections: UsersConnectionsRecord
 }
 
 export type CollectionResponses = {
+	doc_attachments: DocAttachmentsResponse
 	doc_blocks: DocBlocksResponse
 	docs: DocsResponse
 	docs_users: DocsUsersResponse
+	invites: InvitesResponse
 	lists: ListsResponse
 	lists_users: ListsUsersResponse
 	projects: ProjectsResponse
 	projects_users: ProjectsUsersResponse
 	tasks: TasksResponse
 	users: UsersResponse
+	users_connections: UsersConnectionsResponse
 }
 
 export interface CollectionSchemas {
@@ -162,13 +193,90 @@ export interface CollectionSchemas {
   tasks: Tasks;
   lists_users: Listsusers;
   projects: Projects;
-  docs: Projects;
-  doc_blocks: Docblocks;
+  docs: Docs;
+  doc_blocks: Docs;
   projects_users: Listsusers;
   docs_users: Listsusers;
+  users_connections: Usersconnections;
+  invites: Invites;
+  doc_attachments: Docattachments;
 }
 
-export interface Docblocks {
+export interface Docattachments {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema9[];
+}
+
+export interface Schema9 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options9;
+}
+
+export interface Options9 {
+  maxSelect: number;
+  maxSize?: number;
+  mimeTypes?: any[];
+  thumbs?: any[];
+  protected?: boolean;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  displayFields?: any[];
+}
+
+export interface Invites {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema8[];
+}
+
+export interface Schema8 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options8;
+}
+
+export interface Options8 {
+  collectionId: string;
+  cascadeDelete: boolean;
+  minSelect?: any;
+  maxSelect: number;
+  displayFields: any[];
+}
+
+export interface Usersconnections {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema7[];
+}
+
+export interface Schema7 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options7;
+}
+
+export interface Options7 {
+}
+
+export interface Docs {
   id: string;
   name: string;
   type: string;

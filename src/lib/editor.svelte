@@ -15,15 +15,25 @@
 	import Typography from '@tiptap/extension-typography';
 	import Highlight from '@tiptap/extension-highlight';
 	import { getCommands } from './editor/extensions/commands';
-	import ImageExtension from '@tiptap/extension-image';
-	import Gapcursor from '@tiptap/extension-gapcursor';
 	import { Markdown } from 'tiptap-markdown';
+	import Collaboration from '@tiptap/extension-collaboration';
+	import Placeholder from '@tiptap/extension-placeholder';
+	import CollaborationCursor from './editor/extensions/CollaborationCursor';
+	import { WebrtcProvider } from 'y-webrtc';
+	import { ImageExtension } from './editor/extensions/image';
+	import * as Y from 'yjs';
+	import { userStore } from './storage';
+	import { get } from 'svelte/store';
+	import { events } from './modelEvent';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
 	export let editable: boolean = true;
 	export let autofocus: boolean = false;
 	export let isOverview: boolean = false;
+	export let ydoc = new Y.Doc();
+	export let editorProps = {};
+	export let provider;
 
 	let floatingMenuRef: HTMLDivElement;
 	let bubbleMenuRef: HTMLDivElement;
@@ -33,79 +43,46 @@
 	export let content: JSONContent;
 
 	$: {
-		if (editor) {
+		if (editor && content) {
 			editor.commands.setContent(content);
 		}
 	}
 
 	// TODO use collaboration plugin and yjs to sync data
-	// store data as blocks by providing a yjs document then convert it to json before save
+	// Store docs as T.Doc, store tasks from docs only to be able to reference them outside of the doc
+	// Checking or unchecking a task will require loading doc, modifying content and then resaving the doc
+	// https://discuss.yjs.dev/t/appropriate-way-to-load-initial-data-fallback-to-current-yjs-doc-data/1189/10
+
 	// https://github.com/ueberdosis/tiptap/blob/main/packages/extension-collaboration/src/collaboration.ts
 	// https://tiptap.dev/guide/collaborative-editing
 
-	function handleDrop(view, event, slice, moved) {
-		if (!moved && event.dataTransfer?.items?.length > 0) {
-			const items = Array.from(event.dataTransfer.items);
-			// if dropping external files
-			// handle the image upload
-			items.map(async (item) => {
-				console.log({ item });
-				if (item.kind === 'file' && item.type.startsWith('image/')) {
-					const image = new Image();
-					const file = item.getAsFile();
-					console.log({ file, image });
-					image.src = URL.createObjectURL(file);
-					await new Promise((resolve) => (image.onload = resolve));
-					console.log(image.src);
-					const { schema } = view.state;
-					const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-					const node = schema.nodes.image.create({ src: image.src, file }); // creates the image element
-					const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-					return view.dispatch(transaction);
-				}
-				if (item.kind === 'string' && item.type === 'text/uri-list') {
-					const text = await new Promise((resolve) => item.getAsString(resolve));
-					console.log({ text });
-					const blob = await fetch(text).then((r) => r.blob());
-					if (blob.type.startsWith('image/')) {
-						const { schema } = view.state;
-						const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-						const node = schema.nodes.image.create({ src: text, file: blob }); // creates the image element
-						const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-						return view.dispatch(transaction);
-					}
-				}
-			});
-
-			return true; // handled
-		}
-		return false; // not handled use default behaviour
-	}
-
 	onMount(() => {
+		const style = getComputedStyle(document.documentElement);
+
 		editor = new Editor({
 			element,
 			extensions: [
-				StarterKit.configure({ commands: false }),
+				StarterKit.configure({ commands: false, history: false }),
 				TaskItem.configure({ nested: true, isOverview, dispatch }),
+				Collaboration.configure({ document: ydoc, field: 'doc' }),
+				provider &&
+					CollaborationCursor.configure({
+						provider,
+						user: {
+							name: get(userStore).record?.name,
+							color: style.getPropertyValue('--text-3'),
+							backgroundColor: style.getPropertyValue('--surface-4')
+						}
+					}),
+				Placeholder.configure({
+					placeholder: 'Write something...'
+				}),
 				Link,
 				Id,
 				TaskList,
 				SlashCommand,
 				Markdown,
-				ImageExtension.extend({
-					addAttributes() {
-						return {
-							...this.parent?.(),
-							file: {
-								default: undefined
-							},
-							id: {
-								default: undefined
-							}
-						};
-					}
-				}).configure({ allowBase64: true }),
+				ImageExtension,
 				Typography,
 				Highlight.configure({ HTMLAttributes: { class: 'accent' } }),
 				FloatingMenu.configure({
@@ -125,9 +102,7 @@
 			content,
 			editable,
 			autofocus,
-			editorProps: {
-				handleDrop
-			},
+			editorProps,
 			onTransaction: () => {
 				// force re-render so `editor.isActive` works as expected
 				// editor = editor;
@@ -231,5 +206,33 @@
 
 	[data-title='italic'] {
 		font-style: oblique;
+	}
+
+	/* Give a remote user a caret */
+	:global(.collaboration-cursor__caret) {
+		border-left: 1px solid #0d0d0d;
+		border-right: 1px solid #0d0d0d;
+		margin-left: -1px;
+		margin-right: -1px;
+		pointer-events: none;
+		position: relative;
+		word-break: normal;
+	}
+
+	/* Render the username above the caret */
+	:global(.collaboration-cursor__label) {
+		border-radius: 3px 3px 3px 0;
+		background-color: var(--surface-accent-3);
+		color: var(--text-3);
+		font-size: 12px;
+		font-style: normal;
+		font-weight: 600;
+		left: -1px;
+		line-height: normal;
+		padding: 0.1rem 0.3rem;
+		position: absolute;
+		top: -1.4em;
+		user-select: none;
+		white-space: nowrap;
 	}
 </style>

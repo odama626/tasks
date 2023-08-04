@@ -9,13 +9,11 @@
 	export let value;
 
 	function updatePosition() {
-		console.log({ containerRef, contentRef });
 		if (!containerRef || !contentRef) return;
 		computePosition(containerRef, contentRef, {
 			middleware: [
 				size({
 					apply({ availableWidth, availableHeight, elements }) {
-						console.log({ elements });
 						const parent = elements.reference.getBoundingClientRect();
 						Object.assign(elements.floating.style, {
 							width: `${parent.width}px`

@@ -1,6 +1,7 @@
 import Dexie from 'dexie';
 import PocketBase from 'pocketbase';
 import { get, writable } from 'svelte/store';
+import type { DocAttachmentsResponse, DocsResponse } from './db.types';
 
 export const db = new Dexie('todo-db');
 export const pb = new PocketBase(import.meta.env.VITE_SERVER_URL);
@@ -36,10 +37,27 @@ db.version(6).stores({
 	doc_blocks: '&id, attrs, doc, parent, [type+project], path'
 });
 
+db.version(7).stores({
+	doc_attachments: '&id, file, doc, createdBy'
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',
 	Viewer = 'viewer'
+}
+
+export interface DocsInstance extends DocsResponse {
+	cache_ydoc: string;
+}
+
+export interface DocAttachmentsInstance extends DocAttachmentsResponse {
+	cache_file: string;
+}
+
+export interface CollectionInstances {
+	DocsInstance: DocsInstance;
+	DocAttachmentsInstance: DocAttachmentsInstance;
 }
 
 export function storable<T>(data: T, name: string) {
