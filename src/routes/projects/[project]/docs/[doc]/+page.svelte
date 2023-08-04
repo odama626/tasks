@@ -117,23 +117,27 @@
 			// if dropping external files
 			// handle the image upload
 			items.map(async (item) => {
-				if (item.kind === 'file' && item.type.startsWith('image/')) {
-					const file = item.getAsFile();
-					await insertImage(file, view, event, slice, moved);
-				}
-				if (item.kind === 'string' && item.type === 'text/uri-list') {
-					const text = await new Promise((resolve) => item.getAsString(resolve));
-					const blob = await fetch(text).then((r) => r.blob());
-					if (blob.type.startsWith('image/')) {
-						const { schema } = view.state;
-						await insertImage(
-							new File([blob], createId(), { type: blob.type }),
-							view,
-							event,
-							slice,
-							moved
-						);
+				try {
+					if (item.kind === 'file' && item.type.startsWith('image/')) {
+						const file = item.getAsFile();
+						await insertImage(file, view, event, slice, moved);
 					}
+					if (item.kind === 'string' && item.type === 'text/uri-list') {
+						const text = await new Promise((resolve) => item.getAsString(resolve));
+						const blob = await fetch(text).then((r) => r.blob());
+						if (blob.type.startsWith('image/')) {
+							const { schema } = view.state;
+							await insertImage(
+								new File([blob], createId(), { type: blob.type }),
+								view,
+								event,
+								slice,
+								moved
+							);
+						}
+					}
+				} catch (e) {
+					console.error(e);
 				}
 			});
 

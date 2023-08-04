@@ -1,9 +1,9 @@
-import {
+import type {
 	Collections,
-	type CollectionRecords,
-	type DocsResponse,
-	type DocAttachmentsResponse,
-	type CollectionResponses
+	CollectionRecords,
+	DocsResponse,
+	DocAttachmentsResponse,
+	CollectionResponses
 } from './db.types';
 import {
 	db,
@@ -14,6 +14,7 @@ import {
 } from './storage';
 import { DateTime } from 'luxon';
 import { NotificationType, attachRecordToError, notify, prepareRecordFormData } from './utils';
+
 export enum EventType {
 	Add = 'add',
 	Update = 'update',
@@ -44,7 +45,38 @@ interface ModelDeleteEvent<T> extends BaseModelEvent {
 	payload?: Partial<T>;
 }
 
-export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent;
+export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent<T>;
+
+interface SyncTable {
+	table: ValueOf<Collections>;
+	/**
+	 *	 a list of columns to precache as files
+	 */
+	cacheFileFields?: string[];
+	/**
+	 *		a pocketbase token
+	 *		required if cachine file fields
+	 */
+	token?: string;
+	/**
+	 *		 invalidate cache for each table when receiving an update
+	 *		 subscription updates also force a refetch
+	 */
+	invalidateCache?: ValueOf<Collections>[];
+}
+
+const getSyncTables = ({ token }): SyncTable[] => [
+	{ table: 'projects_users', invalidateCache: ['docs', 'users', 'projects'] },
+	{ table: 'docs_users', invalidateCache: ['docs', 'users'] },
+	{ table: 'users' },
+	{ table: 'lists_users' },
+	{ table: 'lists' },
+	{ table: 'tasks' },
+	{ table: 'projects' },
+	{ table: 'docs', cacheFileFields: ['ydoc'], token },
+	{ table: 'doc_blocks' },
+	{ table: 'doc_attachments', cacheFileFields: ['file'], token }
+];
 
 export class ModelEvents {
 	public online: boolean = navigator.onLine;
@@ -59,7 +91,7 @@ export class ModelEvents {
 		window.addEventListener('offline', () => (this.online = false));
 	}
 
-	async add(event: ModelEvent<any>) {
+	private async add(event: ModelEvent<any>) {
 		try {
 			db.events.add(event);
 			if (event.eventType === 'update') {
@@ -104,7 +136,7 @@ export class ModelEvents {
 
 	async delete<T>(
 		modelType: BaseModelEvent['modelType'],
-		recordId: ModelDeleteEvent['recordId'],
+		recordId: ModelDeleteEvent<T>['recordId'],
 		payload?: Partial<T>
 	) {
 		return this.add({
@@ -115,8 +147,9 @@ export class ModelEvents {
 		});
 	}
 
-	private async syncTable(table: string, { cacheFileFields = [], token } = {}) {
+	private async syncTable({ table, cacheFileFields = [], token, invalidateCache = [] }: SyncTable) {
 		if (!this.online) return;
+
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();
 
@@ -134,6 +167,10 @@ export class ModelEvents {
 			{ deleted: [], updates: [] }
 		);
 
+		if (records.length && invalidateCache.length) {
+			invalidateCache.forEach((table) => localStorage.removeItem(`last-sync:${table}`));
+		}
+
 		if (cacheFileFields.length) {
 			results.updates = await Promise.all(
 				results.updates.map(async (update) => this.cacheFields(update, cacheFileFields, token))
@@ -143,6 +180,11 @@ export class ModelEvents {
 		await db[table].bulkPut(results.updates);
 		await db[table].bulkDelete(results.deleted);
 
+		localStorage.setItem(
+			`last-sync:${table}`,
+			currentSync.setZone('utc').toFormat('yyyy-MM-dd HH:mm:s.u')
+		);
+
 		pb.collection(table).subscribe('*', async (data) => {
 			if (data.action === 'delete' || data.record.deleted === true) {
 				db[table].delete(data.record.id);
@@ -150,11 +192,16 @@ export class ModelEvents {
 				const record = await this.cacheFields(data.record, cacheFileFields, token);
 				db[table].put(record);
 			}
+			if (invalidateCache.length) {
+				const syncTables = getSyncTables({ token });
+				for (const syncTable of syncTables) {
+					if (invalidateCache.includes(syncTable.table)) {
+						localStorage.removeItem(`last-sync:${syncTable.table}`);
+						await this.syncTable(syncTable);
+					}
+				}
+			}
 		});
-		localStorage.setItem(
-			`last-sync:${table}`,
-			currentSync.setZone('utc').toFormat('yyyy-MM-dd HH:mm:s.u')
-		);
 
 		return results.updates;
 	}
@@ -184,18 +231,12 @@ export class ModelEvents {
 		await this.step();
 
 		const token = await pb.files.getToken();
+		const syncTables = getSyncTables({ token });
+		for (const syncTable of syncTables) {
+			await this.syncTable(syncTable);
+		}
 
-		await this.syncTable('users');
-		await this.syncTable('lists_users');
-		await this.syncTable('lists');
-		await this.syncTable('tasks');
-		await this.syncTable('projects_users');
-		await this.syncTable('projects');
-		await this.syncTable('docs_users');
-		await this.syncTable('docs', { cacheFileFields: ['ydoc'], token });
-
-		await this.syncTable('doc_blocks');
-		await this.syncTable('doc_attachments', { cacheFileFields: ['file'], token });
+		// Order matters when using invalidateCache!
 
 		// await this.cacheYdocs(docs as DocsInstance[], token);
 		// await this.cacheAttachments(attachments as DocAttachmentsInstance[], token);

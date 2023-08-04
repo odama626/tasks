@@ -76,7 +76,7 @@ export async function saveDocument(docId: string, ydoc: Y.Doc) {
 		referencedAttachments.add(id);
 	}
 	attachments.forEach((attachment) => {
-		if (referencedAttachments.has(docId)) return;
+		if (referencedAttachments.has(attachment.id)) return;
 		events.delete(Collections.DocAttachments, attachment.id, { file: null });
 	});
 
