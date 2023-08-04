@@ -139,8 +139,11 @@ export async function getYdoc(doc: DocsInstance) {
 		Y.applyUpdate(ydoc, new Uint8Array(arrayBuffer));
 		rehydrateImages(ydoc, doc.id);
 	}
-	const metadata = ydoc.getMap('metadata');
-	if (doc && !metadata.get('docId')) metadata.set('docId', doc.id);
+	if (doc) {
+		const metadata = ydoc.getMap('metadata');
+		if (!metadata.has('docId')) metadata.set('docId', doc.id);
+		if (!metadata.has('projectId')) metadata.set('projectId', doc.project);
+	}
 	return ydoc;
 }
 

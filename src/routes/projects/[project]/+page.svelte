@@ -21,6 +21,8 @@
 	import type * as Y from 'yjs';
 	import ShareForm from './share-form.svelte';
 	import { onDestroy } from 'svelte';
+	import { get } from 'svelte/store';
+	import { saveDocument } from './docs/[doc]/saveDocument';
 
 	export let data;
 	let expandedDocs = {};
@@ -39,8 +41,8 @@
 
 	let tasks: TiptapNode<'taskItem'>[] = [];
 	let links: TiptapNode<'text'>[] = [];
-	let ydocs: { doc: DocsInstance; ydoc: Y.Doc }[];
-	let tasksByDoc = {};
+	let ydocsByDocId: Record<string, Y.Doc> = {};
+	let tasksByDocId = {};
 	let providersByDocId: Map<string, WebrtcProvider> = new Map();
 
 	function fetchDocs() {
@@ -55,74 +57,81 @@
 		});
 	});
 
-	function fetchTasks() {
-		docs.subscribe(async (docs) => {
-			console.log({ docs });
-			let newTasks: TiptapNode<'taskItem'>[] = [];
-			let newTasksByDoc = {};
-			let newLinks: TiptapNode<'text'>[] = [];
-			let docsToUnsubscribe = new Set(providersByDocId.keys());
-			ydocs = await Promise.all(
-				docs.map(async (doc) => {
-					const ydoc = await getYdoc(doc);
-					const fragment = ydoc.getXmlFragment('doc');
-					let children = new Set();
-					let allTaskItems: Y.XmlElement[] = [];
+	function omitCheckedChildren(node) {
+		return {
+			...node,
+			content: node.content
+				?.filter((node) => node.type !== 'taskItem' || !node?.attrs?.checked)
+				.map(omitCheckedChildren)
+		};
+	}
 
-					docsToUnsubscribe.delete(doc.id);
-					if (!providersByDocId.has(doc.id)) {
-						const provider = getDocProvider(doc, ydoc);
-						providersByDocId.set(doc.id, provider);
-						provider;
-					}
+	async function fetchTasks() {
+		if (!$docs) return;
+		let newTasks: TiptapNode<'taskItem'>[] = [];
+		let newTasksByDocId = {};
+		let newLinks: TiptapNode<'text'>[] = [];
+		let docsToUnsubscribe = new Set(providersByDocId.keys());
+		await Promise.all(
+			$docs.map(async (doc) => {
+				if (!ydocsByDocId[doc.id]) ydocsByDocId[doc.id] = await getYdoc(doc);
+				const ydoc = ydocsByDocId[doc.id];
+				const fragment = ydoc.getXmlFragment('doc');
+				let children = new Set();
+				let allTaskItems: Y.XmlElement[] = [];
 
-					for (const taskItem of fragment.createTreeWalker(
+				docsToUnsubscribe.delete(doc.id);
+				if (!providersByDocId.has(doc.id)) {
+					const provider = getDocProvider(doc, ydoc);
+					providersByDocId.set(doc.id, provider);
+					fragment.observeDeep((event) => {
+						fetchTasks();
+					});
+				}
+
+				for (const taskItem of fragment.createTreeWalker((yxml) => yxml.nodeName === 'taskItem')) {
+					if (children.has(taskItem.getAttribute('id'))) continue;
+					for (const childItem of taskItem.createTreeWalker(
 						(yxml) => yxml.nodeName === 'taskItem'
 					)) {
-						if (children.has(taskItem.getAttribute('id'))) continue;
-						for (const childItem of taskItem.createTreeWalker(
-							(yxml) => yxml.nodeName === 'taskItem'
-						)) {
-							children.add(childItem.getAttribute('id'));
-						}
-						allTaskItems.push(taskItem);
+						children.add(childItem.getAttribute('id'));
 					}
+					allTaskItems.push(taskItem);
+				}
 
-					const taskItems = allTaskItems
-						.filter((taskItem) => !children.has(taskItem.getAttribute('id')))
-						.map(serializeXmlToJson<'taskItem'>);
+				const taskItems = allTaskItems
+					.filter((taskItem) => !children.has(taskItem.getAttribute('id')))
+					.map(serializeXmlToJson<'taskItem'>);
 
-					newTasksByDoc[doc.id] = taskItems;
+				newTasksByDocId[doc.id] = taskItems;
 
-					if (!doc.excludeFromOverview) {
-						newTasks.push(...taskItems.filter((item) => !item.attrs?.checked));
-					}
+				if (!doc.excludeFromOverview) {
+					newTasks.push(
+						...taskItems.filter((item) => !item.attrs?.checked).map(omitCheckedChildren)
+					);
+				}
 
-					for (const linkItem of fragment.createTreeWalker((yxml) => !yxml.nodeType)) {
-						const linkContent = serializeXmlToJson(linkItem);
-						const linkContents = Array.isArray(linkContent) ? linkContent : [linkContent];
-						newLinks.push(
-							...linkContents.filter((link) => link.marks?.some((mark) => mark.type === 'link'))
-						);
-					}
-					links = newLinks
-						.sort((a, b) => a.text.localeCompare(b.text))
-						.map((link) => ({ type: 'paragraph', content: [link] }));
+				for (const linkItem of fragment.createTreeWalker((yxml) => !yxml.nodeType)) {
+					const linkContent = serializeXmlToJson(linkItem);
+					const linkContents = Array.isArray(linkContent) ? linkContent : [linkContent];
+					newLinks.push(
+						...linkContents.filter((link) => link.marks?.some((mark) => mark.type === 'link'))
+					);
+				}
+				links = newLinks
+					.sort((a, b) => a.text.localeCompare(b.text))
+					.map((link) => ({ type: 'paragraph', content: [link] }));
+			})
+		);
 
-					return { doc, ydoc };
-				})
-			);
-
-			docsToUnsubscribe.forEach((docId: string) => {
-				const provider = providersByDocId.get(docId);
-				provider?.destroy();
-				providersByDocId.delete(docId);
-			});
-
-			tasks = newTasks;
-			tasksByDoc = newTasksByDoc;
-			console.log({ tasks });
+		docsToUnsubscribe.forEach((docId: string) => {
+			const provider = providersByDocId.get(docId);
+			provider?.destroy();
+			providersByDocId.delete(docId);
 		});
+
+		tasks = newTasks;
+		tasksByDocId = newTasksByDocId;
 	}
 
 	// Subscriptions
@@ -130,19 +139,17 @@
 	$: $docs, fetchTasks();
 	$: data.projectId, fetchDocs();
 
-	async function updateTaskItem(event) {
-		const { options, attrs, checked } = event.detail;
-		const existingTask = await db.doc_blocks.get(attrs.id);
-		existingTask.properties.attrs.checked = checked;
-		await events.add({
-			eventType: EventType.Update,
-			modelType: Collections.DocBlocks,
-			recordId: attrs.id,
-			payload: { properties: existingTask.properties }
-		});
+	function onTaskItemUpdate(event) {
+		const { doc, id } = event.detail?.attrs;
+		const { checked } = event.detail;
+		const ydoc = ydocsByDocId[doc];
+		const taskItem = ydoc
+			.getXmlFragment('doc')
+			.createTreeWalker((yxml) => yxml.nodeName === 'taskItem' && yxml.getAttribute('id') === id)
+			.next().value;
+		taskItem.setAttribute('checked', checked);
+		saveDocument(doc, ydoc);
 	}
-
-	// $: console.log(tasks);
 </script>
 
 <Portal target=".sub-header-slot">
@@ -153,7 +160,6 @@
 		{#if isEditingName}
 			<form
 				on:submit|preventDefault={collectFormData((formData) => {
-					console.log(formData);
 					events.add({
 						modelType: Collections.Projects,
 						eventType: EventType.Update,
@@ -207,6 +213,7 @@
 		<h2>Tasks</h2>
 		<!-- TODO: wrap tasks in a tasklist to fix spacing -->
 		<Editor
+			on:taskItemUpdate={onTaskItemUpdate}
 			isOverview={true}
 			editable={false}
 			content={{ type: 'doc', content: [{ type: 'taskList', content: tasks }] }}
@@ -218,7 +225,7 @@
 	<div class="docs">
 		{#if $docs}
 			{#each $docs as doc (doc.id)}
-				{@const tasks = tasksByDoc[doc.id]}
+				{@const tasks = tasksByDocId[doc.id]}
 				{@const expanded = expandedDocs[doc.id]}
 				<button
 					on:click={(e) => {
@@ -256,7 +263,7 @@
 					<div class="tasks-group">
 						<Editor
 							isOverview={true}
-							on:taskItemUpdate={updateTaskItem}
+							on:taskItemUpdate={onTaskItemUpdate}
 							content={{ type: 'doc', content: tasks }}
 							editable={false}
 						/>

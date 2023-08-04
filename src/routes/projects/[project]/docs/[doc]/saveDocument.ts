@@ -1,29 +1,50 @@
 import { Collections } from '$lib/db.types';
-import { EventType, events } from '$lib/modelEvent';
+import { events } from '$lib/modelEvent';
 import { RecordAccess, db, userStore } from '$lib/storage';
-import { createId, notify } from '$lib/utils';
-import type { JSONContent } from '@tiptap/core';
+import { createId, getYdoc, notify } from '$lib/utils';
 import { get } from 'svelte/store';
 import * as Y from 'yjs';
 
+export async function createDocument(projectId: string) {
+	const id = createId();
+	const ydoc = new Y.Doc();
 
-export async function saveDocument(
-	title: string,
-	docId: string,
-	ydoc: Y.Doc,
-	projectId: string,
-	editorContent: JSONContent
-) {
-	if (!editorContent.content) throw new Error('Cannot save an empty document');
-	const isNew = docId === 'new';
-	const id = isNew ? createId() : docId;
+	// attach metadata
+	const metadata = ydoc.getMap('metadata');
+	metadata.set('docId', id);
+	metadata.set('projectId', projectId);
+
+	const ydocFile = new File([Y.encodeStateAsUpdate(ydoc)], title + '.ydoc', {
+		type: 'application/ydoc'
+	});
+
+	events.create(Collections.Docs, {
+		title: 'Untitled Document',
+		createdBy: get(userStore).record.id,
+		project: data.projectId,
+		id,
+		ydoc: ydocFile
+	});
+
+	events.create(Collections.DocsUsers, {
+		id: createId(),
+		user: user.id,
+		doc: id,
+		access: RecordAccess.Admin
+	});
+
+	return id;
+}
+
+export async function saveDocument(docId: string, ydoc: Y.Doc) {
 	const user = get(userStore).record;
-
-	// const title = getText(editorContent);
+	const title = ydoc.getText('title').toString();
+	const projectId = ydoc.getMap('metadata').get('projectId');
 
 	const ydocContent = ydoc.getXmlFragment('doc');
 	const existingIds = new Set();
 
+	// make sure every node has a unique id
 	for (const element of ydocContent.createTreeWalker(() => true)) {
 		const id = element.getAttribute('id');
 		if (!id || existingIds.has(id)) {
@@ -37,55 +58,29 @@ export async function saveDocument(
 		}
 	}
 
-	console.log(ydocContent.toDOM());
-	console.log(ydoc.getMap());
-
+	// attach metadata
 	const ydocFile = new File([Y.encodeStateAsUpdate(ydoc)], title + '.ydoc', {
 		type: 'application/ydoc'
 	});
 
-	const record = {
-		eventType: isNew ? EventType.Add : EventType.Update,
-		modelType: Collections.Docs,
-		recordId: id,
-		payload: {
-			title,
-			createdBy: user.id,
-			project: projectId,
-			id,
-			ydoc: ydocFile
-		}
-	};
-
-	await events.add(record);
-
-	if (isNew) {
-		const docsUsersId = createId();
-		await events.add({
-			eventType: EventType.Add,
-			modelType: Collections.DocsUsers,
-			payload: {
-				id: docsUsersId,
-				user: user.id,
-				doc: id,
-				access: RecordAccess.Admin
-			}
-		});
-	}
+	events.update(Collections.Docs, docId, {
+		ydoc: ydocFile,
+		title
+	});
 
 	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
-	const referencedAttachments = {};
+	const referencedAttachments = new Set<string>();
 	const fragment = ydoc.getXmlFragment('doc');
 	for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
 		const id = image.getAttribute('docAttachment');
-		referencedAttachments[id] = true;
+		referencedAttachments.add(id);
 	}
 	attachments.forEach((attachment) => {
-		if (referencedAttachments[attachment.id]) return;
+		if (referencedAttachments.has(docId)) return;
 		events.delete(Collections.DocAttachments, attachment.id, { file: null });
 	});
 
 	notify({ text: `Saved "${title}"` });
 
-	return id;
+	return docId;
 }

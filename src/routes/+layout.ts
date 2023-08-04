@@ -8,7 +8,6 @@ export let ssr = false;
 const unauthenticatedRoutes = ['/', '/user'];
 
 export const load = (async (args) => {
-	console.log({ globalThis, args });
 	const auth = JSON.parse(localStorage.getItem('auth') ?? 'null');
 
 	if (!auth && !unauthenticatedRoutes.includes(args.url.pathname)) {

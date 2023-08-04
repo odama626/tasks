@@ -12,20 +12,14 @@
 	import { onMount } from 'svelte';
 	import Portal from 'svelte-portal';
 	import { get } from 'svelte/store';
-	import { WebrtcProvider } from 'y-webrtc';
-	import * as Y from 'yjs';
-	import { saveDocument } from './saveDocument';
+	import type { WebrtcProvider } from 'y-webrtc';
+	import { createDocument, saveDocument } from './saveDocument';
 
 	$: {
 		if (data.docId === 'new') {
-			const id = createId();
-			events.create(Collections.Docs, {
-				title: 'Untitled Document',
-				createdBy: get(userStore).record.id,
-				project: data.projectId,
-				id
-			});
-			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
+			createDocument(data.projectId).then((id) =>
+				goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true })
+			);
 		}
 	}
 
@@ -49,21 +43,18 @@
 	let provider: WebrtcProvider;
 	if (events.online) {
 		provider = getDocProvider(data.doc, ydoc);
-	} // let offlineProvider = new IndexeddbPersistence(window.location.href, ydoc);
+	}
 
 	onMount(() => {
 		ydoc.getText('title').observe((event) => {
 			const value = event.target.toString();
 			title = value;
-			// inputRef.value = event.target.toString();
 		});
 		provider?.awareness.on('change', (change) => {
 			hasCollaborators = provider.awareness.getStates().size !== 1;
 		});
 		return () => {
 			provider?.destroy();
-			// offlineProvider.destroy();
-			// if (!hasCollaborators) onSave();
 		};
 	});
 
@@ -79,11 +70,8 @@
 	async function onSave() {
 		if (saving) return;
 		saving = true;
-		const body = Y.encodeStateAsUpdateV2(ydoc);
-		const id = await saveDocument(title, data.docId, ydoc, data.projectId, editor.getJSON());
+		const id = await saveDocument(data.docId, ydoc);
 
-		if (data.docId === 'new')
-			goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true });
 		saving = false;
 	}
 
