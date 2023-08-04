@@ -41,6 +41,10 @@ db.version(7).stores({
 	doc_attachments: '&id, file, doc, createdBy'
 });
 
+db.version(8).stores({
+	dock_blocks: null
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',

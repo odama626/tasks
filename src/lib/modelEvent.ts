@@ -74,7 +74,6 @@ const getSyncTables = ({ token }): SyncTable[] => [
 	{ table: 'tasks' },
 	{ table: 'projects' },
 	{ table: 'docs', cacheFileFields: ['ydoc'], token },
-	{ table: 'doc_blocks' },
 	{ table: 'doc_attachments', cacheFileFields: ['file'], token }
 ];
 
