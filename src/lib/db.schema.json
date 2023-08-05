@@ -36,198 +36,6 @@
           "thumbs": null,
           "protected": false
         }
-      },
-      {
-        "id": "pki2arfl",
-        "name": "lastVisitedList",
-        "type": "relation",
-        "system": false,
-        "required": false,
-        "options": {
-          "collectionId": "inp2hhk8yi4gzlp",
-          "cascadeDelete": false,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      }
-    ]
-  },
-  "lists": {
-    "id": "inp2hhk8yi4gzlp",
-    "name": "lists",
-    "type": "base",
-    "system": false,
-    "schema": [
-      {
-        "id": "lawrt6u8",
-        "name": "name",
-        "type": "text",
-        "system": false,
-        "required": false,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "ed2cwpvx",
-        "name": "description",
-        "type": "text",
-        "system": false,
-        "required": false,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "cb9mqdwd",
-        "name": "deleted",
-        "type": "bool",
-        "system": false,
-        "required": false,
-        "options": {}
-      }
-    ]
-  },
-  "tasks": {
-    "id": "v8zw4nrzjxqfh6m",
-    "name": "tasks",
-    "type": "base",
-    "system": false,
-    "schema": [
-      {
-        "id": "eej7xhma",
-        "name": "name",
-        "type": "text",
-        "system": false,
-        "required": false,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "j5rtbehi",
-        "name": "body",
-        "type": "text",
-        "system": false,
-        "required": false,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "kxu6bd0r",
-        "name": "createdBy",
-        "type": "relation",
-        "system": false,
-        "required": true,
-        "options": {
-          "collectionId": "_pb_users_auth_",
-          "cascadeDelete": false,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "ahqd2izn",
-        "name": "list",
-        "type": "relation",
-        "system": false,
-        "required": false,
-        "options": {
-          "collectionId": "inp2hhk8yi4gzlp",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "uusswckd",
-        "name": "completed",
-        "type": "date",
-        "system": false,
-        "required": false,
-        "options": {
-          "min": "",
-          "max": ""
-        }
-      },
-      {
-        "id": "yr9wt4ci",
-        "name": "deleted",
-        "type": "bool",
-        "system": false,
-        "required": false,
-        "options": {}
-      }
-    ]
-  },
-  "lists_users": {
-    "id": "9lt6qtdhqpfv98d",
-    "name": "lists_users",
-    "type": "base",
-    "system": false,
-    "schema": [
-      {
-        "id": "3zacadtp",
-        "name": "user",
-        "type": "relation",
-        "system": false,
-        "required": true,
-        "options": {
-          "collectionId": "_pb_users_auth_",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "wbjsyims",
-        "name": "list",
-        "type": "relation",
-        "system": false,
-        "required": true,
-        "options": {
-          "collectionId": "inp2hhk8yi4gzlp",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "2c9o6znj",
-        "name": "access",
-        "type": "select",
-        "system": false,
-        "required": false,
-        "options": {
-          "maxSelect": 1,
-          "values": [
-            "admin",
-            "read",
-            "modify"
-          ]
-        }
-      },
-      {
-        "id": "y2qamndy",
-        "name": "deleted",
-        "type": "bool",
-        "system": false,
-        "required": false,
-        "options": {}
       }
     ]
   },
@@ -347,124 +155,6 @@
           "mimeTypes": [],
           "thumbs": [],
           "protected": false
-        }
-      },
-      {
-        "id": "sh2tpobo",
-        "name": "attachments",
-        "type": "file",
-        "system": false,
-        "required": false,
-        "options": {
-          "maxSelect": 99,
-          "maxSize": 5242880,
-          "mimeTypes": [],
-          "thumbs": [],
-          "protected": false
-        }
-      }
-    ]
-  },
-  "doc_blocks": {
-    "id": "2c1pn7t2dq7j2fp",
-    "name": "doc_blocks",
-    "type": "base",
-    "system": false,
-    "schema": [
-      {
-        "id": "13im7a4i",
-        "name": "type",
-        "type": "text",
-        "system": false,
-        "required": true,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "d4dckyoa",
-        "name": "properties",
-        "type": "json",
-        "system": false,
-        "required": false,
-        "options": {}
-      },
-      {
-        "id": "cmr6gnde",
-        "name": "doc",
-        "type": "relation",
-        "system": false,
-        "required": true,
-        "options": {
-          "collectionId": "z6njzq3iaauegmm",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "ikhbodhc",
-        "name": "project",
-        "type": "relation",
-        "system": false,
-        "required": true,
-        "options": {
-          "collectionId": "070s9pn87eu6cuz",
-          "cascadeDelete": true,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "iyofozpt",
-        "name": "parent",
-        "type": "relation",
-        "system": false,
-        "required": false,
-        "options": {
-          "collectionId": "2c1pn7t2dq7j2fp",
-          "cascadeDelete": false,
-          "minSelect": null,
-          "maxSelect": 1,
-          "displayFields": []
-        }
-      },
-      {
-        "id": "fppd8nye",
-        "name": "path",
-        "type": "text",
-        "system": false,
-        "required": true,
-        "options": {
-          "min": null,
-          "max": null,
-          "pattern": ""
-        }
-      },
-      {
-        "id": "jvl4qm1a",
-        "name": "deleted",
-        "type": "bool",
-        "system": false,
-        "required": false,
-        "options": {}
-      },
-      {
-        "id": "yrt9fndy",
-        "name": "file",
-        "type": "file",
-        "system": false,
-        "required": false,
-        "options": {
-          "maxSelect": 1,
-          "maxSize": 20971520,
-          "mimeTypes": [],
-          "thumbs": [],
-          "protected": true
         }
       }
     ]
@@ -594,7 +284,7 @@
     "system": false,
     "schema": [
       {
-        "id": "sic2gmm7",
+        "id": "ii6enlzq",
         "name": "connection",
         "type": "json",
         "system": false,
@@ -611,7 +301,7 @@
     "schema": [
       {
         "id": "3mruyjsf",
-        "name": "invited_by",
+        "name": "createdBy",
         "type": "relation",
         "system": false,
         "required": false,
@@ -649,6 +339,29 @@
           "minSelect": null,
           "maxSelect": 1,
           "displayFields": []
+        }
+      },
+      {
+        "id": "j9ee3gdb",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "tfhlznnf",
+        "name": "access",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "admin",
+            "editor",
+            "viewer"
+          ]
         }
       }
     ]
@@ -700,6 +413,14 @@
           "maxSelect": 1,
           "displayFields": []
         }
+      },
+      {
+        "id": "1gbpaxz2",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
       }
     ]
   }

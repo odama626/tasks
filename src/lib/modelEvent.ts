@@ -72,7 +72,8 @@ const getSyncTables = ({ token }): SyncTable[] => [
 	{ table: 'tasks' },
 	{ table: 'projects' },
 	{ table: 'docs', cacheFileFields: ['ydoc'], token },
-	{ table: 'doc_attachments', cacheFileFields: ['file'], token }
+	{ table: 'doc_attachments', cacheFileFields: ['file'], token },
+	{ table: 'invites' }
 ];
 
 export class ModelEvents {

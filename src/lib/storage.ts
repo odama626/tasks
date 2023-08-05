@@ -53,6 +53,10 @@ db.version(10).stores({
 	users: '&id, username, email'
 });
 
+db.version(11).stores({
+	invites: `&id, project, doc, invited_by, access`
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',

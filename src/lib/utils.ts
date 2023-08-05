@@ -147,6 +147,15 @@ export async function getYdoc(doc: DocsInstance) {
 	return ydoc;
 }
 
+export function getInviteLink(inviteId: string) {
+	return `${location.host}/invite/${inviteId}`;
+}
+
+export function copyInviteToClipboard(inviteId: string) {
+	navigator.clipboard.writeText(getInviteLink(inviteId));
+	notify({ text: `Invite copied to clipboard` });
+}
+
 export function getDocSyncRoom(doc: DocsResponse) {
 	return `${location.host}/project/${doc?.project}/doc/${doc?.id}`;
 }

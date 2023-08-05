@@ -2,14 +2,23 @@
 	import { Collections, ProjectsUsersAccessOptions } from '$lib/db.types';
 	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
-	import { db, userStore } from '$lib/storage';
-	import { collectFormData, withKeys } from '$lib/utils';
+	import { RecordAccess, db, userStore } from '$lib/storage';
+	import {
+		collectFormData,
+		copyInviteToClipboard,
+		createId,
+		getInviteLink,
+		notify,
+		withKeys
+	} from '$lib/utils';
 	import { ListboxOption } from '@rgossiaux/svelte-headlessui';
+	import { getTextSerializersFromSchema } from '@tiptap/core';
 	import { liveQuery } from 'dexie';
 	import { get } from 'svelte/store';
 
 	export let projectId: string;
 	$: permissions = liveQuery(() => db.projects_users.where({ project: projectId }).toArray());
+	$: invites = liveQuery(() => db.invites.where({ project: projectId }).toArray());
 	$: users = liveQuery(() => db.users.toCollection().toArray());
 
 	const createInvite = collectFormData(async (data, event) => {
@@ -27,6 +36,17 @@
 		// })
 		console.log({ data });
 	});
+
+	async function createInviteLink() {
+		const id = createId();
+		events.create(Collections.Invites, {
+			id,
+			createdBy: get(userStore).record.id,
+			project: projectId,
+			access: RecordAccess.Viewer
+		});
+		copyInviteToClipboard(id);
+	}
 
 	let options = ['admin', 'editor', 'viewer'];
 	let allowedOptions = [];
@@ -77,8 +97,40 @@
 					{/each}
 				</Select>
 			{/each}
+			{#if $invites}
+				<div class="divider horizontal" style="grid-column: 1/3;" />
+				{#each $invites as invite (invite.id)}
+					<div class="name invite">
+						{invite.id}
+						<button class="icon ghost small" on:click={() => copyInviteToClipboard(invite.id)}>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke-width="1.5"
+								stroke="currentColor"
+								class="icon"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75"
+								/>
+							</svg>
+						</button>
+					</div>
+					<Select class="ghost" name="access" value={invite.access}>
+						{#each allowedOptions as option}
+							<option value={option}>{option}</option>
+						{/each}
+					</Select>
+				{/each}
+			{/if}
 		</div>
 	{/if}
+	<button on:click={createInviteLink} class="ghost" style="text-align: right">
+		Create Invite Link
+	</button>
 </div>
 
 <style lang="scss">
@@ -110,6 +162,11 @@
 				display: contents;
 			}
 		}
+	}
+
+	.name.invite {
+		display: flex;
+		justify-content: space-between;
 	}
 
 	.name,
