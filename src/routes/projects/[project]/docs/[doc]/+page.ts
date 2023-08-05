@@ -11,12 +11,14 @@ export async function load({ params }) {
 
 	let content = !doc?.ydoc;
 	let ydoc = getYdoc(doc);
+	let token = await pb.files.getToken().catch(() => null);
 
 	return {
 		doc,
 		project,
 		content,
 		ydoc,
+		token,
 		projectId: params.project,
 		docId: params.doc
 	};

@@ -6,7 +6,7 @@
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { events, EventType } from '$lib/modelEvent.js';
-	import { pb, userStore } from '$lib/storage';
+	import { db, pb, userStore } from '$lib/storage';
 	import { createId, getDocProvider } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 	import { onMount } from 'svelte';
@@ -14,6 +14,8 @@
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import { createDocument, saveDocument } from './saveDocument';
+	import Tooltip from '$lib/tooltip.svelte';
+	import { liveQuery } from 'dexie';
 
 	$: {
 		if (data.docId === 'new') {
@@ -28,7 +30,7 @@
 	let saving = false;
 	let ydoc = data.ydoc;
 	let title = data?.doc?.title ?? 'Untitled Document';
-	let hasCollaborators = false;
+	let collaborators = [];
 
 	if (data.ydoc) {
 		try {
@@ -51,7 +53,10 @@
 			title = value;
 		});
 		provider?.awareness.on('change', (change) => {
-			hasCollaborators = provider.awareness.getStates().size !== 1;
+			collaborators = Array.from(provider.awareness.getStates().entries()).map(([id, entry]) => ({
+				user: entry.user,
+				id
+			}));
 		});
 		return () => {
 			provider?.destroy();
@@ -168,6 +173,20 @@
 <div class="document">
 	<Portal target=".header-context-portal">
 		<div class="header-portal-items">
+			<div class="collaborators">
+				{#each collaborators as collaborator}
+					{@const user = collaborator?.user?.user}
+					{@const image = data.token && pb.getFileUrl(user, user?.avatar, { token: data.token })}
+					<Tooltip>
+						<div slot="content" class="collaborator">
+							<img src={image} />
+						</div>
+						<div slot="tooltip" style="white-space: nowrap;">
+							{collaborator.user.name}
+						</div>
+					</Tooltip>
+				{/each}
+			</div>
 			<button disabled={saving} class="ghost" on:click={onSave}>Save</button>
 			<ContextMenu>
 				<div slot="items">
@@ -176,11 +195,8 @@
 							label="Exclude from project overview"
 							checked={data.doc.excludeFromOverview}
 							on:change={(e) => {
-								events.add({
-									modelType: Collections.Docs,
-									eventType: EventType.Update,
-									recordId: data.doc.id,
-									payload: { excludeFromOverview: e.target.checked }
+								events.update(Collections.Docs, data.doc.id, {
+									excludeFromOverviw: e.target.checked
 								});
 							}}
 						/>
@@ -194,17 +210,29 @@
 			</ContextMenu>
 		</div>
 	</Portal>
-	<EditorComponent
-		bind:editor
-		{ydoc}
-		{provider}
-		editorProps={{ handleDrop }}
-		content={data?.ydoc ? undefined : data.content}
-		editable={true}
-	/>
+	<EditorComponent bind:editor {ydoc} {provider} editorProps={{ handleDrop }} editable={true} />
 </div>
 
 <style lang="scss">
+	.collaborators {
+		display: flex;
+		gap: var(--block-spacing);
+	}
+	.collaborator {
+		--size: 40px;
+		width: var(--size);
+		height: var(--size);
+		overflow: hidden;
+		border-radius: 50%;
+		border: 4px solid var(--surface-4);
+
+		> img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+	}
+
 	.document {
 		height: 100%;
 		:global(.editor) {

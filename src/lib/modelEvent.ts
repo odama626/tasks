@@ -68,7 +68,7 @@ interface SyncTable {
 const getSyncTables = ({ token }): SyncTable[] => [
 	{ table: 'projects_users', invalidateCache: ['docs', 'users', 'projects'] },
 	{ table: 'docs_users', invalidateCache: ['docs', 'users'] },
-	{ table: 'users' },
+	{ table: 'users', cacheFileFields: ['avatar'], token },
 	{ table: 'lists_users' },
 	{ table: 'lists' },
 	{ table: 'tasks' },

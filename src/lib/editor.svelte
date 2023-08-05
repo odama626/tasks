@@ -58,6 +58,7 @@
 
 	onMount(() => {
 		const style = getComputedStyle(document.documentElement);
+		const userRecord = get(userStore)?.record;
 
 		editor = new Editor({
 			element,
@@ -69,7 +70,8 @@
 					CollaborationCursor.configure({
 						provider,
 						user: {
-							name: get(userStore).record?.name,
+							name: userRecord?.name,
+							user: userRecord,
 							color: style.getPropertyValue('--text-3'),
 							backgroundColor: style.getPropertyValue('--surface-4')
 						}
