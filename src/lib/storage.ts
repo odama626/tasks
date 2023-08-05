@@ -45,6 +45,14 @@ db.version(8).stores({
 	dock_blocks: null
 });
 
+db.version(9).stores({
+	lists: null,
+	lists_users: null
+});
+db.version(10).stores({
+	users: '&id, username, email'
+});
+
 export enum RecordAccess {
 	Admin = 'admin',
 	Editor = 'editor',

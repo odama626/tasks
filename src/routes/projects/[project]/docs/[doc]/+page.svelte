@@ -217,11 +217,13 @@
 	.collaborators {
 		display: flex;
 		gap: var(--block-spacing);
+		padding: 0 var(--block-spacing);
 	}
 	.collaborator {
 		--size: 40px;
 		width: var(--size);
 		height: var(--size);
+		box-sizing: border-box;
 		overflow: hidden;
 		border-radius: 50%;
 		border: 4px solid var(--surface-4);
