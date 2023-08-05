@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 
-function extractHtmlElementAttributes(content: string = '') {
+function extractHtmlElementAttributes(content = '') {
 	return Object.fromEntries(
 		[...content.matchAll(/([a-zA-Z].*?)="(.*?)"/g)].map(([_, key, value]) => [key, value])
 	);
