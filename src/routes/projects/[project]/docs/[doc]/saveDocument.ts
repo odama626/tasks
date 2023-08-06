@@ -7,7 +7,9 @@ import * as Y from 'yjs';
 
 export async function createDocument(projectId: string) {
 	const id = createId();
+	const title = 'Untitled Document';
 	const ydoc = new Y.Doc();
+	const user = get(userStore).record;
 
 	// attach metadata
 	const metadata = ydoc.getMap('metadata');
@@ -20,8 +22,8 @@ export async function createDocument(projectId: string) {
 
 	events.create(Collections.Docs, {
 		title: 'Untitled Document',
-		createdBy: get(userStore).record.id,
-		project: data.projectId,
+		createdBy: user.id,
+		project: projectId,
 		id,
 		ydoc: ydocFile
 	});
