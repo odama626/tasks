@@ -69,7 +69,6 @@ const getSyncTables = ({ token }): SyncTable[] => [
 	{ table: 'projects_users', invalidateCache: ['docs', 'users', 'projects'] },
 	{ table: 'docs_users', invalidateCache: ['docs', 'users'] },
 	{ table: 'users', cacheFileFields: ['avatar'], token },
-	{ table: 'tasks' },
 	{ table: 'projects' },
 	{ table: 'docs', cacheFileFields: ['ydoc'], token },
 	{ table: 'doc_attachments', cacheFileFields: ['file'], token },

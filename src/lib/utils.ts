@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { writable } from 'svelte/store';
 import * as Y from 'yjs';
 import { db, type DocsInstance } from './storage';
-import type { DocAttachmentsResponse, DocsResponse } from './db.types';
+import type { DocAttachmentsResponse, DocsResponse, InvitesResponse } from './db.types';
 import type { YXmlElement } from 'yjs/dist/src/internals';
 import { WebrtcProvider } from 'y-webrtc';
 
@@ -147,12 +147,15 @@ export async function getYdoc(doc: DocsInstance) {
 	return ydoc;
 }
 
-export function getInviteLink(inviteId: string) {
-	return `${location.host}/invite/${inviteId}`;
+type InviteLinkArgs = { id: string; secret: string } & ({ doc: string } | { project: string });
+
+export async function getInviteLink(invite: InviteLinkArgs) {
+	const hash = await getHash(invite);
+	return `${location.host}/invite/${invite.id}?phrase=${hash}`;
 }
 
-export function copyInviteToClipboard(inviteId: string) {
-	navigator.clipboard.writeText(getInviteLink(inviteId));
+export async function copyInviteToClipboard(invite: InviteLinkArgs) {
+	navigator.clipboard.writeText(await getInviteLink(invite));
 	notify({ text: `Invite copied to clipboard` });
 }
 
@@ -164,6 +167,15 @@ export function getDocProvider(doc: DocsResponse, ydoc: Y.Doc) {
 	return new WebrtcProvider(getDocSyncRoom(doc), ydoc, {
 		signaling: ['wss://signals.tasks.lilbyte.dev']
 	});
+}
+
+export async function getHash(input) {
+	const message = typeof input === 'string' ? input : JSON.stringify(input);
+	const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+	const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8); // hash the message
+	const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+	const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+	return hashHex;
 }
 
 export interface TiptapNode<T> {

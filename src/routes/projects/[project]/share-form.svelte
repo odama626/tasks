@@ -1,19 +1,11 @@
 <script lang="ts">
-	import { Collections, ProjectsUsersAccessOptions } from '$lib/db.types';
+	import { Collections } from '$lib/db.types';
 	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
 	import { RecordAccess, db, userStore } from '$lib/storage';
-	import {
-		collectFormData,
-		copyInviteToClipboard,
-		createId,
-		getInviteLink,
-		notify,
-		withKeys
-	} from '$lib/utils';
-	import { ListboxOption } from '@rgossiaux/svelte-headlessui';
-	import { getTextSerializersFromSchema } from '@tiptap/core';
+	import { collectFormData, copyInviteToClipboard, createId, withKeys } from '$lib/utils';
 	import { liveQuery } from 'dexie';
+	import { nanoid } from 'nanoid';
 	import { get } from 'svelte/store';
 
 	export let projectId: string;
@@ -39,13 +31,15 @@
 
 	async function createInviteLink() {
 		const id = createId();
-		events.create(Collections.Invites, {
+		const invite = {
 			id,
 			createdBy: get(userStore).record.id,
 			project: projectId,
-			access: RecordAccess.Viewer
-		});
-		copyInviteToClipboard(id);
+			access: RecordAccess.Viewer,
+			secret: nanoid()
+		};
+		events.create(Collections.Invites, invite);
+		copyInviteToClipboard(invite);
 	}
 
 	let options = ['admin', 'editor', 'viewer'];
@@ -102,7 +96,7 @@
 				{#each $invites as invite (invite.id)}
 					<div class="name invite">
 						{invite.id}
-						<button class="icon ghost small" on:click={() => copyInviteToClipboard(invite.id)}>
+						<button class="icon ghost small" on:click={() => copyInviteToClipboard(invite)}>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"

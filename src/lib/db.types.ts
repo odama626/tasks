@@ -76,6 +76,7 @@ export type InvitesRecord = {
 	doc?: RecordIdString
 	deleted?: boolean
 	access: InvitesAccessOptions
+	secret?: string
 }
 
 export type ProjectsRecord = {
@@ -146,11 +147,40 @@ export interface CollectionSchemas {
   projects_users: Projectsusers;
   docs_users: Projectsusers;
   users_connections: Usersconnections;
-  invites: Projectsusers;
+  invites: Invites;
   doc_attachments: Docattachments;
 }
 
 export interface Docattachments {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema7[];
+}
+
+export interface Schema7 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options7;
+}
+
+export interface Options7 {
+  maxSelect?: number;
+  maxSize?: number;
+  mimeTypes?: any[];
+  thumbs?: any[];
+  protected?: boolean;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  displayFields?: any[];
+}
+
+export interface Invites {
   id: string;
   name: string;
   type: string;
@@ -168,15 +198,15 @@ export interface Schema6 {
 }
 
 export interface Options6 {
-  maxSelect?: number;
-  maxSize?: number;
-  mimeTypes?: any[];
-  thumbs?: any[];
-  protected?: boolean;
   collectionId?: string;
   cascadeDelete?: boolean;
   minSelect?: any;
+  maxSelect?: number;
   displayFields?: any[];
+  values?: string[];
+  min?: any;
+  max?: any;
+  pattern?: string;
 }
 
 export interface Usersconnections {

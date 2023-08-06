@@ -5,13 +5,13 @@ import { userStore } from '$lib/storage';
 
 export let ssr = false;
 
-const unauthenticatedRoutes = ['/', '/user'];
+const unauthenticatedRoutes = ['/', '/user', '/invite/[invite]'];
 
 export const load = (async (args) => {
-	const auth = JSON.parse(localStorage.getItem('auth') ?? 'null');
+	const auth = JSON.parse(globalThis?.localStorage?.getItem('auth') ?? 'null');
 
-	if (!auth && !unauthenticatedRoutes.includes(args.url.pathname)) {
-		localStorage.setItem('login-redirect', args.url.pathname);
+	if (!auth && !unauthenticatedRoutes.includes(args.route.id)) {
+		globalThis?.localStorage?.setItem('login-redirect', args.url.pathname);
 		throw redirect(307, '/user');
 	}
 	userStore.set(auth);

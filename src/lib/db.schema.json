@@ -363,6 +363,18 @@
             "viewer"
           ]
         }
+      },
+      {
+        "id": "pqfrcj2f",
+        "name": "secret",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
       }
     ]
   },

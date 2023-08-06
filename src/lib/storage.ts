@@ -82,10 +82,10 @@ export function storable<T>(data: T, name: string) {
 	const isBrowser = typeof window !== 'undefined';
 
 	if (isBrowser) {
-		if (localStorage.getItem(name)) {
-			set(JSON.parse(localStorage.getItem(name) ?? ''));
+		if (globalThis.localStorage.getItem(name)) {
+			set(JSON.parse(globalThis.localStorage.getItem(name) ?? ''));
 		} else {
-			localStorage.setItem(name, JSON.stringify(data));
+			globalThis.localStorage.setItem(name, JSON.stringify(data));
 		}
 	}
 
@@ -93,11 +93,11 @@ export function storable<T>(data: T, name: string) {
 		subscribe,
 		set: (n: T) => {
 			set(n);
-			localStorage.setItem(name, JSON.stringify(n));
+			globalThis.localStorage?.setItem(name, JSON.stringify(n));
 		},
 		update: (cb: (value: T) => T) => {
 			const result = update(cb);
-			localStorage.setItem(name, JSON.stringify(result));
+			globalThis.localStorage?.setItem(name, JSON.stringify(result));
 			return result;
 		}
 	};
