@@ -21,7 +21,7 @@ export enum EventType {
 	Delete = 'delete'
 }
 
-type ValueOf<T> = T[keyof T];
+export type ValueOf<T> = T[keyof T];
 
 interface BaseModelEvent {
 	eventType: EventType;

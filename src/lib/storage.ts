@@ -2,6 +2,7 @@ import Dexie from 'dexie';
 import PocketBase from 'pocketbase';
 import { get, writable } from 'svelte/store';
 import type { DocAttachmentsResponse, DocsResponse } from './db.types';
+import { Cookie } from './utils';
 
 export const db = new Dexie('todo-db');
 export const pb = new PocketBase(import.meta.env.VITE_SERVER_URL);
@@ -91,13 +92,21 @@ export function storable<T>(data: T, name: string) {
 
 	return {
 		subscribe,
-		set: (n: T) => {
-			set(n);
-			globalThis.localStorage?.setItem(name, JSON.stringify(n));
+		set: (value: T) => {
+			set(value);
+			if (isBrowser) {
+				const serializedValue = JSON.stringify(value);
+				globalThis.localStorage.setItem(name, serializedValue);
+				Cookie.set(name, value);
+			}
 		},
 		update: (cb: (value: T) => T) => {
 			const result = update(cb);
-			globalThis.localStorage?.setItem(name, JSON.stringify(result));
+			if (isBrowser) {
+				const value = JSON.stringify(result);
+				globalThis.localStorage?.setItem(name, value);
+				Cookie.set(name, value);
+			}
 			return result;
 		}
 	};

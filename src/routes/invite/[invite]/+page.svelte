@@ -13,22 +13,15 @@
 	});
 </script>
 
-Test
-<pre>
-{JSON.stringify(data, null, 2)}
-</pre>
-
 <div class="modal-shade">
-	<div class="modal">
-		<form method="POST" action="?/accept">
-			<input type="hidden" name="inviteId" value={data.inviteId} />
-			<input type="hidden" name="hash" value={data.hash} />
-			<p style="text-align: center;">
-				You were invited by {data?.createdBy?.name || data?.createdBy?.username}<br />
-				to join the {isProject ? 'project' : 'document'} "{recordName}"
-			</p>
-			<button>Accept</button>
-		</form>
+	<div class="modal form">
+		<p style="text-align: center;">
+			You were invited by {data?.createdBy?.name || data?.createdBy?.username}<br />
+			to join the {isProject ? 'project' : 'document'} "{recordName}"
+		</p>
+		<a class="button ghost" href="/invite/accept?id={data.inviteId}&hash={data.hash}"
+			>Accept Invite</a
+		>
 	</div>
 </div>
 

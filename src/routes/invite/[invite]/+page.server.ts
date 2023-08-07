@@ -1,7 +1,9 @@
 import PocketBase from 'pocketbase';
 import 'dotenv/config';
 import { Collections } from '$lib/db.types';
-import type { Actions } from '@sveltejs/kit';
+import { error, type Actions } from '@sveltejs/kit';
+import { pick } from 'lodash-es';
+import { getHash } from '$lib/utils';
 
 export let ssr = true;
 export let csr = false;
@@ -23,24 +25,21 @@ export async function load({ params, url, ...rest }) {
 
 	const invite = await pb.collection(Collections.Invites).getOne(params.invite, {
 		expand: 'createdBy,project,document',
-		fields: 'expand.createdBy.name,expand.createdBy.username, expand.project.name,'
+		fields: 'id,secret, expand.createdBy.name,expand.createdBy.username, expand.project.name,'
 	});
 
-	console.log({ params, rest });
-	console.log(url.searchParams);
+	const newHash = await getHash(pick(invite, ['id', 'secret']));
+	const hash = url.searchParams.get('hash');
+
+	const valid = newHash === hash;
+
+	if (!valid) throw error(404, 'Not Found');
 
 	const record = invite.export();
 
 	return {
-		...record.export,
+		...record.expand,
 		inviteId: params.invite,
-		hash: url.searchParams.get('phrase')
+		hash
 	};
 }
-
-export const actions = {
-	async accept(event) {
-		// TODO: need to ensure logged in first
-		console.log({ event });
-	}
-} satisfies Actions;

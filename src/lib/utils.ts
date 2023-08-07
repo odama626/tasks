@@ -5,6 +5,7 @@ import { db, type DocsInstance } from './storage';
 import type { DocAttachmentsResponse, DocsResponse, InvitesResponse } from './db.types';
 import type { YXmlElement } from 'yjs/dist/src/internals';
 import { WebrtcProvider } from 'y-webrtc';
+import { pick } from 'lodash-es';
 
 export const collectFormData = (callback) => (e) => {
 	const data = new FormData(e.target);
@@ -63,8 +64,6 @@ export const notificationStore = writable<Notification[]>([]);
 export function notify(notification: Partial<Notification>) {
 	const id = createId();
 	const record = { timeout: 2500, type: NotificationType.Info, ...notification, id };
-
-	console.log({ record });
 
 	if (record.timeout) setTimeout(() => notify.dismiss(id), record.timeout);
 
@@ -147,11 +146,11 @@ export async function getYdoc(doc: DocsInstance) {
 	return ydoc;
 }
 
-type InviteLinkArgs = { id: string; secret: string } & ({ doc: string } | { project: string });
+type InviteLinkArgs = { id: string; secret: string };
 
 export async function getInviteLink(invite: InviteLinkArgs) {
-	const hash = await getHash(invite);
-	return `${location.host}/invite/${invite.id}?phrase=${hash}`;
+	const hash = await getHash(pick(invite, ['id', 'secret']));
+	return `${location.host}/invite/${invite.id}?hash=${hash}`;
 }
 
 export async function copyInviteToClipboard(invite: InviteLinkArgs) {
@@ -176,6 +175,18 @@ export async function getHash(input) {
 	const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
 	const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
 	return hashHex;
+}
+
+interface CookieOpts {
+	path?: string;
+}
+
+export class Cookie {
+	static set<T>(name: string, content: T, opts: CookieOpts = {}) {
+		const { path = '/' } = opts;
+		let serializedValue = JSON.stringify(content);
+		document.cookie = `${name}=${serializedValue};SameSite=Strict;path=${path}`;
+	}
 }
 
 export interface TiptapNode<T> {
