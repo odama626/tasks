@@ -189,6 +189,17 @@ export class Cookie {
 	}
 }
 
+export async function openFilePicker({ accept = '*' } = {}): Promise<FileList> {
+	const picker = document.createElement('input');
+	picker.type = 'file';
+	picker.accept = accept;
+	const promise = new Promise(
+		(resolve) => (picker.onchange = (event) => resolve(event.target.files))
+	);
+	picker.click();
+	return promise;
+}
+
 export interface TiptapNode<T> {
 	type: T;
 	content: TiptapNode<any>[];

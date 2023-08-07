@@ -6,6 +6,9 @@ import OrderedList from '$lib/icons/Numbered List.svelte';
 import Highlight from '$lib/icons/Highlight.svelte';
 import List from '$lib/icons/List.svelte';
 import TaskList from '$lib/icons/Task List.svelte';
+import Attachment from '$lib/icons/attachment.svelte';
+import { openFilePicker } from '$lib/utils';
+
 type Prepare = (chain: ChainedCommands) => unknown;
 
 export const getCommands = (prepare: Prepare) => [
@@ -60,5 +63,23 @@ export const getCommands = (prepare: Prepare) => [
 		type: 'bubble',
 		component: Highlight,
 		command: prepare((chain) => chain.toggleHighlight().run())
+	},
+	{
+		title: 'Attach',
+		type: 'inline',
+		component: Attachment,
+		command: prepare(async (chain) => {
+			const files = await openFilePicker();
+			console.log({ files });
+			for (const file of files) {
+				if (file.type.startsWith('image/')) {
+					const image = new Image();
+					image.src = URL.createObjectURL(file);
+					await new Promise((resolve) => (image.onload = resolve));
+
+					chain.setImage({ src: image.src }).run();
+				}
+			}
+		})
 	}
 ];
