@@ -18,12 +18,18 @@
 	let dirty: boolean = false;
 </script>
 
-<label aria-invalid={invalid}>
+<label style="display: contents;" aria-invalid={invalid}>
 	{#if label}<div>{label}</div>{/if}
 	{#if type === 'rich'}
 		<textarea rows="5" {name} aria-invalid={invalid} {...$$restProps} />
 	{:else}
-		<input {type} {name} aria-invalid={invalid} on:keydown={() => (dirty = true)} {...$$restProps} />
+		<input
+			{type}
+			{name}
+			aria-invalid={invalid}
+			on:keydown={() => (dirty = true)}
+			{...$$restProps}
+		/>
 	{/if}
 	{#if error}<small>{error.message}</small>{/if}
 	{#if description}<small>{description}</small>{/if}

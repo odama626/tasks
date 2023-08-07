@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Collections } from '$lib/db.types';
+	import Field from '$lib/field.svelte';
 	import { events } from '$lib/modelEvent';
 	import Select from '$lib/select.svelte';
 	import { RecordAccess, db, userStore } from '$lib/storage';
@@ -7,11 +8,13 @@
 	import { liveQuery } from 'dexie';
 	import { nanoid } from 'nanoid';
 	import { get } from 'svelte/store';
+	import type { ZodError } from 'zod';
 
 	export let projectId: string;
 	$: permissions = liveQuery(() => db.projects_users.where({ project: projectId }).toArray());
 	$: invites = liveQuery(() => db.invites.where({ project: projectId }).toArray());
 	$: users = liveQuery(() => db.users.toCollection().toArray());
+	let error: ZodError;
 
 	const createInvite = collectFormData(async (data, event) => {
 		let user = await db.users
@@ -21,12 +24,25 @@
 			.equalsIgnoreCase(data.user)
 			.first();
 
-		// TODO: create an invite record and send an email instead of querying pb
-		// if (!user) user = pb.collection(Collections.Users).		console.log({ user });
-		// events.create(Collections.ProjectsUsers {
+		if (!user) {
+			error = 'Could not find user, maybe try sharing a link';
+			return;
+		}
 
-		// })
-		console.log({ data });
+		console.log({ user });
+		const record = await db.projects_users.where({ project: projectId, user: user.id }).first();
+		if (record) {
+			error = 'user already invited';
+			return;
+		}
+		error = undefined;
+
+		events.create(Collections.ProjectsUsers, {
+			id: createId(),
+			user: user.id,
+			project: projectId,
+			access: data.access
+		});
 	});
 
 	async function createInviteLink() {
@@ -49,7 +65,7 @@
 	const currentUser = get(userStore).record;
 	db.projects_users.where({ project: projectId, user: currentUser.id }).first((permission) => {
 		currentUserPermission = permission;
-		allowedOptions = options.slice(options.indexOf(currentUserPermission.access));
+		allowedOptions = options.slice(options.indexOf(currentUserPermission.access)).reverse();
 	});
 </script>
 
@@ -60,9 +76,9 @@
 >
 	<p>Invite</p>
 	<form on:submit|preventDefault={createInvite}>
-		<div class="input-group">
+		<div class="input-group" class:error>
 			<input name="user" placeholder="username or email" />
-			<Select>
+			<Select name="access">
 				{#each allowedOptions as option}
 					<option value={option}>{option}</option>
 				{/each}
@@ -70,6 +86,9 @@
 		</div>
 		<button class="outline">Invite</button>
 	</form>
+	{#if error}
+		<small class="error">{error}</small>
+	{/if}
 	<div class="divider horizontal" />
 	{#if $permissions}
 		<div class="permissions">
