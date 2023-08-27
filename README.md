@@ -45,11 +45,11 @@ An assortment of desktop and mobile screenshots from the res folder
 Collaboration
 <img src='./res/collaboration.png'>
 
-Quick Actions
-<img src='./res/actions.png'>
-
 Image Attachments
 <img src='./res/attachments.png'>
+
+Quick Actions
+<img src='./res/actions.png'>
 
 Rich Editing
 <img src='./res/rich-editing.png'>
