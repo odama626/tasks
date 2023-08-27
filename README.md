@@ -14,9 +14,10 @@ There are a lot of other things out there, but all of them have drawbacks, here 
 - Notion -- man that privacy policy is scary
 - Oblivion -- another propetairy thing? paid sync?
 
-I realized that there are a couple of things I want out of an appplication like this, and there are a couple of non-negotiables
+why are these all almost usable but they all have at least one major flaw, and why do the only tend to get worse over time? I was kind of fed up
 
 ## Why another Notes and Tasks App
+I realized that there are a couple of things I want out of an appplication like this, and there are a couple of non-negotiables
 - non-proprietary -- this is my data, fuck your terms of service
 - mobile and desktop
 - offline first -- I need my notes, even if I'm in the woods
