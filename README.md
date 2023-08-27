@@ -23,7 +23,7 @@ I realized that there are a couple of things I want out of an appplication like 
 - mobile and desktop
 - offline first -- I need my notes, even if I'm in the woods
 - collaborative editing
-- sharing is a must
+- sharing by link is a must
 - no single point of failure
 - I need all this stuff to sync between my devices too
 
