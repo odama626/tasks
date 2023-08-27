@@ -192,6 +192,7 @@
 	.header {
 		display: grid;
 		grid-template-columns: 200px 1fr;
+		grid-template-areas: 'sidebar content';
 		gap: 1ch;
 		// padding: 1ch;
 		ul {
@@ -251,7 +252,7 @@
 	}
 
 	article {
-		grid-area: 'content';
+		grid-area: content;
 		width: 100%;
 		max-width: 80ch;
 		margin: 0 auto;

@@ -236,7 +236,6 @@
 	}
 
 	.document {
-		height: 100%;
 		:global(.editor) {
 			height: 100%;
 		}

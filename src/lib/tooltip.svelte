@@ -1,16 +1,23 @@
 <script lang="ts">
-	import { autoUpdate, computePosition } from '@floating-ui/dom';
+	import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 	import { onMount } from 'svelte';
 
 	let targetRef: HTMLElement;
 	let contentRef: HTMLElement;
 
 	async function updatePos() {
-		const { x, y } = await computePosition(targetRef, contentRef, { placement: 'bottom' });
+		const { x, y, placement } = await computePosition(targetRef, contentRef, {
+			middleware: [flip(), offset(5)],
+			placement: 'bottom'
+		});
+		const isOnTop = placement === 'top';
+
 		Object.assign(contentRef.style, {
 			left: `${x}px`,
-			top: `${y + 5}px`
+			top: `${y}px`
 		});
+
+		contentRef.style.setProperty('--before-top', isOnTop ? '100%' : '0');
 	}
 
 	onMount(() => {
@@ -58,13 +65,14 @@
 			content: '';
 			z-index: -1;
 			position: absolute;
-			--size: 16px;
+			--size: 10px;
 			border-radius: 4px;
 			width: var(--size);
 			height: var(--size);
 			transform: translate(-50%, -50%) rotate(45deg);
 			left: 50%;
 			background-color: inherit;
+			top: var(--before-top);
 		}
 	}
 </style>
