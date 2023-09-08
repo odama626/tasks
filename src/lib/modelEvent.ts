@@ -225,6 +225,13 @@ export class ModelEvents {
 
 	async startSync() {
 		if (!this.online) return;
+		try {
+			await pb.collection('users').authRefresh();
+		} catch (e) {
+			// TODO: store previous login credentials and wipe local data on login if it doesn't match
+			pb.authStore.clear();
+			location.reload();
+		}
 		await this.step();
 
 		const token = await pb.files.getToken();
