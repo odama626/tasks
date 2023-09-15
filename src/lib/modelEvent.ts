@@ -229,6 +229,7 @@ export class ModelEvents {
 			await pb.collection('users').authRefresh();
 		} catch (e) {
 			// TODO: store previous login credentials and wipe local data on login if it doesn't match
+			localStorage.removeItem('auth');
 			pb.authStore.clear();
 			location.reload();
 		}
