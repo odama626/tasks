@@ -1,30 +1,27 @@
 <script lang="ts">
 	import './styles.scss';
 
-	import { Editor, type JSONContent } from '@tiptap/core';
-	import { createEventDispatcher, onMount } from 'svelte';
-	import StarterKit from '@tiptap/starter-kit';
-	import TaskList from '@tiptap/extension-task-list';
-	import TaskItem from '$lib/editor/extensions/taskItem';
 	import SlashCommand from '$lib/editor/extensions/slash';
-	import FloatingMenu from '@tiptap/extension-floating-menu';
+	import TaskItem from '$lib/editor/extensions/taskItem';
+	import { Editor, type JSONContent } from '@tiptap/core';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import Link from '@tiptap/extension-link';
-	import { Id } from './editor/extensions/id';
-	import EllipsisVertical from './icons/ellipsis-vertical.svelte';
-	import Typography from '@tiptap/extension-typography';
-	import Highlight from '@tiptap/extension-highlight';
-	import { getCommands } from './editor/extensions/commands';
-	import { Markdown } from 'tiptap-markdown';
 	import Collaboration from '@tiptap/extension-collaboration';
+	import FloatingMenu from '@tiptap/extension-floating-menu';
+	import Highlight from '@tiptap/extension-highlight';
+	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
-	import CollaborationCursor from './editor/extensions/CollaborationCursor';
-	import { WebrtcProvider } from 'y-webrtc';
-	import { ImageExtension } from './editor/extensions/image';
-	import * as Y from 'yjs';
-	import { userStore } from './storage';
+	import TaskList from '@tiptap/extension-task-list';
+	import Typography from '@tiptap/extension-typography';
+	import StarterKit from '@tiptap/starter-kit';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { get } from 'svelte/store';
-	import { events } from './modelEvent';
+	import { Markdown } from 'tiptap-markdown';
+	import * as Y from 'yjs';
+	import CollaborationCursor from './editor/extensions/CollaborationCursor';
+	import { getCommands } from './editor/extensions/commands';
+	import { Id } from './editor/extensions/id';
+	import { ImageExtension } from './editor/extensions/image';
+	import { userStore } from './storage';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -34,6 +31,9 @@
 	export let ydoc = new Y.Doc();
 	export let editorProps = {};
 	export let provider;
+	export let metadata = {};
+
+	let currentAction;
 
 	let floatingMenuRef: HTMLDivElement;
 	let bubbleMenuRef: HTMLDivElement;
@@ -82,7 +82,7 @@
 				Link,
 				Id,
 				TaskList,
-				SlashCommand,
+				SlashCommand(metadata),
 				Markdown,
 				ImageExtension,
 				Typography,
@@ -118,7 +118,7 @@
 		};
 	});
 
-	const prepareMenuItem = (callback) => (editor) => callback(editor.chain().focus());
+	const prepareMenuItem = (callback) => (editor) => callback(editor.chain().focus(), metadata);
 	const floatingMenuCommands = getCommands(prepareMenuItem).filter(
 		(command) => command.type === 'inline'
 	);
@@ -130,7 +130,7 @@
 <div class="editor" bind:this={element} />
 <div bind:this={floatingMenuRef} class="floating-menu accent">
 	{#each floatingMenuCommands as command (command.title)}
-		<button class="outline small" on:click={() => command.command(editor)}>
+		<button class="outline small" on:click={() => (currentAction = command.command(editor))}>
 			{#if command.component}
 				<svelte:component this={command.component} />
 			{:else}
@@ -139,12 +139,40 @@
 		</button>
 	{/each}
 </div>
+
+{#await currentAction}
+	<!-- <div class="loading-spinner">
+	<div class="spinner">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			xmlns:xlink="http://www.w3.org/1999/xlink"
+			style="margin: auto; display: block; shape-rendering: auto;"
+			width="200px"
+			height="200px"
+			viewBox="0 0 100 100"
+			preserveAspectRatio="xMidYMid"
+		>
+			<path d="M10 50A40 40 0 0 0 90 50A40 42 0 0 1 10 50" fill="var(--text-4)" stroke="none">
+				<animateTransform
+					attributeName="transform"
+					type="rotate"
+					dur="1s"
+					repeatCount="indefinite"
+					keyTimes="0;1"
+					values="0 50 51;360 50 51"
+				/>
+			</path>
+		</svg
+		>
+	</div>
+</div> -->
+{/await}
 <div bind:this={bubbleMenuRef} class="bubble-menu">
 	{#each bubbleMenuCommands as command, i (command.title)}
 		<button
 			class="ghost"
 			data-title={command.title.toLowerCase()}
-			on:click={() => command.command(editor)}
+			on:click={() => (currentAction = command.command(editor))}
 		>
 			{#if command.component}
 				<svelte:component this={command.component} />
@@ -159,6 +187,14 @@
 </div>
 
 <style lang="scss">
+	.loading-spinner {
+		position: fixed;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		backdrop-filter: blur(5px);
+	}
 	.editor {
 		box-sizing: border-box;
 		> :global(div) {

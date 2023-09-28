@@ -16,6 +16,7 @@
 	import { createDocument, saveDocument } from './saveDocument';
 	import Tooltip from '$lib/tooltip.svelte';
 	import { liveQuery } from 'dexie';
+	import { insertImage } from '$lib/insertImage';
 
 	$: {
 		if (data.docId === 'new') {
@@ -31,6 +32,11 @@
 	let ydoc = data.ydoc;
 	let title = data?.doc?.title ?? 'Untitled Document';
 	let collaborators = [];
+
+	let metadata = {
+		docId: data.docId,
+		userId: get(userStore).record.id
+	};
 
 	if (data.ydoc) {
 		try {
@@ -80,52 +86,22 @@
 		saving = false;
 	}
 
-	async function insertImage(file: File, view, event, slice, moved) {
-		const image = new Image();
-		image.src = URL.createObjectURL(file);
-
-		await new Promise((resolve) => (image.onload = resolve));
-
-		const attachmentId = createId();
-		events.create(Collections.DocAttachments, {
-			id: attachmentId,
-			createdBy: get(userStore).record.id,
-			file,
-			doc: data.docId
-		});
-
-		const { schema } = view.state;
-		const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY });
-		const node = schema.nodes.image.create({
-			src: image.src,
-			docAttachment: attachmentId
-		}); // creates the image element
-		pb.collection('doc_attachments').subscribe(attachmentId, async (data) => {
-			const token = await pb.files.getToken();
-			const src = pb.getFileUrl(data.record, data.record.file, { token });
-			const newNode = schema.nodes.image.create({ src, docAttachment: attachmentId });
-			const image = new Image();
-			image.src = src;
-
-			await new Promise((resolve) => (image.onload = resolve));
-			const transaction = view.state.tr.setNodeAttribute(coordinates.pos, 'src', src);
-			view.dispatch(transaction);
-			pb.collection('doc_attachments').unsubscribe(attachmentId);
-		});
-		const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-		return view.dispatch(transaction);
-	}
-
 	function handleDrop(view, event, slice, moved) {
 		if (!moved && event.dataTransfer?.items?.length > 0) {
 			const items = Array.from(event.dataTransfer.items);
 			// if dropping external files
 			// handle the image upload
+
+			const pos = view.posAtCoords({ left: event.clientX, top: event.clientY }).pos;
+
+
+			console.log({ event, view, slice, moved })
+
 			items.map(async (item) => {
 				try {
 					if (item.kind === 'file' && item.type.startsWith('image/')) {
 						const file = item.getAsFile();
-						await insertImage(file, view, event, slice, moved);
+						await insertImage(file, metadata, view, pos);
 					}
 					if (item.kind === 'string' && item.type === 'text/uri-list') {
 						const text = await new Promise((resolve) => item.getAsString(resolve));
@@ -134,10 +110,9 @@
 							const { schema } = view.state;
 							await insertImage(
 								new File([blob], createId(), { type: blob.type }),
+								metadata,
 								view,
-								event,
-								slice,
-								moved
+								pos
 							);
 						}
 					}
@@ -210,7 +185,14 @@
 			</ContextMenu>
 		</div>
 	</Portal>
-	<EditorComponent bind:editor {ydoc} {provider} editorProps={{ handleDrop }} editable={true} />
+	<EditorComponent
+		{metadata}
+		bind:editor
+		{ydoc}
+		{provider}
+		editorProps={{ handleDrop }}
+		editable={true}
+	/>
 </div>
 
 <style lang="scss">

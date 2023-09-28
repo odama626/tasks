@@ -253,6 +253,7 @@
 
 	article {
 		grid-area: content;
+		position: relative;
 		width: 100%;
 		max-width: 80ch;
 		margin: 0 auto;

@@ -6,7 +6,14 @@ import OrderedList from '$lib/icons/Numbered List.svelte';
 import Highlight from '$lib/icons/Highlight.svelte';
 import List from '$lib/icons/List.svelte';
 import TaskList from '$lib/icons/Task List.svelte';
-type Prepare = (chain: ChainedCommands) => unknown;
+import Upload from '$lib/icons/upload.svelte';
+import { insertImage } from '$lib/insertImage';
+type Prepare = (callback: (chain: ChainedCommands, metadata: Metadata) => unknown) => unknown;
+
+export interface Metadata {
+	docId: string;
+	userId: string;
+}
 
 export const getCommands = (prepare: Prepare) => [
 	{
@@ -43,12 +50,12 @@ export const getCommands = (prepare: Prepare) => [
 		component: OrderedList,
 		command: prepare((chain) => chain.toggleOrderedList().run())
 	},
-	{
-		title: 'List',
-		type: 'inline',
-		component: List,
-		command: prepare((chain) => chain.toggleBulletList().run())
-	},
+	// {
+	// 	title: 'List',
+	// 	type: 'inline',
+	// 	component: List,
+	// 	command: prepare((chain) => chain.toggleBulletList().run())
+	// },
 	{
 		title: 'Task list',
 		type: 'inline',
@@ -60,5 +67,45 @@ export const getCommands = (prepare: Prepare) => [
 		type: 'bubble',
 		component: Highlight,
 		command: prepare((chain) => chain.toggleHighlight().run())
+	},
+	{
+		title: 'Add file',
+		type: 'inline',
+		component: Upload,
+		command: prepare(async (chain, metadata) => {
+			const picker = document.createElement('input');
+			picker.type = 'file';
+			picker.multiple = true;
+
+			let pickFiles = new Promise<File[]>((resolve) => {
+				picker.addEventListener('change', () => {
+					resolve(Array.from(picker.files ?? []));
+				});
+			});
+			picker.click();
+
+			const files = await pickFiles;
+
+			return new Promise<void>((resolve) =>
+				chain
+					.focus()
+					.command((props) => {
+						async function go() {
+							let offset = 0;
+							for await (const [i, file] of files.entries()) {
+								if (file.type.startsWith('image/')) {
+									const { selection } = props.state;
+									const position = selection.$anchor.pos;
+									offset += await insertImage(file, metadata, props.view, position + i + offset);
+								}
+							}
+							resolve();
+						}
+						go();
+						return true;
+					})
+					.run()
+			);
+		})
 	}
 ];

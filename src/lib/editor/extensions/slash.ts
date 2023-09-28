@@ -6,8 +6,8 @@ import { getCommands } from './commands';
 
 const suggestionCommands = getCommands(
 	(callback) =>
-		({ editor, range }) =>
-			callback(editor.chain().focus().deleteRange(range))
+		({ editor, range }, metadata) =>
+			callback(editor.chain().focus().deleteRange(range), metadata)
 );
 
 const configuration = {
@@ -68,24 +68,25 @@ const configuration = {
 	}
 };
 
-export default new Extension({
-	name: 'commands',
-	addOptions() {
-		return {
-			suggestion: {
-				char: '/',
-				command: ({ editor, range, props }) => {
-					props.command({ editor, range });
+export default (metadata) =>
+	new Extension({
+		name: 'commands',
+		addOptions() {
+			return {
+				suggestion: {
+					char: '/',
+					command: ({ editor, range, props }) => {
+						props.command({ editor, range }, metadata);
+					}
 				}
-			}
-		};
-	},
-	addProseMirrorPlugins() {
-		return [
-			Suggestion({
-				editor: this.editor,
-				...this.options.suggestion
-			})
-		];
-	}
-}).configure(configuration);
+			};
+		},
+		addProseMirrorPlugins() {
+			return [
+				Suggestion({
+					editor: this.editor,
+					...this.options.suggestion
+				})
+			];
+		}
+	}).configure(configuration);
