@@ -95,8 +95,6 @@
 			const pos = view.posAtCoords({ left: event.clientX, top: event.clientY }).pos;
 
 
-			console.log({ event, view, slice, moved })
-
 			items.map(async (item) => {
 				try {
 					if (item.kind === 'file' && item.type.startsWith('image/')) {

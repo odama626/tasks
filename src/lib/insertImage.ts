@@ -39,10 +39,6 @@ export async function insertImage(file: File, metadata, view, pos) {
 
 			await new Promise((resolve) => (image.onload = resolve));
 
-			console.log({ offset });
-			// const offset = node.type.spec.inline ? 1 : 0;
-			// console.log(view.state.selection)
-
 			const transaction = view.state.tr.setNodeAttribute(pos + offset, 'src', src);
 			view.dispatch(transaction);
 			pb.collection('doc_attachments').unsubscribe(attachmentId);
