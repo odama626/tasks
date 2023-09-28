@@ -50,12 +50,12 @@ export const getCommands = (prepare: Prepare) => [
 		component: OrderedList,
 		command: prepare((chain) => chain.toggleOrderedList().run())
 	},
-	// {
-	// 	title: 'List',
-	// 	type: 'inline',
-	// 	component: List,
-	// 	command: prepare((chain) => chain.toggleBulletList().run())
-	// },
+	{
+		title: 'List',
+		// type: 'inline',
+		component: List,
+		command: prepare((chain) => chain.toggleBulletList().run())
+	},
 	{
 		title: 'Task list',
 		type: 'inline',
