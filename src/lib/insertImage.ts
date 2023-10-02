@@ -46,6 +46,5 @@ export async function insertImage(file: File, metadata, view, pos) {
 		})
 	);
 
-
-	return offset
+	return offset;
 }

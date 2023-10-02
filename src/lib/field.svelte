@@ -26,6 +26,8 @@
 		<input
 			{type}
 			{name}
+			on:change
+			on:input
 			aria-invalid={invalid}
 			on:keydown={() => (dirty = true)}
 			{...$$restProps}

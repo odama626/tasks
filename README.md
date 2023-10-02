@@ -1,3 +1,7 @@
+Structa
+Where ideas find structure
+"Your Notes, Your Structure, Your Way."
+
 Keep track of your notes and tasks, and keep your freedom
 
 - [Motivation](#motivation)

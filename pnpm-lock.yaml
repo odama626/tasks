@@ -101,6 +101,9 @@ dependencies:
   '@tiptap/suggestion':
     specifier: ^2.1.7
     version: 2.1.7(@tiptap/core@2.1.7)(@tiptap/pm@2.1.7)
+  colorjs.io:
+    specifier: ^0.4.5
+    version: 0.4.5
   dexie:
     specifier: ^3.2.4
     version: 3.2.4
@@ -1562,6 +1565,10 @@ packages:
   /color-support@1.1.3:
     resolution: {integrity: sha512-qiBjkpbMLO/HL68y+lh4q0/O1MZFj2RX6X/KmMa3+gJD3z+WwI1ZzDHysvqHGS3mP6mznPckpXmw1nI9cJjyRg==}
     hasBin: true
+    dev: false
+
+  /colorjs.io@0.4.5:
+    resolution: {integrity: sha512-yCtUNCmge7llyfd/Wou19PMAcf5yC3XXhgFoAh6zsO2pGswhUPBaaUh8jzgHnXtXuZyFKzXZNAnyF5i+apICow==}
     dev: false
 
   /combined-stream@1.0.8:

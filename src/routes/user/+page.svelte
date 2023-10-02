@@ -5,10 +5,13 @@
 	import { z, ZodError } from 'zod';
 	import { pb, userStore } from '$lib/storage';
 	import { goto } from '$app/navigation';
+	import { get } from 'svelte/store';
+	import Profile from './profile.svelte';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
 	let isRegistering = false;
+	let isLoggedIn = !!get(userStore)?.record;
 
 	function handleRedirect() {
 		const redirect = localStorage.getItem('login-redirect') ?? '/';
@@ -62,37 +65,52 @@
 	});
 </script>
 
-<div class="modal-shade">
-	<div class="modal">
-		<div class="toggle">
-			<button class:ghost={!isRegistering} on:click={() => (isRegistering = !isRegistering)}>
-				Login
-			</button>
-			<button class:ghost={isRegistering} on:click={() => (isRegistering = !isRegistering)}>
-				Register
-			</button>
-		</div>
-		<div class="modal-content">
-			{#if isRegistering}
-				<form on:submit|preventDefault={register}>
-					<Field label="Username" name="username" zodError={registerErrors} />
-					<Field label="Email" name="email" zodError={registerErrors} />
-					<Field type="password" label="Password" name="password" zodError={registerErrors} />
-					<Field type="password" label="Confirm" name="passwordConfirm" zodError={registerErrors} />
-					<button>Register</button>
-				</form>
-			{:else}
-				<form on:submit|preventDefault={login}>
-					<Field label="Username" name="username" zodError={loginErrors} />
-					<Field label="Password" name="password" type="password" zodError={loginErrors} />
-					<button>Login</button>
-					{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
-						>{/if}
-				</form>
-			{/if}
+{#if isLoggedIn}
+	<div class="modal-shade">
+		<div class="modal">
+			<div class="modal-content">
+				<Profile />
+			</div>
 		</div>
 	</div>
-</div>
+{:else}
+	<div class="modal-shade">
+		<div class="modal">
+			<div class="toggle">
+				<button class:ghost={!isRegistering} on:click={() => (isRegistering = !isRegistering)}>
+					Login
+				</button>
+				<button class:ghost={isRegistering} on:click={() => (isRegistering = !isRegistering)}>
+					Register
+				</button>
+			</div>
+			<div class="modal-content">
+				{#if isRegistering}
+					<form on:submit|preventDefault={register}>
+						<Field label="Username" name="username" zodError={registerErrors} />
+						<Field label="Email" name="email" zodError={registerErrors} />
+						<Field type="password" label="Password" name="password" zodError={registerErrors} />
+						<Field
+							type="password"
+							label="Confirm"
+							name="passwordConfirm"
+							zodError={registerErrors}
+						/>
+						<button>Register</button>
+					</form>
+				{:else}
+					<form on:submit|preventDefault={login}>
+						<Field label="Username" name="username" zodError={loginErrors} />
+						<Field label="Password" name="password" type="password" zodError={loginErrors} />
+						<button>Login</button>
+						{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
+							>{/if}
+					</form>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	.modal {
