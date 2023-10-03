@@ -4,6 +4,7 @@
 
 export enum Collections {
 	DocAttachments = "doc_attachments",
+	DocRelations = "doc_relations",
 	Docs = "docs",
 	DocsUsers = "docs_users",
 	Invites = "invites",
@@ -44,6 +45,11 @@ export type DocAttachmentsRecord = {
 	deleted?: boolean
 }
 
+export type DocRelationsRecord<TdocId = unknown, TparentId = unknown> = {
+	docId?: null | TdocId
+	parentId?: null | TparentId
+}
+
 export type DocsRecord = {
 	title?: string
 	createdBy?: RecordIdString
@@ -51,6 +57,7 @@ export type DocsRecord = {
 	deleted?: boolean
 	excludeFromOverview?: boolean
 	ydoc?: string
+	parent?: RecordIdString
 }
 
 export enum DocsUsersAccessOptions {
@@ -76,7 +83,7 @@ export type InvitesRecord = {
 	doc?: RecordIdString
 	deleted?: boolean
 	access: InvitesAccessOptions
-	secret?: string
+	secret: string
 }
 
 export type ProjectsRecord = {
@@ -100,6 +107,8 @@ export type ProjectsUsersRecord = {
 export type UsersRecord = {
 	name?: string
 	avatar?: string
+	primaryColor?: string
+	accentColor?: string
 }
 
 export type UsersConnectionsRecord<Tconnection = unknown> = {
@@ -108,18 +117,20 @@ export type UsersConnectionsRecord<Tconnection = unknown> = {
 
 // Response types include system fields and match responses from the PocketBase API
 export type DocAttachmentsResponse<Texpand = unknown> = Required<DocAttachmentsRecord> & BaseSystemFields<Texpand>
+export type DocRelationsResponse<TdocId = unknown, TparentId = unknown, Texpand = unknown> = Required<DocRelationsRecord<TdocId, TparentId>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
 export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> & BaseSystemFields<Texpand>
 export type ProjectsResponse<Texpand = unknown> = Required<ProjectsRecord> & BaseSystemFields<Texpand>
 export type ProjectsUsersResponse<Texpand = unknown> = Required<ProjectsUsersRecord> & BaseSystemFields<Texpand>
-export type UsersResponse = Required<UsersRecord> & AuthSystemFields
-export type UsersConnectionsResponse<Tconnection = unknown> = Required<UsersConnectionsRecord<Tconnection>> & BaseSystemFields
+export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
+export type UsersConnectionsResponse<Tconnection = unknown, Texpand = unknown> = Required<UsersConnectionsRecord<Tconnection>> & BaseSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
 	doc_attachments: DocAttachmentsRecord
+	doc_relations: DocRelationsRecord
 	docs: DocsRecord
 	docs_users: DocsUsersRecord
 	invites: InvitesRecord
@@ -131,6 +142,7 @@ export type CollectionRecords = {
 
 export type CollectionResponses = {
 	doc_attachments: DocAttachmentsResponse
+	doc_relations: DocRelationsResponse
 	docs: DocsResponse
 	docs_users: DocsUsersResponse
 	invites: InvitesResponse
@@ -149,6 +161,7 @@ export interface CollectionSchemas {
   users_connections: Usersconnections;
   invites: Invites;
   doc_attachments: Docattachments;
+  doc_relations: Usersconnections;
 }
 
 export interface Docattachments {

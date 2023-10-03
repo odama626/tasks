@@ -8,9 +8,14 @@ import { WebrtcProvider } from 'y-webrtc';
 import { pick } from 'lodash-es';
 
 export const collectFormData = (callback) => (e) => {
-	console.log({ e })
+	console.log({ e });
 	const data = new FormData(e.target);
-	return callback(Object.fromEntries(data.entries()), e);
+	const record = Object.fromEntries(data.entries());
+	for (const field in record) {
+		// filter out empty file inputs to prevent overwriting files with untouched inputs
+		if (record[field] instanceof Blob && record[field].size === 0) delete record[field];
+	}
+	return callback(record, e);
 };
 
 export function convertPbErrorToZod(result) {
@@ -84,7 +89,16 @@ notify.dismiss = function (id: string) {
 	notificationStore.update((notifications) => notifications.filter((n) => n.id !== id));
 };
 
-export function prepareRecordFormData(record) {
+export function prepareLocalPayload(record: any) {
+	for (const field in record) {
+		let payload = record[field];
+		if (payload instanceof Blob) {
+			delete record[`cache_${field}`];
+		}
+	}
+	return record;
+}
+export function prepareRecordFormData(record: any) {
 	const formData = new FormData();
 	for (const field in record) {
 		let payload = record[field];
@@ -101,6 +115,13 @@ export function prepareRecordFormData(record) {
 		formData.append(field, payload);
 	}
 	return formData;
+}
+
+export function getImage(record: any, field: string) {
+	console.log({ record })
+	if (!record) return;
+	if (record[`cache_${field}`]) return record[`cache_${field}`];
+	if (record[field] instanceof Blob) return URL.createObjectURL(record[field]);
 }
 
 export async function rehydrateImages(ydoc: Y.Doc, docId: string) {

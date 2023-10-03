@@ -1,23 +1,18 @@
 <script lang="ts">
-	import Task from '../tasks/task.svelte';
 	import Field from '$lib/field.svelte';
-	import { collectFormData, convertPbErrorToZod } from '$lib/utils';
-	import { z, ZodError } from 'zod';
 	import { pb, userStore } from '$lib/storage';
-	import { goto } from '$app/navigation';
+	import { collectFormData, convertPbErrorToZod } from '$lib/utils';
 	import { get } from 'svelte/store';
+	import { ZodError, z } from 'zod';
 	import Profile from './profile.svelte';
+	import { handleRedirect } from './utils';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
 	let isRegistering = false;
 	let isLoggedIn = !!get(userStore)?.record;
 
-	function handleRedirect() {
-		const redirect = localStorage.getItem('login-redirect') ?? '/';
-		localStorage.removeItem('login-redirect');
-		goto(redirect);
-	}
+
 
 	const registrationSchema = z
 		.object({

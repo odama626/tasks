@@ -36,6 +36,30 @@
           "thumbs": null,
           "protected": false
         }
+      },
+      {
+        "id": "wqkg3zca",
+        "name": "primaryColor",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "gmf0zw4r",
+        "name": "accentColor",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
       }
     ]
   },
@@ -155,6 +179,20 @@
           "mimeTypes": [],
           "thumbs": [],
           "protected": false
+        }
+      },
+      {
+        "id": "u9teufen",
+        "name": "parent",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
         }
       }
     ]
@@ -369,7 +407,7 @@
         "name": "secret",
         "type": "text",
         "system": false,
-        "required": false,
+        "required": true,
         "options": {
           "min": null,
           "max": null,
@@ -392,7 +430,7 @@
         "required": false,
         "options": {
           "maxSelect": 1,
-          "maxSize": 5242880,
+          "maxSize": 104857600,
           "mimeTypes": [],
           "thumbs": [],
           "protected": false
@@ -430,6 +468,30 @@
         "id": "1gbpaxz2",
         "name": "deleted",
         "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ]
+  },
+  "doc_relations": {
+    "id": "57w2k6vgko1avhz",
+    "name": "doc_relations",
+    "type": "view",
+    "system": false,
+    "schema": [
+      {
+        "id": "ak18p4rz",
+        "name": "docId",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "cvgdwd85",
+        "name": "parentId",
+        "type": "json",
         "system": false,
         "required": false,
         "options": {}

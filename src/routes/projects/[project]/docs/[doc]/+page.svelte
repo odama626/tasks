@@ -5,7 +5,7 @@
 	import { Collections } from '$lib/db.types.js';
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import { insertImage } from '$lib/insertImage';
+	import { insertFile, insertImage } from '$lib/insertImage';
 	import { events } from '$lib/modelEvent.js';
 	import { pb, userStore } from '$lib/storage';
 	import Tooltip from '$lib/tooltip.svelte';
@@ -16,6 +16,7 @@
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import { createDocument, saveDocument } from './saveDocument';
+	import File from '$lib/editor/extensions/file/file.svelte';
 
 	$: {
 		if (data.docId === 'new') {
@@ -97,7 +98,11 @@
 				try {
 					if (item.kind === 'file' && item.type.startsWith('image/')) {
 						const file = item.getAsFile();
-						await insertImage(file, metadata, view, pos);
+						if (file.type.startsWith('image/')) {
+							await insertImage(file, metadata, view, pos);
+						} else {
+							await insertFile(file, metadata, view, pos);
+						}
 					}
 					if (item.kind === 'string' && item.type === 'text/uri-list') {
 						const text = await new Promise((resolve) => item.getAsString(resolve));

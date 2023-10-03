@@ -1,19 +1,14 @@
+import { DateTime } from 'luxon';
 import type {
-	Collections,
-	CollectionRecords,
-	DocsResponse,
-	DocAttachmentsResponse,
-	CollectionResponses
+	CollectionResponses,
+	Collections
 } from './db.types';
 import {
 	db,
 	pb,
-	type DocAttachmentsInstance,
-	type DocsInstance,
 	type CollectionInstances
 } from './storage';
-import { DateTime } from 'luxon';
-import { NotificationType, attachRecordToError, notify, prepareRecordFormData } from './utils';
+import { NotificationType, attachRecordToError, notify, prepareLocalPayload, prepareRecordFormData } from './utils';
 
 export enum EventType {
 	Add = 'add',
@@ -91,12 +86,13 @@ export class ModelEvents {
 	private async add(event: ModelEvent<any>) {
 		try {
 			db.events.add(event);
+			const payload = prepareLocalPayload(event.payload);
 			if (event.eventType === 'update') {
-				await db[event.modelType][event.eventType](event.recordId, event.payload);
+				await db[event.modelType][event.eventType](event.recordId, payload);
 			} else if (event.eventType === 'delete') {
 				await db[event.modelType][event.eventType](event.recordId);
 			} else {
-				await db[event.modelType][event.eventType](event.payload);
+				await db[event.modelType][event.eventType](payload);
 			}
 
 			if (this.online) {
@@ -208,6 +204,7 @@ export class ModelEvents {
 		R extends ValueOf<CollectionInstances>
 	>(record: T, fields: string[], token: string): Promise<R> {
 		for (const field of fields) {
+			if (!record[field].length) continue;
 			const url = pb.files.getUrl(record, record[field], { token });
 			await fetch(url);
 			record[`cache_${field}`] = url;

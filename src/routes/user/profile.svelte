@@ -3,23 +3,20 @@
 	import Field from '$lib/field.svelte';
 	import { events } from '$lib/modelEvent';
 	import { db, pb, userStore } from '$lib/storage';
-	import { collectFormData } from '$lib/utils';
+	import { collectFormData, getImage, withKeys } from '$lib/utils';
 	import { get } from 'svelte/store';
 	import { ZodError, z } from 'zod';
 	import Color from 'colorjs.io';
 	import Upload from '$lib/icons/upload.svelte';
 	import User from '$lib/icons/user.svelte';
 	import { liveQuery } from 'dexie';
+	import { DEFAULT_ACCENT_HUE, DEFAULT_PRIMARY_HUE } from '$lib/theme';
+	import { handleRedirect } from './utils';
 
 	let zodError: ZodError;
 	let image;
-	
+
 	$: user = liveQuery(() => db.users.get(get(userStore)?.record?.id));
-
-	$: console.log({ $user })
-
-	const DEFAULT_PRIMARY_HUE = 295;
-	const DEFAULT_ACCENT_HUE = 174;
 
 	const colorRange = Color.range('oklch(67% .31, 0)', 'oklch(67% .31 360)', {
 		steps: 360,
@@ -31,13 +28,19 @@
 	const gradientStops = Array(360)
 		.fill(0)
 		.map((_, i) => colorRange(i / 360));
-	console.log({ gradientStops });
 
-
-	$: image = $user?.cache_avatar;
+	$: image = getImage($user, 'avatar');
 
 	function getColorFromHue(hue: number) {
 		return new Color(`oklch(72%, .25, ${hue})`).to('srgb').toString();
+	}
+
+
+	function goBack() {
+		const root = document.querySelector(':root');	
+		root?.style.setProperty(`--hue-primary`, $user?.primaryColor || DEFAULT_PRIMARY_HUE);
+		root?.style.setProperty(`--hue-accent`, $user?.accentColor || DEFAULT_ACCENT_HUE)
+		handleRedirect();
 	}
 
 	function onColorChange(palette: string, event: InputEvent) {
@@ -57,14 +60,13 @@
 	const updateUser = collectFormData(async (data, event) => {
 		const result = schema.safeParse(data);
 		if (!result.success) return (zodError = result.error);
-		console.log({ data, result });
 		const payload = {
 			...$user,
 			...result.data
 		};
 
-		console.log({ payload })
 		await events.update(Collections.Users, $user.id, payload);
+		handleRedirect();
 	});
 
 	async function updateImage(e) {
@@ -82,9 +84,13 @@
 
 <form on:submit|preventDefault={updateUser} style="--stops:{gradientStops}">
 	<div class="row even">
-		<div class="profile-image" on:click={updateImage}>
+		<div
+			on:keypress={withKeys(['Enter', 'Space'], updateImage)}
+			class="profile-image"
+			on:click={updateImage}
+		>
 			{#if image}
-				<img class="avatar" src={image} />
+				<img class="avatar" alt="change user profile" src={image} />
 			{:else}
 				<div class="profile-image-placeholder">
 					<User />
@@ -93,7 +99,7 @@
 			<div class="profile-image-mask">
 				<Upload />
 			</div>
-			<input type="file" accept="image/*" style="opacity: 0" name="avatar" />
+			<input value={null} type="file" accept="image/*" style="opacity: 0" name="avatar" />
 		</div>
 		<div><Field label="Name" value={$user?.name} name="name" {zodError} /></div>
 	</div>
@@ -113,7 +119,7 @@
 					{zodError}
 				/>
 			</div>
-			<div style="--value: {getColorFromHue(user?.accentColor || DEFAULT_ACCENT_HUE)}">
+			<div style="--value: {getColorFromHue($user?.accentColor || DEFAULT_ACCENT_HUE)}">
 				<Field
 					on:input={(e) => onColorChange('accent', e)}
 					min={0}
@@ -129,7 +135,7 @@
 		</div>
 	</fieldset>
 	<div class="row" style="justify-content: end; flex-direction: row;">
-		<button class="accent ghost">Go Back</button>
+		<button type="button" class="accent ghost" on:click={goBack}>Go Back</button>
 		<button>Save Changes</button>
 	</div>
 </form>

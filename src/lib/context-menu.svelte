@@ -2,6 +2,8 @@
 	import { Popover, PopoverButton, PopoverPanel } from '@rgossiaux/svelte-headlessui';
 	import { createPopperActions } from 'svelte-popperjs';
 	import { events } from './modelEvent';
+	import { createRedirect } from '../routes/user/utils';
+	import { goto } from '$app/navigation';
 
 	const [popperRef, popperContent] = createPopperActions({
 		placement: 'bottom-end',
@@ -33,6 +35,14 @@
 		<ul class="menu">
 			<slot name="items" />
 			{#if $$slots.items}<div class="divider" />{/if}
+			<li class="menu-item">
+				<button
+					on:click={() => {
+						createRedirect(globalThis.location);
+						goto('/user');
+					}}>Preferences</button
+				>
+			</li>
 			<li class="menu-item">
 				<button on:click={events.logout}>Logout</button>
 			</li>
