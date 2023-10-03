@@ -1,8 +1,37 @@
 <script lang="ts">
+	import { db, userStore } from '$lib/storage';
 	import { notificationStore, notify, withKeys } from '$lib/utils';
+	import { liveQuery } from 'dexie';
 	import { flip } from 'svelte/animate';
+	import { get } from 'svelte/store';
 	import { fade, fly } from 'svelte/transition';
+
+	
+	const user = liveQuery(() => db.users.get(get(userStore)?.record?.id));
+	let primaryHue = 295;
+	let accentHue = 174;
+
+	user.subscribe(user => {
+		console.log({ user })
+		primaryHue = user.primaryColor,
+		accentHue = user.accentColor
+	})
+
+	let theme;
+	
+	$: theme = `<${''}style>
+	  :root {
+			--hue-primary: ${primaryHue};
+			--hue-accent: ${accentHue};
+		}
+		</${''}style>
+	`
 </script>
+
+<svelte:head>
+
+{@html theme}
+</svelte:head>
 
 <slot />
 <div class="tray">

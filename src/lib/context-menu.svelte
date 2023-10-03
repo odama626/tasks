@@ -11,7 +11,7 @@
 </script>
 
 <Popover bind:open class="popper">
-	<PopoverButton class="ghost icon" use={[popperRef]}>
+	<PopoverButton style="display: flex;" class="ghost icon" use={[popperRef]}>
 		<slot name="button">
 			<svg
 				xmlns="http://www.w3.org/2000/svg"

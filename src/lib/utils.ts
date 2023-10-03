@@ -8,6 +8,7 @@ import { WebrtcProvider } from 'y-webrtc';
 import { pick } from 'lodash-es';
 
 export const collectFormData = (callback) => (e) => {
+	console.log({ e })
 	const data = new FormData(e.target);
 	return callback(Object.fromEntries(data.entries()), e);
 };

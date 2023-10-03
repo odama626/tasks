@@ -21,6 +21,7 @@
 
 	const registrationSchema = z
 		.object({
+			name: z.string().trim().min(2),
 			username: z.string().trim().toLowerCase().min(2),
 			email: z.string().email().trim().toLowerCase(),
 			password: z.string().min(8),
@@ -87,10 +88,23 @@
 			<div class="modal-content">
 				{#if isRegistering}
 					<form on:submit|preventDefault={register}>
-						<Field label="Username" name="username" zodError={registerErrors} />
-						<Field label="Email" name="email" zodError={registerErrors} />
-						<Field type="password" label="Password" name="password" zodError={registerErrors} />
+						<Field autocomplete="name" label="Name" name="name" zodError={registerErrors} />
 						<Field
+							autocomplete="username"
+							label="Username"
+							name="username"
+							zodError={registerErrors}
+						/>
+						<Field autocomplete="email" label="Email" name="email" zodError={registerErrors} />
+						<Field
+							autocomplete="new-password"
+							type="password"
+							label="Password"
+							name="password"
+							zodError={registerErrors}
+						/>
+						<Field
+							autocomplete="new-password"
 							type="password"
 							label="Confirm"
 							name="passwordConfirm"
@@ -100,8 +114,19 @@
 					</form>
 				{:else}
 					<form on:submit|preventDefault={login}>
-						<Field label="Username" name="username" zodError={loginErrors} />
-						<Field label="Password" name="password" type="password" zodError={loginErrors} />
+						<Field
+							autocomplete="username"
+							label="Username"
+							name="username"
+							zodError={loginErrors}
+						/>
+						<Field
+							autocomplete="current-password"
+							label="Password"
+							name="password"
+							type="password"
+							zodError={loginErrors}
+						/>
 						<button>Login</button>
 						{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
 							>{/if}

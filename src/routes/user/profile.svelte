@@ -2,16 +2,24 @@
 	import { Collections } from '$lib/db.types';
 	import Field from '$lib/field.svelte';
 	import { events } from '$lib/modelEvent';
-	import { pb, userStore } from '$lib/storage';
+	import { db, pb, userStore } from '$lib/storage';
 	import { collectFormData } from '$lib/utils';
 	import { get } from 'svelte/store';
 	import { ZodError, z } from 'zod';
 	import Color from 'colorjs.io';
 	import Upload from '$lib/icons/upload.svelte';
+	import User from '$lib/icons/user.svelte';
+	import { liveQuery } from 'dexie';
 
 	let zodError: ZodError;
 	let image;
-	let user = get(userStore)?.record;
+	
+	$: user = liveQuery(() => db.users.get(get(userStore)?.record?.id));
+
+	$: console.log({ $user })
+
+	const DEFAULT_PRIMARY_HUE = 295;
+	const DEFAULT_ACCENT_HUE = 174;
 
 	const colorRange = Color.range('oklch(67% .31, 0)', 'oklch(67% .31 360)', {
 		steps: 360,
@@ -25,11 +33,8 @@
 		.map((_, i) => colorRange(i / 360));
 	console.log({ gradientStops });
 
-	async function fetchImage() {
-		const token = await pb.files.getToken();
-		image = pb.getFileUrl(user, user?.avatar, { token });
-	}
-	fetchImage();
+
+	$: image = $user?.cache_avatar;
 
 	function getColorFromHue(hue: number) {
 		return new Color(`oklch(72%, .25, ${hue})`).to('srgb').toString();
@@ -43,56 +48,59 @@
 	}
 
 	const schema = z.object({
-		name: z.string().nonempty(`name is required`)
+		name: z.string().nonempty(`name is required`),
+		avatar: z.any(),
+		primaryColor: z.string(),
+		accentColor: z.string()
 	});
 
 	const updateUser = collectFormData(async (data, event) => {
 		const result = schema.safeParse(data);
 		if (!result.success) return (zodError = result.error);
+		console.log({ data, result });
 		const payload = {
-			...user,
+			...$user,
 			...result.data
 		};
 
-		await events.update(Collections.Users, user.id, payload);
+		console.log({ payload })
+		await events.update(Collections.Users, $user.id, payload);
 	});
 
 	async function updateImage(e) {
-		const fileInput = document.createElement('input');
-		fileInput.type = 'file';
-		fileInput.accept = 'image/*';
+		const currentTarget = e.currentTarget;
+		const fileInput = currentTarget.querySelector('input[name="avatar"]');
 
 		fileInput.click();
-    const target = e.currentTarget;
 
 		const file = await new Promise<File>((resolve) =>
 			fileInput.addEventListener('change', (e) => resolve(e.target.files[0]))
 		);
-    console.log(e.currentTarget)
-		const input = target.querySelector('input[name="avatar"]');
-		input.value = file;
-		const image = target.querySelector('img');
-		image.src = URL.createObjectURL(file);
-
-		console.log({ file });
+		image = URL.createObjectURL(file);
 	}
 </script>
 
 <form on:submit|preventDefault={updateUser} style="--stops:{gradientStops}">
 	<div class="row even">
 		<div class="profile-image" on:click={updateImage}>
-			<img class="avatar" src={image} />
+			{#if image}
+				<img class="avatar" src={image} />
+			{:else}
+				<div class="profile-image-placeholder">
+					<User />
+				</div>
+			{/if}
 			<div class="profile-image-mask">
 				<Upload />
 			</div>
-			<input type="hidden" name="avatar" />
+			<input type="file" accept="image/*" style="opacity: 0" name="avatar" />
 		</div>
-		<div><Field label="Name" value={user.name} name="name" {zodError} /></div>
+		<div><Field label="Name" value={$user?.name} name="name" {zodError} /></div>
 	</div>
 	<fieldset>
 		<legend>Color Theme</legend>
 		<div class="row even">
-			<div style="--value: {getColorFromHue(user?.primaryColor || 295)}">
+			<div style="--value: {getColorFromHue($user?.primaryColor || DEFAULT_PRIMARY_HUE)}">
 				<Field
 					on:input={(e) => onColorChange('primary', e)}
 					label="Primary"
@@ -101,12 +109,11 @@
 					type="range"
 					class="color"
 					name="primaryColor"
-					defaultValue={295}
-					value={user.primaryColor}
+					value={$user?.primaryColor || DEFAULT_PRIMARY_HUE}
 					{zodError}
 				/>
 			</div>
-			<div style="--value: {getColorFromHue(user?.accentColor || 174)}">
+			<div style="--value: {getColorFromHue(user?.accentColor || DEFAULT_ACCENT_HUE)}">
 				<Field
 					on:input={(e) => onColorChange('accent', e)}
 					min={0}
@@ -114,9 +121,8 @@
 					class="color"
 					label="Secondary"
 					type="range"
-					defaultValue={174}
 					name="accentColor"
-					value={user.accentColor}
+					value={$user?.accentColor || DEFAULT_ACCENT_HUE}
 					{zodError}
 				/>
 			</div>
@@ -148,15 +154,26 @@
 
 		&:hover,
 		&:active {
-       .profile-image-mask {
-        opacity:  100%;
-      }
+			.profile-image-mask {
+				opacity: 100%;
+			}
 		}
+	}
+
+	.profile-image-placeholder {
+		position: absolute;
+		inset: 0;
+		--svg-size: 50px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		pointer-events: none;
+		color: var(--surface-5);
 	}
 
 	.profile-image-mask {
 		position: absolute;
-    opacity: 0;
+		opacity: 0;
 		pointer-events: none;
 		inset: 0;
 		display: flex;
@@ -164,8 +181,8 @@
 		align-items: center;
 		color: var(--surface-5);
 		backdrop-filter: blur(5px);
-    transition: opacity ease-in-out 250ms;
-    will-change: opacity;
+		transition: opacity ease-in-out 250ms;
+		will-change: opacity;
 		background-color: color-mix(in oklch, var(--surface-1) 40%, transparent);
 	}
 
@@ -178,6 +195,9 @@
 				--profile-image-size: 200px;
 				--svg-size: 50px;
 				flex-basis: var(--profile-image-size);
+			}
+			.profile-image-placeholder {
+				--svg-size: 150px;
 			}
 		}
 	}
