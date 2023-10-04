@@ -26,7 +26,7 @@
 	href={$file?.cache_file}
 >
 	<div class="container">
-		<div style="--svg-size: 48px; color: var(--text-3);">
+		<div style="color: var(--text-3);">
 			<Document />
 		</div>
 		<div class="content">
@@ -45,18 +45,21 @@
 	}
 
 	.container {
-		margin-top: var(--block-spacing);
-		margin-right: var(--block-spacing);
+		/* margin-top: var(--block-spacing); */
+		/* margin-right: var(--block-spacing); */
 		padding: 0.5rem 0.75rem;
-		border: 2px solid var(--surface-4);
-		background-color: var(--surface-2);
+    padding-left: 0;
+		/* border: 2px solid var(--surface-4); */
+		/* background-color: var(--surface-2); */
 		color: var(--text-1);
-		border-radius: 4px;
+		/* border-radius: 4px; */
 		display: inline-flex;
 		gap: var(--block-spacing);
 	}
 
 	.content {
 		flex: 1 1 auto;
+    display: flex;
+		gap: var(--block-spacing);
 	}
 </style>
