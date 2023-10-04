@@ -1,7 +1,6 @@
-import { get } from 'svelte/store';
 import { Collections } from './db.types';
 import { events } from './modelEvent';
-import { userStore, pb } from './storage';
+import { pb } from './storage';
 import { createId } from './utils';
 
 export async function insertImage(file: File, metadata, view, pos) {
