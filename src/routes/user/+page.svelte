@@ -1,23 +1,22 @@
 <script lang="ts">
-	import Task from '../tasks/task.svelte';
 	import Field from '$lib/field.svelte';
-	import { collectFormData, convertPbErrorToZod } from '$lib/utils';
-	import { z, ZodError } from 'zod';
 	import { pb, userStore } from '$lib/storage';
-	import { goto } from '$app/navigation';
+	import { collectFormData, convertPbErrorToZod } from '$lib/utils';
+	import { get } from 'svelte/store';
+	import { ZodError, z } from 'zod';
+	import Profile from './profile.svelte';
+	import { handleRedirect } from './utils';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
 	let isRegistering = false;
+	let isLoggedIn = !!get(userStore)?.record;
 
-	function handleRedirect() {
-		const redirect = localStorage.getItem('login-redirect') ?? '/';
-		localStorage.removeItem('login-redirect');
-		goto(redirect);
-	}
+
 
 	const registrationSchema = z
 		.object({
+			name: z.string().trim().min(2),
 			username: z.string().trim().toLowerCase().min(2),
 			email: z.string().email().trim().toLowerCase(),
 			password: z.string().min(8),
@@ -62,37 +61,76 @@
 	});
 </script>
 
-<div class="modal-shade">
-	<div class="modal">
-		<div class="toggle">
-			<button class:ghost={!isRegistering} on:click={() => (isRegistering = !isRegistering)}>
-				Login
-			</button>
-			<button class:ghost={isRegistering} on:click={() => (isRegistering = !isRegistering)}>
-				Register
-			</button>
-		</div>
-		<div class="modal-content">
-			{#if isRegistering}
-				<form on:submit|preventDefault={register}>
-					<Field label="Username" name="username" zodError={registerErrors} />
-					<Field label="Email" name="email" zodError={registerErrors} />
-					<Field type="password" label="Password" name="password" zodError={registerErrors} />
-					<Field type="password" label="Confirm" name="passwordConfirm" zodError={registerErrors} />
-					<button>Register</button>
-				</form>
-			{:else}
-				<form on:submit|preventDefault={login}>
-					<Field label="Username" name="username" zodError={loginErrors} />
-					<Field label="Password" name="password" type="password" zodError={loginErrors} />
-					<button>Login</button>
-					{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
-						>{/if}
-				</form>
-			{/if}
+{#if isLoggedIn}
+	<div class="modal-shade">
+		<div class="modal">
+			<div class="modal-content">
+				<Profile />
+			</div>
 		</div>
 	</div>
-</div>
+{:else}
+	<div class="modal-shade">
+		<div class="modal">
+			<div class="toggle">
+				<button class:ghost={!isRegistering} on:click={() => (isRegistering = !isRegistering)}>
+					Login
+				</button>
+				<button class:ghost={isRegistering} on:click={() => (isRegistering = !isRegistering)}>
+					Register
+				</button>
+			</div>
+			<div class="modal-content">
+				{#if isRegistering}
+					<form on:submit|preventDefault={register}>
+						<Field autocomplete="name" label="Name" name="name" zodError={registerErrors} />
+						<Field
+							autocomplete="username"
+							label="Username"
+							name="username"
+							zodError={registerErrors}
+						/>
+						<Field autocomplete="email" label="Email" name="email" zodError={registerErrors} />
+						<Field
+							autocomplete="new-password"
+							type="password"
+							label="Password"
+							name="password"
+							zodError={registerErrors}
+						/>
+						<Field
+							autocomplete="new-password"
+							type="password"
+							label="Confirm"
+							name="passwordConfirm"
+							zodError={registerErrors}
+						/>
+						<button>Register</button>
+					</form>
+				{:else}
+					<form on:submit|preventDefault={login}>
+						<Field
+							autocomplete="username"
+							label="Username"
+							name="username"
+							zodError={loginErrors}
+						/>
+						<Field
+							autocomplete="current-password"
+							label="Password"
+							name="password"
+							type="password"
+							zodError={loginErrors}
+						/>
+						<button>Login</button>
+						{#if loginErrors?.overalMessage}<small class="error">{loginErrors.overalMessage}</small
+							>{/if}
+					</form>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <style lang="scss">
 	.modal {

@@ -5,8 +5,10 @@
 	import { Collections } from '$lib/db.types.js';
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import { events, EventType } from '$lib/modelEvent.js';
-	import { db, pb, userStore } from '$lib/storage';
+	import { insertFile, insertImage } from '$lib/insertAttachment';
+	import { events } from '$lib/modelEvent.js';
+	import { pb, userStore } from '$lib/storage';
+	import Tooltip from '$lib/tooltip.svelte';
 	import { createId, getDocProvider } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 	import { onMount } from 'svelte';
@@ -14,9 +16,6 @@
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import { createDocument, saveDocument } from './saveDocument';
-	import Tooltip from '$lib/tooltip.svelte';
-	import { liveQuery } from 'dexie';
-	import { insertImage } from '$lib/insertImage';
 
 	$: {
 		if (data.docId === 'new') {
@@ -94,12 +93,15 @@
 
 			const pos = view.posAtCoords({ left: event.clientX, top: event.clientY }).pos;
 
-
 			items.map(async (item) => {
 				try {
 					if (item.kind === 'file' && item.type.startsWith('image/')) {
 						const file = item.getAsFile();
-						await insertImage(file, metadata, view, pos);
+						if (file.type.startsWith('image/')) {
+							await insertImage(file, metadata, view, pos);
+						} else {
+							await insertFile(file, metadata, view, pos);
+						}
 					}
 					if (item.kind === 'string' && item.type === 'text/uri-list') {
 						const text = await new Promise((resolve) => item.getAsString(resolve));
@@ -151,7 +153,7 @@
 					{@const user = collaborator?.user?.user}
 					{@const image = data.token && pb.getFileUrl(user, user?.avatar, { token: data.token })}
 					<Tooltip>
-						<div slot="content" class="collaborator">
+						<div slot="content" class="profile-image" style="--profile-image-size: 40px;">
 							<img src={image} />
 						</div>
 						<div slot="tooltip" style="white-space: nowrap;">
@@ -198,21 +200,6 @@
 		display: flex;
 		gap: var(--block-spacing);
 		padding: 0 var(--block-spacing);
-	}
-	.collaborator {
-		--size: 40px;
-		width: var(--size);
-		height: var(--size);
-		box-sizing: border-box;
-		overflow: hidden;
-		border-radius: 50%;
-		border: 4px solid var(--surface-4);
-
-		> img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
 	}
 
 	.document {

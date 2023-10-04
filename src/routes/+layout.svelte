@@ -1,8 +1,20 @@
 <script lang="ts">
+	import { db, userStore } from '$lib/storage';
+	import { getStyle } from '$lib/theme';
 	import { notificationStore, notify, withKeys } from '$lib/utils';
+	import { liveQuery } from 'dexie';
 	import { flip } from 'svelte/animate';
 	import { fade, fly } from 'svelte/transition';
+
+	$: user = liveQuery(() => db.users.get($userStore?.record?.id));
+
+	$: style = getStyle($user);
+
 </script>
+
+<svelte:head>
+	{@html style}
+</svelte:head>
 
 <slot />
 <div class="tray">
@@ -61,7 +73,6 @@
 			color: var(--surface-5);
 		}
 	}
-
 
 	@media only screen and (max-width: 480px) {
 		.tray {

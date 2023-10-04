@@ -22,6 +22,7 @@
 	import { Id } from './editor/extensions/id';
 	import { ImageExtension } from './editor/extensions/image';
 	import { userStore } from './storage';
+	import file from './editor/extensions/file';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -80,6 +81,7 @@
 					placeholder: 'Write something...'
 				}),
 				Link,
+				file,
 				Id,
 				TaskList,
 				SlashCommand(metadata),

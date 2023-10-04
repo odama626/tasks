@@ -70,6 +70,7 @@
 			<li>
 				<button
 					class="ghost icon"
+					style="display: flex;"
 					aria-expanded={isHeaderOpen}
 					on:click={() => (isHeaderOpen = !isHeaderOpen)}
 				>

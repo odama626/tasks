@@ -1,4 +1,4 @@
-import { type ChainedCommands } from '@tiptap/core';
+import type { ChainedCommands } from '@tiptap/core';
 import H1 from '$lib/icons/H1.svelte';
 import H2 from '$lib/icons/H2.svelte';
 import Quote from '$lib/icons/Quote.svelte';
@@ -7,7 +7,8 @@ import Highlight from '$lib/icons/Highlight.svelte';
 import List from '$lib/icons/List.svelte';
 import TaskList from '$lib/icons/Task List.svelte';
 import Upload from '$lib/icons/upload.svelte';
-import { insertImage } from '$lib/insertImage';
+import { insertFile, insertImage } from '$lib/insertAttachment';
+
 type Prepare = (callback: (chain: ChainedCommands, metadata: Metadata) => unknown) => unknown;
 
 export interface Metadata {
@@ -97,6 +98,10 @@ export const getCommands = (prepare: Prepare) => [
 									const { selection } = props.state;
 									const position = selection.$anchor.pos;
 									offset += await insertImage(file, metadata, props.view, position + i + offset);
+								} else {
+									const { selection } = props.state;
+									const position = selection.$anchor.pos;
+									offset += await insertFile(file, metadata, props.view, position + i + offset);
 								}
 							}
 							resolve();

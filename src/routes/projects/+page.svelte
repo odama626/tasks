@@ -5,8 +5,6 @@
 	import ContextMenu from '$lib/context-menu.svelte';
 
 	$: projects = liveQuery(() => db.projects.toCollection().toArray());
-
-	$: console.log($projects);
 </script>
 
 <Portal target=".header-context-portal">
