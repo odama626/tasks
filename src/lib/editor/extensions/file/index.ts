@@ -5,6 +5,9 @@ declare module '@tiptap/core' {}
 
 export default Node.create({
 	name: 'file',
+	draggable: true,
+
+	group: 'block',
 
 	addAttributes() {
 		return {
@@ -20,19 +23,19 @@ export default Node.create({
 	parseHTML() {
 		return [
 			{
-				tag: 'div[data-type="file"]'
+				tag: 'file'
 			}
 		];
 	},
 
 	renderHTML({ HTMLAttributes }) {
-		return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'file' }), 0];
+		return ['file', HTMLAttributes];
 	},
 
 	addNodeView() {
 		return ({ node, HTMLAttributes, getPos, editor }) => {
-			const dom = document.createElement('div');
-			dom.innerHTML = 'blahhhh';
+			const dom = document.createElement('span');
+
 			const element = new Component({
 				target: dom,
 				props: {
@@ -44,16 +47,12 @@ export default Node.create({
 				}
 			});
 
-			// Object.entries(this.options.HTMLAttributes).forEach(([key, value]) => {
-			// 	dom.setAttribute(key, value)
-			// })
-
-			// Object.entries(HTMLAttributes).forEach(([key, value]) => {
-			// 	dom.setAttribute(key, value);
-			// })
+			Object.entries(HTMLAttributes).forEach(([key, value]) => {
+				dom.setAttribute(key, value);
+			});
 
 			return {
-				dom,
+				dom
 			};
 		};
 	}

@@ -107,6 +107,9 @@ dependencies:
   dexie:
     specifier: ^3.2.4
     version: 3.2.4
+  file-size:
+    specifier: ^1.0.0
+    version: 1.0.0
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -2072,6 +2075,10 @@ packages:
     dependencies:
       flat-cache: 3.1.0
     dev: true
+
+  /file-size@1.0.0:
+    resolution: {integrity: sha512-tLIdonWTpABkU6Axg2yGChYdrOsy4V8xcm0IcyAP8fSsu6jiXLm5pgs083e4sq5fzNRZuAYolUbZyYmPvCKfwQ==}
+    dev: false
 
   /fill-range@7.0.1:
     resolution: {integrity: sha512-qOo9F+dMUmC2Lcb4BbVvnKJxTPjCm+RRpe4gDuGrzkL7mEVl/djYSu2OdQ2Pa302N4oqkSg9ir6jaLWJ2USVpQ==}

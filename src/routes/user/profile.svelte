@@ -3,7 +3,7 @@
 	import Field from '$lib/field.svelte';
 	import { events } from '$lib/modelEvent';
 	import { db, pb, userStore } from '$lib/storage';
-	import { collectFormData, getImage, withKeys } from '$lib/utils';
+	import { collectFormData, getAttachmentUrl, withKeys } from '$lib/utils';
 	import { get } from 'svelte/store';
 	import { ZodError, z } from 'zod';
 	import Color from 'colorjs.io';
@@ -29,7 +29,7 @@
 		.fill(0)
 		.map((_, i) => colorRange(i / 360));
 
-	$: image = getImage($user, 'avatar');
+	$: image = getAttachmentUrl($user, 'avatar');
 
 	function getColorFromHue(hue: number) {
 		return new Color(`oklch(72%, .25, ${hue})`).to('srgb').toString();

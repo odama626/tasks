@@ -15,6 +15,9 @@ export async function insertImage(file: File, metadata, view, pos) {
 		id: attachmentId,
 		createdBy: metadata.userId,
 		file,
+		name: file.name,
+		type: file.type,
+		size: file.size,
 		doc: metadata.docId
 	});
 
@@ -57,6 +60,9 @@ export function insertFile(file: File, metadata, view, pos) {
 		id: attachmentId,
 		createdBy: metadata.userId,
 		file,
+		name: file.name,
+		type: file.type,
+		size: file.size,
 		doc: metadata.docId
 	});
 
@@ -74,7 +80,7 @@ export function insertFile(file: File, metadata, view, pos) {
 		(offset, step) => offset + step.to - step.from,
 		0
 	);
-	
+
 	const waitForUpdate = new Promise<number>(async (resolve) =>
 		pb.collection('doc_attachments').subscribe(attachmentId, async (data) => {
 			const token = await pb.files.getToken();

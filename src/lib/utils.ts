@@ -117,32 +117,37 @@ export function prepareRecordFormData(record: any) {
 	return formData;
 }
 
-export function getImage(record: any, field: string) {
-	console.log({ record })
+export function getAttachmentUrl(record: any, field: string) {
+	console.log({ record });
 	if (!record) return;
 	if (record[`cache_${field}`]) return record[`cache_${field}`];
 	if (record[field] instanceof Blob) return URL.createObjectURL(record[field]);
 }
 
-export async function rehydrateImages(ydoc: Y.Doc, docId: string) {
+export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
+	const attachmentsById = attachments.reduce((result, attachment) => {
+		result[attachment.id] = attachment;
+		return result;
+	}, {});
 
 	const fragment = ydoc.getXmlFragment('doc');
 
-	for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
-		if (!image.getAttribute('src').startsWith('blob')) continue;
+	for (const file of fragment.createTreeWalker(
+		(yxml) => yxml.nodeName === 'image' || yxml.nodeName === 'file'
+	)) {
+		const key = file.nodeName === 'image' ? 'src' : 'file';
+		if (!file.getAttribute(key).startsWith('blob')) continue;
 
-		const attachmentId = image.getAttribute('docAttachment');
-		const attachment = attachments.find(
-			(attachment: DocAttachmentsResponse) => attachment.id === attachmentId
-		);
-		let src;
+		const attachmentId = file.getAttribute('docAttachment');
+		const attachment = attachmentsById[attachmentId];
+		let url;
 		if (attachment.file instanceof File) {
-			src = URL.createObjectURL(attachment.file);
+			url = URL.createObjectURL(attachment.file);
 		} else if (attachment.cache_file) {
-			src = attachment.cache_file;
+			url = attachment.cache_file;
 		}
-		image.setAttribute('src', src);
+		file.setAttribute(key, url);
 	}
 }
 
@@ -158,7 +163,7 @@ export async function getYdoc(doc: DocsInstance) {
 
 	if (arrayBuffer) {
 		Y.applyUpdate(ydoc, new Uint8Array(arrayBuffer));
-		rehydrateImages(ydoc, doc.id);
+		rehydrateAttachments(ydoc, doc.id);
 	}
 	if (doc) {
 		const metadata = ydoc.getMap('metadata');
