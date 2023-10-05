@@ -26,12 +26,12 @@
 	href={$file?.cache_file}
 >
 	<div class="container">
-		<div style="color: var(--text-3);">
+		<div style="color: var(--text-5);">
 			<Document />
 		</div>
 		<div class="content">
 			<div>{$file?.name}</div>
-			<div style="color: var(--text-5);">{size}</div>
+			<div style="font-weight: 300;">{size}</div>
 		</div>
 	</div>
 </a>
@@ -45,14 +45,9 @@
 	}
 
 	.container {
-		/* margin-top: var(--block-spacing); */
-		/* margin-right: var(--block-spacing); */
 		padding: 0.5rem 0.75rem;
     padding-left: 0;
-		/* border: 2px solid var(--surface-4); */
-		/* background-color: var(--surface-2); */
-		color: var(--text-1);
-		/* border-radius: 4px; */
+		color: var(--text-3);
 		display: inline-flex;
 		gap: var(--block-spacing);
 	}
