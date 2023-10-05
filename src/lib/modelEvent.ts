@@ -1,14 +1,13 @@
 import { DateTime } from 'luxon';
-import type {
-	CollectionResponses,
-	Collections
-} from './db.types';
+import type { CollectionResponses, Collections } from './db.types';
+import { db, pb, type CollectionInstances } from './storage';
 import {
-	db,
-	pb,
-	type CollectionInstances
-} from './storage';
-import { NotificationType, attachRecordToError, notify, prepareLocalPayload, prepareRecordFormData } from './utils';
+	NotificationType,
+	attachRecordToError,
+	notify,
+	prepareLocalPayload,
+	prepareRecordFormData
+} from './utils';
 
 export enum EventType {
 	Add = 'add',
@@ -73,6 +72,7 @@ const getSyncTables = ({ token }): SyncTable[] => [
 export class ModelEvents {
 	public online: boolean = navigator.onLine;
 	private processing: boolean = false;
+	private syncing: boolean = false;
 	private queue: Promise<any> = Promise.resolve();
 
 	constructor() {
@@ -222,26 +222,36 @@ export class ModelEvents {
 
 	async startSync() {
 		if (!this.online) return;
+		if (this.syncing) return;
+
 		try {
 			await pb.collection('users').authRefresh();
 		} catch (e) {
+			this.syncing = false;
 			// TODO: store previous login credentials and wipe local data on login if it doesn't match
 			localStorage.removeItem('auth');
 			pb.authStore.clear();
 			location.reload();
 		}
-		await this.step();
+		try {
+			await this.step();
 
-		const token = await pb.files.getToken();
-		const syncTables = getSyncTables({ token });
-		for (const syncTable of syncTables) {
-			await this.syncTable(syncTable);
+			const token = await pb.files.getToken();
+			const syncTables = getSyncTables({ token });
+			for (const syncTable of syncTables) {
+				await this.syncTable(syncTable);
+			}
+		} catch (e) {
+			console.error(e);
+			notify({
+				text: 'Failed to sync',
+				detail: e.message,
+				type: NotificationType.Error,
+				timeout: 5000
+			});
+		} finally {
+			this.syncing = false;
 		}
-
-		// Order matters when using invalidateCache!
-
-		// await this.cacheYdocs(docs as DocsInstance[], token);
-		// await this.cacheAttachments(attachments as DocAttachmentsInstance[], token);
 	}
 
 	private async step(): Promise<void> {
@@ -282,9 +292,7 @@ export class ModelEvents {
 				await db.events.where({ id: record.id }).delete();
 			}
 			if (records.length) return (this.queue = this.step());
-			this.processing = false;
 		} catch (e) {
-			this.processing = false;
 			console.error(e);
 			notify({
 				text: 'Failed to sync',
@@ -292,6 +300,8 @@ export class ModelEvents {
 				type: NotificationType.Error,
 				timeout: 5000
 			});
+		} finally {
+			this.processing = false;
 		}
 	}
 }

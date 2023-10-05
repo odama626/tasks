@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { withKeys } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 
 	export let editor: Editor;
