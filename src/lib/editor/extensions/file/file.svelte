@@ -9,9 +9,28 @@
 	export let attrs;
 
 	$: file = liveQuery(() => db.doc_attachments.get(attrs?.docAttachment));
-	$: console.log({ attrs, $file });
-
 	let size;
+
+	// TODO: load icons dynamically based on mime type
+
+	// application/yaml
+	// application/toml
+	// application/msword
+	// application/xml
+	// application/zip
+	// application/tar
+	// application/gzip
+	// image
+	// video
+	// audio
+	// text/csv
+	// text
+	// text/javascript
+	// text/markdown
+	// model
+	// model/stl
+	// model/obj
+	// model/step
 
 	$: size = filesize($file?.size).human('jedec');
 </script>
@@ -19,7 +38,6 @@
 <a
 	class="link"
 	contenteditable={false}
-	style="all: unset; cursor: pointer;"
 	rel="noopener noreferrer"
 	target="_blank"
 	download={$file?.name}
@@ -38,6 +56,11 @@
 
 <style lang="scss">
 	.link {
+		all: unset;
+		cursor: pointer;
+		display: inline-block;
+		margin: 0.5rem 0.75rem;
+		margin-left: 0;
 		&:focus,
 		&:active {
 			outline: solid var(--surface-5);
@@ -45,8 +68,6 @@
 	}
 
 	.container {
-		padding: 0.5rem 0.75rem;
-    padding-left: 0;
 		color: var(--text-3);
 		display: inline-flex;
 		gap: var(--block-spacing);
@@ -54,7 +75,7 @@
 
 	.content {
 		flex: 1 1 auto;
-    display: flex;
+		display: flex;
 		gap: var(--block-spacing);
 	}
 </style>

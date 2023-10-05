@@ -7,14 +7,16 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { insertFile, insertImage } from '$lib/insertAttachment';
 	import { events } from '$lib/modelEvent.js';
-	import { pb, userStore } from '$lib/storage';
+	import { db, pb, userStore } from '$lib/storage';
 	import Tooltip from '$lib/tooltip.svelte';
-	import { createId, getDocProvider } from '$lib/utils';
+	import { createId, getDocProvider, getYdoc } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
+	import { liveQuery } from 'dexie';
 	import { onMount } from 'svelte';
 	import Portal from 'svelte-portal';
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
+	import * as Y from 'yjs';
 	import { createDocument, saveDocument } from './saveDocument';
 
 	$: {
@@ -29,8 +31,22 @@
 	let editor: Editor;
 	let saving = false;
 	let ydoc = data.ydoc;
-	let title = data?.doc?.title ?? 'Untitled Document';
+	let title = data?.doc?.title ?? '';
 	let collaborators = [];
+
+	const docObservable = liveQuery(() => db.docs.get(data.docId));
+
+	onMount(() => {
+		const subscription = docObservable.subscribe(async (update) => {
+			if (!update) return;
+
+			const ydoc = await getYdoc(update);
+			const yjsUpdate = Y.encodeStateAsUpdate(ydoc);
+			Y.applyUpdate(data.ydoc, yjsUpdate);
+		});
+
+		return subscription.unsubscribe;
+	});
 
 	let metadata = {
 		docId: data.docId,
@@ -134,6 +150,7 @@
 		</a>
 		<input
 			class="ghost title"
+			placeholder="Untitled Document"
 			value={title}
 			on:input={(e) => {
 				const text = ydoc.getText('title');

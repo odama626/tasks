@@ -137,6 +137,7 @@ export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 		(yxml) => yxml.nodeName === 'image' || yxml.nodeName === 'file'
 	)) {
 		const key = file.nodeName === 'image' ? 'src' : 'file';
+		if ('getAttribute' in file) continue;
 		if (!file.getAttribute(key).startsWith('blob')) continue;
 
 		const attachmentId = file.getAttribute('docAttachment');
@@ -165,6 +166,7 @@ export async function getYdoc(doc: DocsInstance) {
 		Y.applyUpdate(ydoc, new Uint8Array(arrayBuffer));
 		rehydrateAttachments(ydoc, doc.id);
 	}
+
 	if (doc) {
 		const metadata = ydoc.getMap('metadata');
 		if (!metadata.has('docId')) metadata.set('docId', doc.id);
