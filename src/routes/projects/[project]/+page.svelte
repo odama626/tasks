@@ -12,17 +12,17 @@
 		collectFormData,
 		getDocProvider,
 		getYdoc,
+		rehydrateAttachments,
 		serializeXmlToJson,
 		type TiptapNode
 	} from '$lib/utils.js';
 	import { liveQuery, type Observable } from 'dexie';
-	import Portal from 'svelte-portal';
-	import { WebrtcProvider } from 'y-webrtc';
-	import type * as Y from 'yjs';
-	import ShareForm from './share-form.svelte';
 	import { onDestroy } from 'svelte';
-	import { get } from 'svelte/store';
+	import Portal from 'svelte-portal';
+	import type { WebrtcProvider } from 'y-webrtc';
+	import type * as Y from 'yjs';
 	import { saveDocument } from './docs/[doc]/saveDocument';
+	import ShareForm from './share-form.svelte';
 
 	export let data;
 	let expandedDocs = {};
@@ -41,6 +41,7 @@
 
 	let tasks: TiptapNode<'taskItem'>[] = [];
 	let links: TiptapNode<'text'>[] = [];
+	let images: TiptapNode<'img'>[] = [];
 	let ydocsByDocId: Record<string, Y.Doc> = {};
 	let tasksByDocId = {};
 	let providersByDocId: Map<string, WebrtcProvider> = new Map();
@@ -71,6 +72,7 @@
 		let newTasks: TiptapNode<'taskItem'>[] = [];
 		let newTasksByDocId = {};
 		let newLinks: TiptapNode<'text'>[] = [];
+		let newImages = [];
 		let docsToUnsubscribe = new Set(providersByDocId.keys());
 		await Promise.all(
 			$docs.map(async (doc) => {
@@ -105,11 +107,9 @@
 
 				newTasksByDocId[doc.id] = taskItems;
 
-				if (!doc.excludeFromOverview) {
-					newTasks.push(
-						...taskItems.filter((item) => !item.attrs?.checked).map(omitCheckedChildren)
-					);
-				}
+				if (doc.excludeFromOverview) return;
+
+				newTasks.push(...taskItems.filter((item) => !item.attrs?.checked).map(omitCheckedChildren));
 
 				for (const linkItem of fragment.createTreeWalker((yxml) => !yxml.nodeType)) {
 					const linkContent = serializeXmlToJson(linkItem);
@@ -118,9 +118,18 @@
 						...linkContents.filter((link) => link.marks?.some((mark) => mark.type === 'link'))
 					);
 				}
+
 				links = newLinks
 					.sort((a, b) => a.text.localeCompare(b.text))
 					.map((link) => ({ type: 'paragraph', content: [link] }));
+
+				await rehydrateAttachments(ydoc, doc.id);
+
+				for (const image of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image')) {
+					newImages.push(serializeXmlToJson(image));
+				}
+
+				images = newImages;
 			})
 		);
 
@@ -280,6 +289,11 @@
 	{#if links.length}
 		<h2>Links</h2>
 		<Editor isOverview content={{ type: 'doc', content: links }} editable={false} />
+	{/if}
+
+	{#if images.length}
+		<h2>Media</h2>
+		<Editor isOverview content={{ type: 'doc', content: images }} editable={false} />
 	{/if}
 {:else}
 	<div class="loading">
