@@ -124,6 +124,16 @@ export function getAttachmentUrl(record: any, field: string) {
 	if (record[field] instanceof Blob) return URL.createObjectURL(record[field]);
 }
 
+export function sanitizeFilename(rawName: string) {
+	const stripped = decodeURIComponent(rawName);
+	let sanitized = stripped
+		.toLowerCase()
+		.trim()
+		.replace(/[\#\!\<\>\/\\\:\"\'\=\|\`\+\$\%\^\{\}\s\?\!\@\*\&\.]+/g, '-');
+	while (sanitized.startsWith('-')) sanitized = sanitized.slice(1);
+	return sanitized;
+}
+
 export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
 	const attachmentsById = attachments.reduce((result, attachment) => {

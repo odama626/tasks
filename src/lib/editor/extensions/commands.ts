@@ -1,13 +1,13 @@
-import type { ChainedCommands } from '@tiptap/core';
 import H1 from '$lib/icons/H1.svelte';
 import H2 from '$lib/icons/H2.svelte';
-import Quote from '$lib/icons/Quote.svelte';
-import OrderedList from '$lib/icons/Numbered List.svelte';
 import Highlight from '$lib/icons/Highlight.svelte';
 import List from '$lib/icons/List.svelte';
+import OrderedList from '$lib/icons/Numbered List.svelte';
+import Quote from '$lib/icons/Quote.svelte';
 import TaskList from '$lib/icons/Task List.svelte';
 import Upload from '$lib/icons/upload.svelte';
-import { insertFile, insertImage } from '$lib/insertAttachment';
+import { insertFile } from '$lib/insertAttachment';
+import type { ChainedCommands } from '@tiptap/core';
 
 type Prepare = (callback: (chain: ChainedCommands, metadata: Metadata) => unknown) => unknown;
 
@@ -94,15 +94,9 @@ export const getCommands = (prepare: Prepare) => [
 						async function go() {
 							let offset = 0;
 							for await (const [i, file] of files.entries()) {
-								if (file.type.startsWith('image/')) {
-									const { selection } = props.state;
-									const position = selection.$anchor.pos;
-									offset += await insertImage(file, metadata, props.view, position + i + offset);
-								} else {
-									const { selection } = props.state;
-									const position = selection.$anchor.pos;
-									offset += await insertFile(file, metadata, props.view, position + i + offset);
-								}
+								const { selection } = props.state;
+								const position = selection.$anchor.pos;
+								offset += await insertFile(file, metadata, props.view, position + i + offset);
 							}
 							resolve();
 						}

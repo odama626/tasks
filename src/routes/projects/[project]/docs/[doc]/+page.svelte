@@ -2,14 +2,14 @@
 	import { goto } from '$app/navigation';
 	import Checkbox from '$lib/checkbox.svelte';
 	import ContextMenu from '$lib/context-menu.svelte';
-	import { Collections } from '$lib/db.types.js';
+	import { Collections, type UsersResponse } from '$lib/db.types.js';
 	import EditorComponent from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
-	import { insertFile, insertImage } from '$lib/insertAttachment';
+	import { insertFile } from '$lib/insertAttachment';
 	import { events } from '$lib/modelEvent.js';
 	import { db, pb, userStore } from '$lib/storage';
 	import Tooltip from '$lib/tooltip.svelte';
-	import { createId, getDocProvider, getYdoc } from '$lib/utils';
+	import { getDocProvider, getYdoc, sanitizeFilename } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 	import { liveQuery } from 'dexie';
 	import { onMount } from 'svelte';
@@ -21,10 +21,18 @@
 
 	$: {
 		if (data.docId === 'new') {
-			createDocument(data.projectId).then((id) =>
-				goto(`/projects/${data.projectId}/docs/${id}`, { replaceState: true })
-			);
+			const documentId = createDocument(data.projectId);
+			goto(`/projects/${data.projectId}/docs/${documentId}`, { replaceState: true });
 		}
+	}
+
+	interface Collaborator {
+		user: {
+			user: UsersResponse;
+			name: string;
+			color: string;
+			backgroundColor: string;
+		};
 	}
 
 	export let data;
@@ -32,7 +40,7 @@
 	let saving = false;
 	let ydoc = data.ydoc;
 	let title = data?.doc?.title ?? '';
-	let collaborators = [];
+	let collaborators: Collaborator[] = [];
 
 	const docObservable = liveQuery(() => db.docs.get(data.docId));
 
@@ -101,45 +109,37 @@
 		saving = false;
 	}
 
-	function handleDrop(view, event, slice, moved) {
-		if (!moved && event.dataTransfer?.items?.length > 0) {
-			const items = Array.from(event.dataTransfer.items);
-			// if dropping external files
-			// handle the image upload
+	function handleDrop(view: any, event: DragEvent, slice, moved: boolean) {
+		if (moved || !event?.dataTransfer?.items?.length) return;
+		const items = Array.from(event.dataTransfer.items);
 
-			const pos = view.posAtCoords({ left: event.clientX, top: event.clientY }).pos;
+		const pos = view.posAtCoords({ left: event.clientX, top: event.clientY }).pos;
+		console.log({ items });
 
-			items.map(async (item) => {
-				try {
-					if (item.kind === 'file' && item.type.startsWith('image/')) {
-						const file = item.getAsFile();
-						if (file.type.startsWith('image/')) {
-							await insertImage(file, metadata, view, pos);
-						} else {
-							await insertFile(file, metadata, view, pos);
-						}
-					}
-					if (item.kind === 'string' && item.type === 'text/uri-list') {
-						const text = await new Promise((resolve) => item.getAsString(resolve));
-						const blob = await fetch(text).then((r) => r.blob());
-						if (blob.type.startsWith('image/')) {
-							const { schema } = view.state;
-							await insertImage(
-								new File([blob], createId(), { type: blob.type }),
-								metadata,
-								view,
-								pos
-							);
-						}
-					}
-				} catch (e) {
-					console.error(e);
+		items.forEach(async (item) => {
+			try {
+				if (item.kind === 'file') {
+					const file = item.getAsFile();
+					if (!file) return;
+					await insertFile(file, metadata, view, pos);
 				}
-			});
+				if (item.kind !== 'string') return;
+				const text = await new Promise<string>((resolve) => item.getAsString(resolve));
+				const line = text.trim().split('\n')[0];
+				const name = sanitizeFilename(line);
 
-			return true; // handled
-		}
-		return false; // not handled use default behaviour
+				if (item.type === 'text/uri-list') {
+					const blob = await fetch(text).then((r) => r.blob());
+					await insertFile(new File([blob], name, { type: blob.type }), metadata, view, pos);
+				} else {
+					await insertFile(new File([text], name, { type: 'text/plain' }), metadata, view, pos);
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		});
+
+		return true; // handled
 	}
 </script>
 
@@ -154,7 +154,7 @@
 			value={title}
 			on:input={(e) => {
 				const text = ydoc.getText('title');
-				const value = e.target.value;
+				const value = e.currentTarget.value;
 				text.delete(0, text.toString().length);
 				text.insert(0, value);
 			}}
