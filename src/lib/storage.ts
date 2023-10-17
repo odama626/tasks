@@ -2,7 +2,7 @@ import Dexie from 'dexie';
 import PocketBase from 'pocketbase';
 import { writable } from 'svelte/store';
 import type {
-	CollectionRecords,
+	CollectionResponses,
 	Collections,
 	DocAttachmentsRecord,
 	DocAttachmentsResponse,
@@ -17,6 +17,20 @@ import type {
 	UsersRecord
 } from './db.types';
 import { Cookie } from './utils';
+
+export type Expand<T> = T extends (...args: infer A) => infer R
+	? (...args: Expand<A>) => Expand<R>
+	: T extends infer O
+	? { [K in keyof O]: O[K] }
+	: never;
+
+export type ExpandRecursively<T> = T extends (...args: infer A) => infer R
+	? (...args: ExpandRecursively<A>) => ExpandRecursively<R>
+	: T extends object
+	? T extends infer O
+		? { [K in keyof O]: ExpandRecursively<O[K]> }
+		: never
+	: T;
 
 export enum EventType {
 	Add = 'add',
@@ -59,8 +73,8 @@ class Database extends Dexie {
 	projects_users!: Dexie.Table<ProjectsUsersRecord, string>;
 	doc_relations!: Dexie.Table<DocRelationsRecord, string>;
 	invites!: Dexie.Table<InvitesRecord, string>;
-	users_connections!: Dexie.Table<UsersConnectionsRecord, string>
-	events!: Dexie.Table<ModelEvent<ValueOf<CollectionRecords>>, string>;
+	users_connections!: Dexie.Table<UsersConnectionsRecord, string>;
+	events!: Dexie.Table<{ id: string; } & ModelEvent<ValueOf<CollectionResponses>>, string>;
 
 	constructor() {
 		super('todo-db');

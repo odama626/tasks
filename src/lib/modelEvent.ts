@@ -1,21 +1,34 @@
 import { DateTime } from 'luxon';
-import type { CollectionResponses, Collections } from './db.types';
-import { db, pb, type CollectionInstances, EventType, type ModelEvent, type ValueOf, type BaseModelEvent, type ModelCreateEvent, type ModelDeleteEvent, type ModelUpdateEvent } from './storage';
+import * as Y from 'yjs';
+import type { CollectionResponses } from './db.types';
+import {
+	EventType,
+	db,
+	pb,
+	type BaseModelEvent,
+	type CollectionInstances,
+	type ModelCreateEvent,
+	type ModelDeleteEvent,
+	type ModelEvent,
+	type ModelUpdateEvent,
+	type ValueOf
+} from './storage';
 import {
 	NotificationType,
 	attachRecordToError,
+	getYdoc,
 	notify,
 	prepareLocalPayload,
-	prepareRecordFormData
+	prepareRecordFormData,
+	rehydrateAttachments
 } from './utils';
 
-
-interface SyncTable {
-	table: ValueOf<Collections>;
+interface SyncTable<T extends keyof CollectionResponses, R> {
+	table: T;
 	/**
 	 *	 a list of columns to precache as files
 	 */
-	cacheFileFields?: string[];
+	cacheFileFields?: (keyof CollectionResponses[T])[];
 	/**
 	 *		a pocketbase token
 	 *		required if cachine file fields
@@ -25,18 +38,41 @@ interface SyncTable {
 	 *		 invalidate cache for each table when receiving an update
 	 *		 subscription updates also force a refetch
 	 */
-	invalidateCache?: ValueOf<Collections>[];
+	invalidateCache?: ValueOf<R>[];
+	/**
+	 *	Merge fields, uses ydoc merge algorithm
+	 */
+	mergeFields?: (keyof CollectionResponses[T])[];
 }
 
-const getSyncTables = ({ token }: { token: string }): SyncTable[] => [
-	{ table: 'projects_users', invalidateCache: ['docs', 'users', 'projects'], token },
-	{ table: 'docs_users', invalidateCache: ['docs', 'users'], token },
-	{ table: 'users', cacheFileFields: ['avatar'], token },
-	{ table: 'projects' },
-	{ table: 'docs', cacheFileFields: ['ydoc'], token },
-	{ table: 'doc_attachments', cacheFileFields: ['file'], token },
-	{ table: 'invites' }
-];
+const getSyncTablesByTable = ({
+	token
+}: {
+	token: string;
+}): Record<string, SyncTable<unknown, unknown>> => ({
+	projects_users: {
+		table: 'projects_users',
+		invalidateCache: ['docs', 'users', 'projects'],
+		token
+	},
+	docs_users: { table: 'docs_users', invalidateCache: ['docs', 'users'], token },
+	users: { table: 'users', cacheFileFields: ['avatar'], token },
+	projects: { table: 'projects' },
+	docs: { table: 'docs', cacheFileFields: ['ydoc'], mergeFields: ['ydoc'], token },
+	doc_attachments: { table: 'doc_attachments', cacheFileFields: ['file'], token },
+	invites: { table: 'invites' }
+});
+
+async function processLocalEvent(event: ModelEvent<any>) {
+	const payload = prepareLocalPayload(event.payload);
+	if (event.eventType === 'update') {
+		await db[event.modelType][event.eventType](event.recordId, payload);
+	} else if (event.eventType === 'delete') {
+		await db[event.modelType][event.eventType](event.recordId);
+	} else {
+		await db[event.modelType][event.eventType](payload);
+	}
+}
 
 export class ModelEvents {
 	public online: boolean = navigator.onLine;
@@ -55,14 +91,7 @@ export class ModelEvents {
 	private async add(event: ModelEvent<any>) {
 		try {
 			db.events.add(event);
-			const payload = prepareLocalPayload(event.payload);
-			if (event.eventType === 'update') {
-				await db[event.modelType][event.eventType](event.recordId, payload);
-			} else if (event.eventType === 'delete') {
-				await db[event.modelType][event.eventType](event.recordId);
-			} else {
-				await db[event.modelType][event.eventType](payload);
-			}
+			await processLocalEvent(event);
 
 			if (this.online) {
 				if (!this.processing) this.processing = true;
@@ -109,15 +138,20 @@ export class ModelEvents {
 		});
 	}
 
-	private async syncTable({ table, cacheFileFields = [], token, invalidateCache = [] }: SyncTable) {
+	private async syncTable<
+		T extends keyof CollectionResponses,
+		R extends keyof CollectionInstances
+	>({ table, cacheFileFields = [], token, invalidateCache = [] }: SyncTable<T, R>) {
 		if (!this.online) return;
 
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();
 
 		const options = { filter: lastSync ? `updated >= "${lastSync}"` : '' };
-		const records = await pb.collection(table).getFullList(options, { $autoCancel: false });
-		const results = records.reduce(
+		const records = await pb
+			.collection(table as string)
+			.getFullList(undefined, { ...options, $autoCancel: false });
+		const results = records.reduce<{ deleted: string[]; updates: CollectionResponses[T][] }>(
 			(results, next) => {
 				if (next.deleted) {
 					results.deleted.push(next.id);
@@ -133,7 +167,7 @@ export class ModelEvents {
 			invalidateCache.forEach((table) => localStorage.removeItem(`last-sync:${table}`));
 		}
 
-		if (cacheFileFields.length) {
+		if (cacheFileFields.length && token) {
 			results.updates = await Promise.all(
 				results.updates.map(async (update) => this.cacheFields(update, cacheFileFields, token))
 			);
@@ -155,7 +189,7 @@ export class ModelEvents {
 				db[table].put(record);
 			}
 			if (invalidateCache.length) {
-				const syncTables = getSyncTables({ token });
+				const syncTables = getSyncTablesByTable({ token });
 				for (const syncTable of syncTables) {
 					if (invalidateCache.includes(syncTable.table)) {
 						localStorage.removeItem(`last-sync:${syncTable.table}`);
@@ -171,12 +205,14 @@ export class ModelEvents {
 	private async cacheFields<
 		T extends ValueOf<CollectionResponses>,
 		R extends ValueOf<CollectionInstances>
-	>(record: T, fields: string[], token: string): Promise<R> {
+	>(record: T, fields: (keyof T)[], token: string): Promise<R> {
 		for (const field of fields) {
-			if (!record[field].length) continue;
-			const url = pb.files.getUrl(record, record[field], { token });
+			const value = record[field];
+			if (typeof value !== 'string') continue;
+			if (!value.length) continue;
+			const url = pb.files.getUrl(record, value, { token });
 			await fetch(url);
-			record[`cache_${field}`] = url;
+			record[`cache_${String(field)}`] = url;
 		}
 		return record as unknown as R;
 	}
@@ -187,6 +223,52 @@ export class ModelEvents {
 		db.delete();
 		pb.authStore.clear();
 		location.reload();
+	}
+
+	async replayLocal(
+		syncTableById: Record<string, SyncTable<unknown, unknown>>,
+		offset = 0
+	): Promise<void> {
+		const limit = 50;
+		try {
+			const records = await db.events.offset(offset).limit(limit).toArray();
+			console.log('replay local', records);
+			for await (const record of records) {
+				if (record.eventType === EventType.Add) continue;
+				const { mergeFields } = syncTableById[record.modelType];
+				if (mergeFields?.length) {
+					let updated = false;
+					for await (const field of mergeFields) {
+						const file = record[field] as File;
+						if (!file || !(file instanceof File)) return;
+						const updatedYdoc = await getYdoc(record, field);
+						const oldRecord = await db[record.modelType].get(record.recordId);
+						const currentYDoc = await getYdoc(oldRecord, field);
+						Y.applyUpdate(updatedYdoc, Y.encodeStateAsUpdate(currentYDoc));
+						// TODO: need to rehydrate images after uploads have been done
+						// await rehydrateAttachments(updatedYdoc, record.id);
+						record[field] = new File([Y.encodeStateAsUpdate(updatedYdoc)], file.name, {
+							type: file.type
+						});
+						updated = true;
+						console.log({ field, record });
+					}
+					if (updated) {
+						db.events.update(record.id, record);
+					}
+				}
+				await processLocalEvent(record);
+			}
+			if (records.length === 50) return this.replayLocal(syncTableById, offset + limit);
+		} catch (e) {
+			console.error(e, { offset });
+			notify({
+				text: `Failed to replay local changes during sync`,
+				detail: e.message,
+				type: NotificationType.Error,
+				timeout: 5000
+			});
+		}
 	}
 
 	async startSync() {
@@ -200,16 +282,22 @@ export class ModelEvents {
 			// TODO: store previous login credentials and wipe local data on login if it doesn't match
 			localStorage.removeItem('auth');
 			pb.authStore.clear();
-			location.reload();
+			return location.reload();
 		}
-		try {
-			await this.step();
 
+		try {
 			const token = await pb.files.getToken();
-			const syncTables = getSyncTables({ token });
-			for (const syncTable of syncTables) {
+			const syncTablesByTable = getSyncTablesByTable({ token });
+			for (const syncTable of Object.values(syncTablesByTable)) {
 				await this.syncTable(syncTable);
 			}
+
+			// replay all local changes before syncing
+			await this.replayLocal(syncTablesByTable);
+
+			console.log('done replaying');
+
+			await this.step();
 		} catch (e) {
 			console.error(e);
 			notify({
@@ -226,7 +314,7 @@ export class ModelEvents {
 	private async step(): Promise<void> {
 		try {
 			const records = await db.events.offset(0).limit(50).toArray();
-			for await (let record of records) {
+			for await (const record of records) {
 				if (!this.online) return;
 				switch (record.eventType) {
 					case EventType.Add: {

@@ -1,11 +1,11 @@
+import { pick } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { writable } from 'svelte/store';
-import * as Y from 'yjs';
-import { db, type DocsInstance } from './storage';
-import type { DocAttachmentsResponse, DocsResponse, InvitesResponse } from './db.types';
-import type { YXmlElement } from 'yjs/dist/src/internals';
 import { WebrtcProvider } from 'y-webrtc';
-import { pick } from 'lodash-es';
+import * as Y from 'yjs';
+import type { YXmlElement } from 'yjs/dist/src/internals';
+import type { DocsResponse } from './db.types';
+import { db, type DocsInstance } from './storage';
 
 export const collectFormData = (callback) => (e) => {
 	console.log({ e });
@@ -147,8 +147,7 @@ export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 		(yxml) => yxml.nodeName === 'image' || yxml.nodeName === 'file'
 	)) {
 		const key = file.nodeName === 'image' ? 'src' : 'file';
-		if ('getAttribute' in file) continue;
-		if (!file.getAttribute(key).startsWith('blob')) continue;
+		if (!file.getAttribute(key)?.startsWith('blob')) continue;
 
 		const attachmentId = file.getAttribute('docAttachment');
 		const attachment = attachmentsById[attachmentId];
@@ -162,14 +161,14 @@ export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 	}
 }
 
-export async function getYdoc(doc: DocsInstance) {
+export async function getYdoc(doc: DocsInstance, field = 'ydoc') {
 	const ydoc = new Y.Doc();
 	let arrayBuffer: ArrayBuffer;
 
-	if (doc?.ydoc instanceof File) {
-		arrayBuffer = await doc.ydoc.arrayBuffer();
+	if (doc?.[field] instanceof File) {
+		arrayBuffer = await doc[field].arrayBuffer();
 	} else if (doc?.cache_ydoc) {
-		arrayBuffer = await fetch(doc?.cache_ydoc).then((r) => r.arrayBuffer());
+		arrayBuffer = await fetch(doc?.[`cache_${field}`]).then((r) => r.arrayBuffer());
 	}
 
 	if (arrayBuffer) {
