@@ -1,10 +1,73 @@
 import Dexie from 'dexie';
 import PocketBase from 'pocketbase';
-import { get, writable } from 'svelte/store';
-import type { DocAttachmentsResponse, DocsResponse } from './db.types';
+import { writable } from 'svelte/store';
+import type {
+	CollectionRecords,
+	Collections,
+	DocAttachmentsRecord,
+	DocAttachmentsResponse,
+	DocRelationsRecord,
+	DocsRecord,
+	DocsResponse,
+	DocsUsersRecord,
+	InvitesRecord,
+	ProjectsRecord,
+	ProjectsUsersRecord,
+	UsersConnectionsRecord,
+	UsersRecord
+} from './db.types';
 import { Cookie } from './utils';
 
-export const db = new Dexie('todo-db');
+export enum EventType {
+	Add = 'add',
+	Update = 'update',
+	Delete = 'delete'
+}
+
+export type ValueOf<T> = T[keyof T];
+
+export interface BaseModelEvent {
+	eventType: EventType;
+	modelType: Collections;
+}
+
+export interface ModelCreateEvent<T> extends BaseModelEvent {
+	eventType: EventType.Add;
+	payload: T;
+}
+
+export interface ModelUpdateEvent<T> extends BaseModelEvent {
+	eventType: EventType.Update;
+	payload: Partial<T>;
+	recordId: string;
+}
+
+export interface ModelDeleteEvent<T> extends BaseModelEvent {
+	eventType: EventType.Delete;
+	recordId: string;
+	payload?: Partial<T>;
+}
+
+export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent<T>;
+
+class Database extends Dexie {
+	users!: Dexie.Table<UsersRecord, string>;
+	projects!: Dexie.Table<ProjectsRecord, string>;
+	docs!: Dexie.Table<DocsRecord, string>;
+	doc_attachments!: Dexie.Table<DocAttachmentsRecord, string>;
+	docs_users!: Dexie.Table<DocsUsersRecord, string>;
+	projects_users!: Dexie.Table<ProjectsUsersRecord, string>;
+	doc_relations!: Dexie.Table<DocRelationsRecord, string>;
+	invites!: Dexie.Table<InvitesRecord, string>;
+	users_connections!: Dexie.Table<UsersConnectionsRecord, string>
+	events!: Dexie.Table<ModelEvent<ValueOf<CollectionRecords>>, string>;
+
+	constructor() {
+		super('todo-db');
+	}
+}
+
+export const db = new Database();
 export const pb = new PocketBase(import.meta.env.VITE_SERVER_URL);
 
 db.version(1).stores({

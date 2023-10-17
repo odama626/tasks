@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Collections } from '$lib/db.types';
 	import Field from '$lib/field.svelte';
-	import { events, EventType } from '$lib/modelEvent';
-	import { RecordAccess, userStore } from '$lib/storage';
+	import { events} from '$lib/modelEvent';
+	import { EventType, RecordAccess, userStore } from '$lib/storage';
 	import { collectFormData, createId } from '$lib/utils';
 	import { createEventDispatcher } from 'svelte';
 	import { get } from 'svelte/store';

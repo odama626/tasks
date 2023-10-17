@@ -1,12 +1,11 @@
 <script lang="ts">
-	import type { TasksRecord, ListsRecord } from '$lib/db.types';
-	import { createId, collectFormData } from '$lib/utils';
-	import { EventType, events } from '$lib/modelEvent';
-	import { get } from 'svelte/store';
 	import { ListsUsersAccessOptions } from '$lib/db.types';
-	import { userStore } from '$lib/storage';
-	import { z } from 'zod';
+	import { events } from '$lib/modelEvent';
+	import { EventType, userStore } from '$lib/storage';
+	import { collectFormData, createId } from '$lib/utils';
 	import { createEventDispatcher } from 'svelte';
+	import { get } from 'svelte/store';
+	import { z } from 'zod';
 	import Field from '../../lib/field.svelte';
 
 	const dispatch = createEventDispatcher();

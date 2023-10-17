@@ -6,8 +6,8 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
-	import { EventType, events } from '$lib/modelEvent.js';
-	import { currentProject, db, type DocsInstance } from '$lib/storage.js';
+	import { events } from '$lib/modelEvent.js';
+	import { currentProject, db, EventType, type DocsInstance } from '$lib/storage.js';
 	import {
 		collectFormData,
 		getDocProvider,

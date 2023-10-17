@@ -48,6 +48,8 @@
 		const subscription = docObservable.subscribe(async (update) => {
 			if (!update) return;
 
+			data.doc = update;
+
 			const ydoc = await getYdoc(update);
 			const yjsUpdate = Y.encodeStateAsUpdate(ydoc);
 			Y.applyUpdate(data.ydoc, yjsUpdate);
@@ -166,15 +168,15 @@
 	<Portal target=".header-context-portal">
 		<div class="header-portal-items">
 			<div class="collaborators">
-				{#each collaborators as collaborator}
+				{#each collaborators.filter((c) => c.user) as collaborator}
 					{@const user = collaborator?.user?.user}
-					{@const image = data.token && pb.getFileUrl(user, user?.avatar, { token: data.token })}
+					{@const image = data.token && pb.files.getUrl(user, user?.avatar, { token: data.token })}
 					<Tooltip>
 						<div slot="content" class="profile-image" style="--profile-image-size: 40px;">
 							<img src={image} />
 						</div>
 						<div slot="tooltip" style="white-space: nowrap;">
-							{collaborator.user.name}
+							{user.name}
 						</div>
 					</Tooltip>
 				{/each}
@@ -188,7 +190,7 @@
 							checked={data.doc.excludeFromOverview}
 							on:change={(e) => {
 								events.update(Collections.Docs, data.doc.id, {
-									excludeFromOverviw: e.target.checked
+									excludeFromOverview: e.target.checked
 								});
 							}}
 						/>

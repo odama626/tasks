@@ -24,12 +24,12 @@
 			return;
 		}
 		if (editor.isEditable && typeof getPos == 'function') {
+			const position = getPos();
 			editor
 				.chain()
-				.focus(undefined, { scrollIntoView: false })
+				.focus(position, { scrollIntoView: false })
 				.command(({ tr }) => {
-					const position = getPos();
-					const currentNode = tr.doc.nodeAt(position);
+				const currentNode = tr.doc.nodeAt(position);
 					checked = !checked;
 					tr.setNodeMarkup(position, undefined, { ...currentNode?.attrs, checked });
 				})

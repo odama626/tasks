@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import type { CollectionResponses, Collections } from './db.types';
-import { db, pb, type CollectionInstances } from './storage';
+import { db, pb, type CollectionInstances, EventType, type ModelEvent, type ValueOf, type BaseModelEvent, type ModelCreateEvent, type ModelDeleteEvent, type ModelUpdateEvent } from './storage';
 import {
 	NotificationType,
 	attachRecordToError,
@@ -9,37 +9,6 @@ import {
 	prepareRecordFormData
 } from './utils';
 
-export enum EventType {
-	Add = 'add',
-	Update = 'update',
-	Delete = 'delete'
-}
-
-export type ValueOf<T> = T[keyof T];
-
-interface BaseModelEvent {
-	eventType: EventType;
-	modelType: Collections;
-}
-
-interface ModelCreateEvent<T> extends BaseModelEvent {
-	eventType: EventType.Add;
-	payload: T;
-}
-
-interface ModelUpdateEvent<T> extends BaseModelEvent {
-	eventType: EventType.Update;
-	payload: Partial<T>;
-	recordId: string;
-}
-
-interface ModelDeleteEvent<T> extends BaseModelEvent {
-	eventType: EventType.Delete;
-	recordId: string;
-	payload?: Partial<T>;
-}
-
-export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent<T>;
 
 interface SyncTable {
 	table: ValueOf<Collections>;
@@ -59,7 +28,7 @@ interface SyncTable {
 	invalidateCache?: ValueOf<Collections>[];
 }
 
-const getSyncTables = ({ token }): SyncTable[] => [
+const getSyncTables = ({ token }: { token: string }): SyncTable[] => [
 	{ table: 'projects_users', invalidateCache: ['docs', 'users', 'projects'], token },
 	{ table: 'docs_users', invalidateCache: ['docs', 'users'], token },
 	{ table: 'users', cacheFileFields: ['avatar'], token },
@@ -71,8 +40,8 @@ const getSyncTables = ({ token }): SyncTable[] => [
 
 export class ModelEvents {
 	public online: boolean = navigator.onLine;
-	private processing: boolean = false;
-	private syncing: boolean = false;
+	private processing = false;
+	private syncing = false;
 	private queue: Promise<any> = Promise.resolve();
 
 	constructor() {

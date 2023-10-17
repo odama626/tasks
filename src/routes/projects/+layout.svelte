@@ -1,27 +1,17 @@
 <script lang="ts">
-	import { liveQuery } from 'dexie';
-	import { currentProject, db, pb, userStore } from '$lib/storage';
-	import { EventType, events } from '$lib/modelEvent';
-	import { fade, slide } from 'svelte/transition';
-	import { Collections } from '$lib/db.types';
-	import { createId, withKeys } from '$lib/utils';
-	import { Shortcuts } from 'shortcuts';
-	import { commands } from '$lib/commands';
-	import type { Command } from '$lib/commands';
-	import { onMount, tick } from 'svelte';
-	import CreateProjectForm from './createProjectForm.svelte';
-	import '$lib/styles.scss';
 	import { clickOutside } from '$lib/clickOutside';
-	import {
-		Menu,
-		MenuButton,
-		MenuItems,
-		MenuItem,
-		Popover,
-		PopoverButton,
-		PopoverPanel
-	} from '@rgossiaux/svelte-headlessui';
-	import ContextMenu from '$lib/context-menu.svelte';
+	import type { Command } from '$lib/commands';
+	import { commands } from '$lib/commands';
+	import { Collections } from '$lib/db.types';
+	import { events } from '$lib/modelEvent';
+	import { currentProject, db } from '$lib/storage';
+	import '$lib/styles.scss';
+	import { withKeys } from '$lib/utils';
+	import { liveQuery } from 'dexie';
+	import { Shortcuts } from 'shortcuts';
+	import { onMount } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import CreateProjectForm from './createProjectForm.svelte';
 
 	export let data;
 	const { auth } = data;
