@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import * as Y from 'yjs';
 import type { CollectionResponses } from './db.types';
+import { saveDocument } from './saveDocument';
 import {
 	EventType,
 	db,
@@ -227,6 +228,7 @@ export class ModelEvents {
 
 	async replayLocal(
 		syncTableById: Record<string, SyncTable<unknown, unknown>>,
+		scheduleAction: (callback: () => Promise<void>) => void,
 		offset = 0
 	): Promise<void> {
 		const limit = 50;
@@ -247,6 +249,12 @@ export class ModelEvents {
 						Y.applyUpdate(updatedYdoc, Y.encodeStateAsUpdate(currentYDoc));
 						// TODO: need to rehydrate images after uploads have been done
 						// await rehydrateAttachments(updatedYdoc, record.id);
+						scheduleAction(async () => {
+							const doc = await db[record.modelType].get(record.recordId);
+							const ydoc = await getYdoc(doc, field);
+							await rehydrateAttachments(ydoc, record.recordId);
+							await saveDocument(record.recordId, ydoc);
+						});
 						record[field] = new File([Y.encodeStateAsUpdate(updatedYdoc)], file.name, {
 							type: file.type
 						});
@@ -259,7 +267,7 @@ export class ModelEvents {
 				}
 				await processLocalEvent(record);
 			}
-			if (records.length === 50) return this.replayLocal(syncTableById, offset + limit);
+			if (records.length === 50) return this.replayLocal(syncTableById, scheduleAction, offset + limit);
 		} catch (e) {
 			console.error(e, { offset });
 			notify({
@@ -286,18 +294,29 @@ export class ModelEvents {
 		}
 
 		try {
+		  const scheduledWork: (() => Promise<void>)[] = []
 			const token = await pb.files.getToken();
+
 			const syncTablesByTable = getSyncTablesByTable({ token });
+
+			// pull all changes
 			for (const syncTable of Object.values(syncTablesByTable)) {
 				await this.syncTable(syncTable);
 			}
 
-			// replay all local changes before syncing
-			await this.replayLocal(syncTablesByTable);
+			// replay all local changes before pushing
+			await this.replayLocal(syncTablesByTable, scheduledWork.push);
 
 			console.log('done replaying');
 
+			// push all changes
 			await this.step();
+
+			// do all scheduled work after pushing
+			await scheduledWork.reduce((p, next) => {
+				return p.then(next)
+			}, Promise.resolve());
+
 		} catch (e) {
 			console.error(e);
 			notify({

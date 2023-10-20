@@ -222,7 +222,7 @@ interface CookieOpts {
 export class Cookie {
 	static set<T>(name: string, content: T, opts: CookieOpts = {}) {
 		const { path = '/' } = opts;
-		let serializedValue = JSON.stringify(content);
+		const serializedValue = JSON.stringify(content);
 		document.cookie = `${name}=${serializedValue};SameSite=Strict;path=${path}`;
 	}
 }

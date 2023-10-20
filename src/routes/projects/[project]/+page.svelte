@@ -7,7 +7,8 @@
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
 	import { events } from '$lib/modelEvent.js';
-	import { currentProject, db, EventType, type DocsInstance } from '$lib/storage.js';
+	import { saveDocument } from '$lib/saveDocument';
+	import { EventType, currentProject, db, type DocsInstance } from '$lib/storage.js';
 	import {
 		collectFormData,
 		getDocProvider,
@@ -21,7 +22,6 @@
 	import Portal from 'svelte-portal';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import type * as Y from 'yjs';
-	import { saveDocument } from './docs/[doc]/saveDocument';
 	import ShareForm from './share-form.svelte';
 
 	export let data;

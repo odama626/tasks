@@ -67,6 +67,7 @@
 		"@tiptap/extension-typography": "^2.1.12",
 		"@tiptap/starter-kit": "^2.1.12",
 		"@tiptap/suggestion": "^2.1.12",
+		"@types/lodash-es": "^4.17.9",
 		"colorjs.io": "^0.4.5",
 		"dexie": "^3.2.4",
 		"file-size": "^1.0.0",

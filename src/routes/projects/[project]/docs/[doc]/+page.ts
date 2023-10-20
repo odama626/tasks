@@ -9,9 +9,9 @@ export async function load({ params }) {
 		db.projects.get(params.project)
 	]);
 
-	let content = !doc?.ydoc;
-	let ydoc = getYdoc(doc);
-	let token = await pb.files.getToken().catch(() => null);
+	const content = !doc?.ydoc;
+	const ydoc = getYdoc(doc);
+	const token = await pb.files.getToken().catch(() => null);
 
 	return {
 		doc,
