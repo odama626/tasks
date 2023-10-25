@@ -46,11 +46,7 @@ interface SyncTable<T extends keyof CollectionResponses, R> {
 	mergeFields?: (keyof CollectionResponses[T])[];
 }
 
-const getSyncTablesByTable = ({
-	token
-}: {
-	token: string;
-}): Record<string, SyncTable<unknown, unknown>> => ({
+const getSyncTablesByTable = ({ token }: { token: string }) => ({
 	projects_users: {
 		table: 'projects_users',
 		invalidateCache: ['docs', 'users', 'projects'],
@@ -227,7 +223,7 @@ export class ModelEvents {
 	}
 
 	async replayLocal(
-		syncTableById: Record<string, SyncTable<unknown, unknown>>,
+		syncTableById: Record<string, SyncTable<any, any>>,
 		scheduleAction: (callback: () => Promise<void>) => void,
 		offset = 0
 	): Promise<void> {
@@ -267,7 +263,8 @@ export class ModelEvents {
 				}
 				await processLocalEvent(record);
 			}
-			if (records.length === 50) return this.replayLocal(syncTableById, scheduleAction, offset + limit);
+			if (records.length === 50)
+				return this.replayLocal(syncTableById, scheduleAction, offset + limit);
 		} catch (e) {
 			console.error(e, { offset });
 			notify({
@@ -294,7 +291,7 @@ export class ModelEvents {
 		}
 
 		try {
-		  const scheduledWork: (() => Promise<void>)[] = []
+			const scheduledWork: (() => Promise<void>)[] = [];
 			const token = await pb.files.getToken();
 
 			const syncTablesByTable = getSyncTablesByTable({ token });
@@ -314,9 +311,8 @@ export class ModelEvents {
 
 			// do all scheduled work after pushing
 			await scheduledWork.reduce((p, next) => {
-				return p.then(next)
+				return p.then(next);
 			}, Promise.resolve());
-
 		} catch (e) {
 			console.error(e);
 			notify({
