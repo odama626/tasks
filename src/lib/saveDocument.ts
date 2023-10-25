@@ -1,7 +1,7 @@
 import { Collections } from '$lib/db.types';
 import { events } from '$lib/modelEvent';
 import { RecordAccess, db, userStore } from '$lib/storage';
-import { createId, getYdoc, notify } from '$lib/utils';
+import { createId, notify } from '$lib/utils';
 import { get } from 'svelte/store';
 import * as Y from 'yjs';
 
@@ -73,7 +73,9 @@ export async function saveDocument(docId: string, ydoc: Y.Doc) {
 	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
 	const referencedAttachments = new Set<string>();
 	const fragment = ydoc.getXmlFragment('doc');
-	for (const file of fragment.createTreeWalker((yxml) => yxml.nodeName === 'image' || yxml.nodeName === 'file')) {
+	for (const file of fragment.createTreeWalker(
+		(yxml) => yxml.nodeName === 'image' || yxml.nodeName === 'file'
+	)) {
 		const id = file.getAttribute('docAttachment');
 		referencedAttachments.add(id);
 	}

@@ -78,7 +78,7 @@ export const getCommands = (prepare: Prepare) => [
 			picker.type = 'file';
 			picker.multiple = true;
 
-			let pickFiles = new Promise<File[]>((resolve) => {
+			const pickFiles = new Promise<File[]>((resolve) => {
 				picker.addEventListener('change', () => {
 					resolve(Array.from(picker.files ?? []));
 				});

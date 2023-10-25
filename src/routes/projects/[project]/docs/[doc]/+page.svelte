@@ -7,6 +7,7 @@
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import { insertFile } from '$lib/insertAttachment';
 	import { events } from '$lib/modelEvent.js';
+	import { createDocument, saveDocument } from '$lib/saveDocument';
 	import { db, pb, userStore } from '$lib/storage';
 	import Tooltip from '$lib/tooltip.svelte';
 	import { getDocProvider, getYdoc, sanitizeFilename } from '$lib/utils';
@@ -17,7 +18,6 @@
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import * as Y from 'yjs';
-	import { createDocument, saveDocument } from './saveDocument';
 
 	$: {
 		if (data.docId === 'new') {
