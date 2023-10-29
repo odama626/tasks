@@ -10,7 +10,7 @@
 	import { createDocument, saveDocument } from '$lib/saveDocument';
 	import { db, pb, userStore } from '$lib/storage';
 	import Tooltip from '$lib/tooltip.svelte';
-	import { getDocProvider, getYdoc, sanitizeFilename } from '$lib/utils';
+	import { getDocProvider, getYdoc, sanitizeFilename, withKeys } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 	import { liveQuery } from 'dexie';
 	import { onMount } from 'svelte';
@@ -18,6 +18,12 @@
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
 	import * as Y from 'yjs';
+	import DeleteForm from './deleteForm.svelte';
+
+	enum ActiveModal {
+		Delete,
+		None
+	}
 
 	$: {
 		if (data.docId === 'new') {
@@ -38,6 +44,7 @@
 	export let data;
 	let editor: Editor;
 	let saving = false;
+	let activeModal: ActiveModal = ActiveModal.None;
 	let ydoc = data.ydoc;
 	let title = data?.doc?.title ?? '';
 	let collaborators: Collaborator[] = [];
@@ -195,7 +202,12 @@
 							}}
 						/>
 					</div>
-					<button class='menu-item error ghost' on:click={}>Delete Document</button>
+					{#if data.doc}
+						<button
+							class="menu-item error ghost"
+							on:click={() => (activeModal = ActiveModal.Delete)}>Delete Document</button
+						>
+					{/if}
 					<div class="menu-item">
 						<button on:click={() => exportMarkdown(editor.storage.markdown.getMarkdown())}>
 							Export as markdown
@@ -205,6 +217,19 @@
 			</ContextMenu>
 		</div>
 	</Portal>
+	{#if activeModal !== ActiveModal.None}
+		<div
+			class="modal-shade"
+			on:keyup={withKeys(['Escape'], () => (activeModal = ActiveModal.None))}
+			on:click={() => (activeModal = ActiveModal.None)}
+		>
+			<div class="modal" on:click|stopPropagation on:keyup={() => {}}>
+				{#if activeModal === ActiveModal.Delete && data.doc}
+					<DeleteForm document={data.doc} />
+				{/if}
+			</div>
+		</div>
+	{/if}
 	<EditorComponent
 		{metadata}
 		bind:editor

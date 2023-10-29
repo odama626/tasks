@@ -151,7 +151,6 @@ input[type="range"] {
 	}
 }
 
-
 .profile-image {
 	--size: var(--profile-image-size, 82px);
 	width: var(--size);
@@ -349,6 +348,15 @@ svg.icon {
 	@media only screen and (max-width: 480px) {
 		padding: 1.5rem;
 	}
+}
+
+
+.modal-buttons {
+	margin-top: var(--block-spacing);
+	display: flex;
+	gap: var(--block-spacing);
+	justify-content: flex-end;
+
 }
 
 .modal-shade {
