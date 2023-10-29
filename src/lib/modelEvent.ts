@@ -187,7 +187,7 @@ export class ModelEvents {
 			}
 			if (invalidateCache.length) {
 				const syncTables = getSyncTablesByTable({ token });
-				for (const syncTable of syncTables) {
+				for (const syncTable of Object.values(syncTables)) {
 					if (invalidateCache.includes(syncTable.table)) {
 						localStorage.removeItem(`last-sync:${syncTable.table}`);
 						await this.syncTable(syncTable);
@@ -249,7 +249,7 @@ export class ModelEvents {
 							const doc = await db[record.modelType].get(record.recordId);
 							const ydoc = await getYdoc(doc, field);
 							await rehydrateAttachments(ydoc, record.recordId);
-							await saveDocument(record.recordId, ydoc);
+							await saveDocument(doc, ydoc);
 						});
 						record[field] = new File([Y.encodeStateAsUpdate(updatedYdoc)], file.name, {
 							type: file.type

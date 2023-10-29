@@ -1,4 +1,4 @@
-import { Collections } from '$lib/db.types';
+import { Collections, type DocsResponse } from '$lib/db.types';
 import { events } from '$lib/modelEvent';
 import { RecordAccess, db, userStore } from '$lib/storage';
 import { createId, notify } from '$lib/utils';
@@ -38,7 +38,7 @@ export function createDocument(projectId: string) {
 	return id;
 }
 
-export async function saveDocument(docId: string, ydoc: Y.Doc) {
+export async function saveDocument(doc: DocsResponse, ydoc: Y.Doc) {
 	const user = get(userStore).record;
 	const title = ydoc.getText('title').toString();
 	const projectId = ydoc.getMap('metadata').get('projectId');
@@ -56,7 +56,7 @@ export async function saveDocument(docId: string, ydoc: Y.Doc) {
 		}
 		if (element.nodeName === 'taskItem') {
 			element.setAttribute('project', projectId);
-			element.setAttribute('doc', docId);
+			element.setAttribute('doc', doc.id);
 		}
 	}
 
@@ -65,12 +65,12 @@ export async function saveDocument(docId: string, ydoc: Y.Doc) {
 		type: 'application/ydoc'
 	});
 
-	events.update(Collections.Docs, docId, {
+	events.update(Collections.Docs, doc.id, {
 		ydoc: ydocFile,
 		title
 	});
 
-	const attachments = await db.doc_attachments.where({ doc: docId }).toArray();
+	const attachments = await db.doc_attachments.where({ doc: doc.id}).toArray();
 	const referencedAttachments = new Set<string>();
 	const fragment = ydoc.getXmlFragment('doc');
 	for (const file of fragment.createTreeWalker(
@@ -86,5 +86,5 @@ export async function saveDocument(docId: string, ydoc: Y.Doc) {
 
 	notify({ text: `Saved "${title}"` });
 
-	return docId;
+	return doc.id;
 }

@@ -29,6 +29,7 @@
 	export let editable: boolean = true;
 	export let autofocus: boolean = false;
 	export let isOverview: boolean = false;
+	export let options: Partial<{ hideCompletedTasks: boolean }> = {};
 	export let ydoc = new Y.Doc();
 	export let editorProps = {};
 	export let provider;
@@ -129,7 +130,7 @@
 	);
 </script>
 
-<div class="editor" bind:this={element} />
+<div class="editor" bind:this={element} class:hideCompletedTasks={options.hideCompletedTasks} />
 <div bind:this={floatingMenuRef} class="floating-menu accent">
 	{#each floatingMenuCommands as command (command.title)}
 		<button class="outline small" on:click={() => (currentAction = command.command(editor))}>
@@ -196,6 +197,12 @@
 		align-items: center;
 		justify-content: center;
 		backdrop-filter: blur(5px);
+	}
+
+	.hideCompletedTasks {
+		:global([data-checked='true']) {
+			display: none;
+		}
 	}
 	.editor {
 		box-sizing: border-box;

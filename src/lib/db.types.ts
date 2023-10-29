@@ -4,9 +4,10 @@
 
 export enum Collections {
 	DocAttachments = "doc_attachments",
-	DocRelations = "doc_relations",
+	DocHierarchys = "doc_hierarchys",
 	Docs = "docs",
 	DocsUsers = "docs_users",
+	EntitiesPerUser = "entities_per_user",
 	Invites = "invites",
 	Projects = "projects",
 	ProjectsUsers = "projects_users",
@@ -39,28 +40,29 @@ export type AuthSystemFields<T = never> = {
 // Record types for each collection
 
 export type DocAttachmentsRecord = {
-	file?: string
-	doc?: RecordIdString
 	createdBy?: RecordIdString
 	deleted?: boolean
-	type?: string
-	size?: number
+	doc?: RecordIdString
+	file?: string
 	name?: string
+	size?: number
+	type?: string
 }
 
-export type DocRelationsRecord<TdocId = unknown, TparentId = unknown> = {
+export type DocHierarchysRecord<TdocId = unknown, TparentId = unknown> = {
 	docId?: null | TdocId
 	parentId?: null | TparentId
 }
 
 export type DocsRecord = {
-	title?: string
 	createdBy?: RecordIdString
-	project?: RecordIdString
 	deleted?: boolean
 	excludeFromOverview?: boolean
-	ydoc?: string
+	hideCompletedTasks?: boolean
 	parent?: RecordIdString
+	project?: RecordIdString
+	title?: string
+	ydoc?: string
 }
 
 export enum DocsUsersAccessOptions {
@@ -69,10 +71,16 @@ export enum DocsUsersAccessOptions {
 	"viewer" = "viewer",
 }
 export type DocsUsersRecord = {
-	user: RecordIdString
-	doc: RecordIdString
 	access?: DocsUsersAccessOptions
 	deleted?: boolean
+	doc: RecordIdString
+	user: RecordIdString
+}
+
+export type EntitiesPerUserRecord = {
+	doc_count?: number
+	email?: string
+	project_count?: number
 }
 
 export enum InvitesAccessOptions {
@@ -81,18 +89,18 @@ export enum InvitesAccessOptions {
 	"viewer" = "viewer",
 }
 export type InvitesRecord = {
-	createdBy?: RecordIdString
-	project?: RecordIdString
-	doc?: RecordIdString
-	deleted?: boolean
 	access: InvitesAccessOptions
+	createdBy?: RecordIdString
+	deleted?: boolean
+	doc?: RecordIdString
+	project?: RecordIdString
 	secret: string
 }
 
 export type ProjectsRecord = {
-	name?: string
 	createdBy?: RecordIdString
 	deleted?: boolean
+	name?: string
 }
 
 export enum ProjectsUsersAccessOptions {
@@ -101,17 +109,17 @@ export enum ProjectsUsersAccessOptions {
 	"viewer" = "viewer",
 }
 export type ProjectsUsersRecord = {
-	user: RecordIdString
-	project: RecordIdString
 	access?: ProjectsUsersAccessOptions
 	deleted?: boolean
+	project: RecordIdString
+	user: RecordIdString
 }
 
 export type UsersRecord = {
-	name?: string
-	avatar?: string
-	primaryColor?: string
 	accentColor?: string
+	avatar?: string
+	name?: string
+	primaryColor?: string
 }
 
 export type UsersConnectionsRecord<Tconnection = unknown> = {
@@ -120,9 +128,10 @@ export type UsersConnectionsRecord<Tconnection = unknown> = {
 
 // Response types include system fields and match responses from the PocketBase API
 export type DocAttachmentsResponse<Texpand = unknown> = Required<DocAttachmentsRecord> & BaseSystemFields<Texpand>
-export type DocRelationsResponse<TdocId = unknown, TparentId = unknown, Texpand = unknown> = Required<DocRelationsRecord<TdocId, TparentId>> & BaseSystemFields<Texpand>
+export type DocHierarchysResponse<TdocId = unknown, TparentId = unknown, Texpand = unknown> = Required<DocHierarchysRecord<TdocId, TparentId>> & BaseSystemFields<Texpand>
 export type DocsResponse<Texpand = unknown> = Required<DocsRecord> & BaseSystemFields<Texpand>
 export type DocsUsersResponse<Texpand = unknown> = Required<DocsUsersRecord> & BaseSystemFields<Texpand>
+export type EntitiesPerUserResponse<Texpand = unknown> = Required<EntitiesPerUserRecord> & BaseSystemFields<Texpand>
 export type InvitesResponse<Texpand = unknown> = Required<InvitesRecord> & BaseSystemFields<Texpand>
 export type ProjectsResponse<Texpand = unknown> = Required<ProjectsRecord> & BaseSystemFields<Texpand>
 export type ProjectsUsersResponse<Texpand = unknown> = Required<ProjectsUsersRecord> & BaseSystemFields<Texpand>
@@ -133,9 +142,10 @@ export type UsersConnectionsResponse<Tconnection = unknown, Texpand = unknown> =
 
 export type CollectionRecords = {
 	doc_attachments: DocAttachmentsRecord
-	doc_relations: DocRelationsRecord
+	doc_hierarchys: DocHierarchysRecord
 	docs: DocsRecord
 	docs_users: DocsUsersRecord
+	entities_per_user: EntitiesPerUserRecord
 	invites: InvitesRecord
 	projects: ProjectsRecord
 	projects_users: ProjectsUsersRecord
@@ -145,9 +155,10 @@ export type CollectionRecords = {
 
 export type CollectionResponses = {
 	doc_attachments: DocAttachmentsResponse
-	doc_relations: DocRelationsResponse
+	doc_hierarchys: DocHierarchysResponse
 	docs: DocsResponse
 	docs_users: DocsUsersResponse
+	entities_per_user: EntitiesPerUserResponse
 	invites: InvitesResponse
 	projects: ProjectsResponse
 	projects_users: ProjectsUsersResponse
@@ -163,8 +174,67 @@ export interface CollectionSchemas {
   docs_users: Projectsusers;
   users_connections: Usersconnections;
   invites: Invites;
-  doc_attachments: Docs;
-  doc_relations: Usersconnections;
+  doc_attachments: Docattachments;
+  doc_hierarchys: Usersconnections;
+  entities_per_user: Entitiesperuser;
+}
+
+export interface Entitiesperuser {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema8[];
+}
+
+export interface Schema8 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options8;
+}
+
+export interface Options8 {
+  exceptDomains?: any;
+  onlyDomains?: any;
+  min?: any;
+  max?: any;
+  noDecimal?: boolean;
+}
+
+export interface Docattachments {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  schema: Schema7[];
+}
+
+export interface Schema7 {
+  id: string;
+  name: string;
+  type: string;
+  system: boolean;
+  required: boolean;
+  options: Options7;
+}
+
+export interface Options7 {
+  maxSelect?: number;
+  maxSize?: number;
+  mimeTypes?: any[];
+  thumbs?: any[];
+  protected?: boolean;
+  collectionId?: string;
+  cascadeDelete?: boolean;
+  minSelect?: any;
+  displayFields?: any[];
+  min?: any;
+  max?: any;
+  pattern?: string;
+  noDecimal?: boolean;
 }
 
 export interface Invites {

@@ -4,17 +4,15 @@ import { writable } from 'svelte/store';
 import type {
 	CollectionResponses,
 	Collections,
-	DocAttachmentsRecord,
 	DocAttachmentsResponse,
-	DocRelationsRecord,
-	DocsRecord,
+	DocHierarchysResponse,
 	DocsResponse,
-	DocsUsersRecord,
-	InvitesRecord,
-	ProjectsRecord,
-	ProjectsUsersRecord,
-	UsersConnectionsRecord,
-	UsersRecord
+	DocsUsersResponse,
+	InvitesResponse,
+	ProjectsResponse,
+	ProjectsUsersResponse,
+	UsersConnectionsResponse,
+	UsersResponse
 } from './db.types';
 import { Cookie } from './utils';
 
@@ -65,16 +63,16 @@ export interface ModelDeleteEvent<T> extends BaseModelEvent {
 export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent<T>;
 
 class Database extends Dexie {
-	users!: Dexie.Table<UsersRecord, string>;
-	projects!: Dexie.Table<ProjectsRecord, string>;
-	docs!: Dexie.Table<DocsRecord, string>;
-	doc_attachments!: Dexie.Table<DocAttachmentsRecord, string>;
-	docs_users!: Dexie.Table<DocsUsersRecord, string>;
-	projects_users!: Dexie.Table<ProjectsUsersRecord, string>;
-	doc_relations!: Dexie.Table<DocRelationsRecord, string>;
-	invites!: Dexie.Table<InvitesRecord, string>;
-	users_connections!: Dexie.Table<UsersConnectionsRecord, string>;
-	events!: Dexie.Table<{ id: string; } & ModelEvent<ValueOf<CollectionResponses>>, string>;
+	users!: Dexie.Table<UsersResponse, string>;
+	projects!: Dexie.Table<ProjectsResponse, string>;
+	docs!: Dexie.Table<DocsResponse, string>;
+	doc_attachments!: Dexie.Table<DocAttachmentsResponse, string>;
+	docs_users!: Dexie.Table<DocsUsersResponse, string>;
+	projects_users!: Dexie.Table<ProjectsUsersResponse, string>;
+	doc_hierarchys!: Dexie.Table<DocHierarchysResponse, string>;
+	invites!: Dexie.Table<InvitesResponse, string>;
+	users_connections!: Dexie.Table<UsersConnectionsResponse, string>;
+	events!: Dexie.Table<{ id: string } & ModelEvent<ValueOf<CollectionResponses>>, string>;
 
 	constructor() {
 		super('todo-db');

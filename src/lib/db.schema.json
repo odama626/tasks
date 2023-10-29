@@ -25,7 +25,7 @@
         "required": false,
         "options": {
           "maxSelect": 1,
-          "maxSize": 5242880,
+          "maxSize": 104857600,
           "mimeTypes": [
             "image/jpeg",
             "image/png",
@@ -178,7 +178,7 @@
           "maxSize": 5242880,
           "mimeTypes": [],
           "thumbs": [],
-          "protected": false
+          "protected": true
         }
       },
       {
@@ -194,6 +194,14 @@
           "maxSelect": 1,
           "displayFields": []
         }
+      },
+      {
+        "id": "owdl8imn",
+        "name": "hideCompletedTasks",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
       }
     ]
   },
@@ -322,7 +330,7 @@
     "system": false,
     "schema": [
       {
-        "id": "ii6enlzq",
+        "id": "yxziqlul",
         "name": "connection",
         "type": "json",
         "system": false,
@@ -433,7 +441,7 @@
           "maxSize": 104857600,
           "mimeTypes": [],
           "thumbs": [],
-          "protected": false
+          "protected": true
         }
       },
       {
@@ -492,7 +500,8 @@
         "required": false,
         "options": {
           "min": null,
-          "max": null
+          "max": null,
+          "noDecimal": false
         }
       },
       {
@@ -509,14 +518,14 @@
       }
     ]
   },
-  "doc_relations": {
-    "id": "57w2k6vgko1avhz",
-    "name": "doc_relations",
+  "doc_hierarchys": {
+    "id": "7a859y6ryfdgbod",
+    "name": "doc_hierarchys",
     "type": "view",
     "system": false,
     "schema": [
       {
-        "id": "ak18p4rz",
+        "id": "xgwmngy6",
         "name": "docId",
         "type": "json",
         "system": false,
@@ -524,12 +533,55 @@
         "options": {}
       },
       {
-        "id": "cvgdwd85",
+        "id": "zxduemmw",
         "name": "parentId",
         "type": "json",
         "system": false,
         "required": false,
         "options": {}
+      }
+    ]
+  },
+  "entities_per_user": {
+    "id": "hv38egyp3jve3tc",
+    "name": "entities_per_user",
+    "type": "view",
+    "system": false,
+    "schema": [
+      {
+        "id": "x4jrqqce",
+        "name": "email",
+        "type": "email",
+        "system": false,
+        "required": false,
+        "options": {
+          "exceptDomains": null,
+          "onlyDomains": null
+        }
+      },
+      {
+        "id": "lse9fzu3",
+        "name": "doc_count",
+        "type": "number",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": false
+        }
+      },
+      {
+        "id": "pqx219lm",
+        "name": "project_count",
+        "type": "number",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": false
+        }
       }
     ]
   }

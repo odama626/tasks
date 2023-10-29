@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Collections } from '$lib/db.types';
 	import Field from '$lib/field.svelte';
-	import { events} from '$lib/modelEvent';
-	import { EventType, RecordAccess, userStore } from '$lib/storage';
+	import { events } from '$lib/modelEvent';
+	import { RecordAccess, userStore } from '$lib/storage';
 	import { collectFormData, createId } from '$lib/utils';
 	import { createEventDispatcher } from 'svelte';
 	import { get } from 'svelte/store';
@@ -17,24 +17,23 @@
 
 	const createRecord = collectFormData(async (data, event) => {
 		const result = schema.safeParse(data);
+		const user = get(userStore).record;
 
 		if (!result.success) return (zodError = result.error);
 		const payload = {
 			...result.data,
+			createdBy: user.id,
 			id: createId()
 		};
 
-		await events.add({ eventType: EventType.Add, modelType: Collections.Projects, payload });
-		await events.add({
-			eventType: EventType.Add,
-			modelType: Collections.ProjectsUsers,
-			payload: {
-				id: createId(),
-				user: get(userStore).record.id,
-				project: payload.id,
-				access: RecordAccess.Admin
-			}
+		await events.create(Collections.Projects, payload);
+		await events.create(Collections.ProjectsUsers, {
+			id: createId(),
+			user: user.id,
+			project: payload.id,
+			access: RecordAccess.Admin
 		});
+
 		event.target.reset();
 		dispatch('submitted');
 	});

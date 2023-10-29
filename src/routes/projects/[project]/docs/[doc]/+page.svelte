@@ -113,7 +113,7 @@
 	async function onSave() {
 		if (saving) return;
 		saving = true;
-		const id = await saveDocument(data.docId, ydoc);
+		const id = await saveDocument(data.doc, ydoc);
 
 		saving = false;
 	}
@@ -202,17 +202,28 @@
 							}}
 						/>
 					</div>
+					<div class="menu-item">
+						<Checkbox
+							label="Hide completed tasks"
+							checked={data.doc.hideCompletedTasks}
+							on:change={(e) => {
+								events.update(Collections.Docs, data.doc.id, {
+									hideCompletedTasks: e.target.checked
+								});
+							}}
+						/>
+					</div>
+					<div class="menu-item">
+						<button on:click={() => exportMarkdown(editor.storage.markdown.getMarkdown())}>
+							Export as markdown
+						</button>
+					</div>
 					{#if data.doc}
 						<button
 							class="menu-item error ghost"
 							on:click={() => (activeModal = ActiveModal.Delete)}>Delete Document</button
 						>
 					{/if}
-					<div class="menu-item">
-						<button on:click={() => exportMarkdown(editor.storage.markdown.getMarkdown())}>
-							Export as markdown
-						</button>
-					</div>
 				</div>
 			</ContextMenu>
 		</div>
@@ -233,6 +244,7 @@
 	<EditorComponent
 		{metadata}
 		bind:editor
+		options={{ hideCompletedTasks: data.doc?.hideCompletedTasks }}
 		{ydoc}
 		{provider}
 		editorProps={{ handleDrop }}
