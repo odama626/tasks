@@ -284,7 +284,7 @@ export class ModelEvents {
 			await pb.collection('users').authRefresh();
 		} catch (e) {
 			this.syncing = false;
-			// TODO: store previous login credentials and wipe local data on login if it doesn't match
+			if (e.status !== 401) return;
 			localStorage.removeItem('auth');
 			pb.authStore.clear();
 			return location.reload();
