@@ -195,6 +195,7 @@
 							}}
 						/>
 					</div>
+					<button class='menu-item error ghost' on:click={}>Delete Document</button>
 					<div class="menu-item">
 						<button on:click={() => exportMarkdown(editor.storage.markdown.getMarkdown())}>
 							Export as markdown
