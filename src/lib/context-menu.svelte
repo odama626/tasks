@@ -73,6 +73,10 @@
 		border-radius: 4px;
 		overflow: hidden;
 
+		:global(.menu-item) {
+			width: 100%;
+		}
+
 		:global(.menu-item > *) {
 			box-sizing: border-box;
 			padding: 1rem;
