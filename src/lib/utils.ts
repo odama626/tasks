@@ -172,7 +172,8 @@ export async function getYdoc(doc: DocsInstance, field = 'ydoc') {
 	}
 
 	if (arrayBuffer) {
-		Y.applyUpdate(ydoc, new Uint8Array(arrayBuffer));
+		const arr = new Uint8Array(arrayBuffer);
+		Y.applyUpdate(ydoc, arr);
 		rehydrateAttachments(ydoc, doc.id);
 	}
 

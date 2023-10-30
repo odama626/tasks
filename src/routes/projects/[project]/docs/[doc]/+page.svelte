@@ -193,7 +193,7 @@
 				<div slot="items">
 					<div class="menu-item">
 						<Checkbox
-							label="Exclude from project overview"
+							label="Hide contents from Overview"
 							checked={data.doc.excludeFromOverview}
 							on:change={(e) => {
 								events.update(Collections.Docs, data.doc.id, {

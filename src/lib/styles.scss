@@ -467,7 +467,7 @@ em {
 	}
 }
 
-ul[data-type="taskList"] {
+div[data-type="taskList"] > ul {
 	list-style: none;
 	margin-left: 0;
 	> li {

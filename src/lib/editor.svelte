@@ -3,6 +3,7 @@
 
 	import SlashCommand from '$lib/editor/extensions/slash';
 	import TaskItem from '$lib/editor/extensions/taskItem';
+	import TaskList from '$lib/editor/extensions/taskList';
 	import { Editor, type JSONContent } from '@tiptap/core';
 	import BubbleMenu from '@tiptap/extension-bubble-menu';
 	import Collaboration from '@tiptap/extension-collaboration';
@@ -10,7 +11,6 @@
 	import Highlight from '@tiptap/extension-highlight';
 	import Link from '@tiptap/extension-link';
 	import Placeholder from '@tiptap/extension-placeholder';
-	import TaskList from '@tiptap/extension-task-list';
 	import Typography from '@tiptap/extension-typography';
 	import StarterKit from '@tiptap/starter-kit';
 	import { createEventDispatcher, onMount } from 'svelte';
@@ -19,10 +19,10 @@
 	import * as Y from 'yjs';
 	import CollaborationCursor from './editor/extensions/CollaborationCursor';
 	import { getCommands } from './editor/extensions/commands';
+	import file from './editor/extensions/file';
 	import { Id } from './editor/extensions/id';
 	import { ImageExtension } from './editor/extensions/image';
 	import { userStore } from './storage';
-	import file from './editor/extensions/file';
 
 	let element: HTMLDivElement;
 	export let editor: Editor = null;
@@ -67,6 +67,7 @@
 			extensions: [
 				StarterKit.configure({ commands: false, history: false }),
 				TaskItem.configure({ nested: true, isOverview, dispatch }),
+				TaskList,
 				Collaboration.configure({ document: ydoc, field: 'doc' }),
 				provider &&
 					CollaborationCursor.configure({
@@ -84,7 +85,6 @@
 				Link,
 				file,
 				Id,
-				TaskList,
 				SlashCommand(metadata),
 				Markdown,
 				ImageExtension,
