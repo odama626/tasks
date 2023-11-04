@@ -5,11 +5,25 @@
 	import { liveQuery } from 'dexie';
 	import { flip } from 'svelte/animate';
 	import { fade, fly } from 'svelte/transition';
+	import { navigating } from '$app/stores';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
 	$: user = liveQuery(() => db.users.get($userStore?.record?.id));
-
 	$: style = getStyle($user);
 
+	onMount(() => {
+		const route = localStorage.getItem('current-route');
+		if (route && window.location.pathname === '/') {
+			localStorage.removeItem('current-route');
+			goto(route);
+		}
+	});
+
+	afterNavigate((navigation) => {
+		if (navigation.to.url.pathname === '/') return;
+		localStorage.setItem('current-route', navigation.to?.url.href);
+	});
 </script>
 
 <svelte:head>
