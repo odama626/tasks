@@ -1,0 +1,13 @@
+
+services:
+  db:
+    image: postgres:alpine3.18
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: user
+      POSTGRES_DB: pub_server
+    ports:
+      - 5432:5432
+
+
