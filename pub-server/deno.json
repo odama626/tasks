@@ -4,7 +4,13 @@
     "hono": "https://deno.land/x/hono@v3.9.2/mod.ts",
     "dotenv": "https://deno.land/std@0.205.0/dotenv/mod.ts",
     "postgresjs": "https://deno.land/x/postgresjs/mod.js",
-    "pgmg": "npm:pgmg@0.0.11"
+    "pgmg": "npm:pgmg@0.0.11",
+    "@hono/zod-validator": "npm:@hono/zod-validator",
+    "zod": "https://deno.land/x/zod@v3.22.4/mod.ts",
+    "argon2": "https://deno.land/x/argon2ian@2.0.1/src/async.ts",
+    "std/encoding/hex": "https://deno.land/std@0.192.0/encoding/hex.ts",
+    "std/encoding/base64": "https://deno.land/std@0.202.0/encoding/base64.ts",
+    "rsa": "https://deno.land/x/rsa@v0.2/mod.ts"
   },
   "tasks": {
     "dev": "deno run --allow-read --allow-env --allow-net --watch ./src/main.ts",

@@ -1,9 +1,9 @@
 import { Hono, HTTPException } from 'hono';
-import { sql } from '../db.ts'
+import { sql } from '../db.ts';
 
 export const router = new Hono();
 
-router.get('/webfinger', async (c) => {
+router.get('/webfinger', (c) => {
 	const resource = c.req.query('resource');
 
 	if (!resource) throw new HTTPException(400, { message: `resource query parameter is required` });
@@ -20,9 +20,16 @@ router.get('/webfinger', async (c) => {
 	if (domain !== c.env?.HOST)
 		throw new HTTPException(400, { message: `not associated with domain "${domain}"` });
 
-  sql`select `
+	sql`select `;
 
-  return c.jsonT({
-    
-  })
+	return c.jsonT({
+		subject: resource,
+		links: [
+			{
+				rel: 'self',
+				type: 'application/activity+json',
+				href: `https://${c.env.HOST}/users/${username}`
+			}
+		]
+	});
 });
