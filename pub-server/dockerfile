@@ -1,0 +1,20 @@
+FROM denoland/deno:alpine-1.38.0
+
+EXPOSE 8000
+
+WORKDIR /app
+
+USER deno
+COPY deno.json .
+COPY deno.lock .
+COPY startup.sh startup.sh
+RUN deno cache -c deno.json deno.json
+
+ADD src src
+ADD migrations migrations
+ADD migrate.ts migrate.ts
+ADD .env.defaults .env.defaults
+
+# RUN deno cache --allow-write ./src/main.ts
+
+CMD ["task", "start"]

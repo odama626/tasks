@@ -5,7 +5,7 @@
     "dotenv": "https://deno.land/std@0.205.0/dotenv/mod.ts",
     "postgresjs": "https://deno.land/x/postgresjs/mod.js",
     "pgmg": "npm:pgmg@0.0.11",
-    "@hono/zod-validator": "npm:@hono/zod-validator",
+    "@hono/zod-validator": "npm:@hono/zod-validator@0.1.11",
     "zod": "https://deno.land/x/zod@v3.22.4/mod.ts",
     "argon2": "https://deno.land/x/argon2ian@2.0.1/src/async.ts",
     "std/encoding/hex": "https://deno.land/std@0.192.0/encoding/hex.ts",
@@ -14,6 +14,8 @@
   },
   "tasks": {
     "dev": "deno run --allow-read --allow-env --allow-net --watch ./src/main.ts",
-    "migrate-db": "deno run --allow-read --allow-env --allow-net migrate.ts 'postgres://user:admin@localhost:5432/pub_server' $(ls -1 migrations | sed 's/.*/migrations\\/&/')"
+    "migrate-db": "sh -c 'source ./.env.defaults set; source ./.env set; deno run --allow-read --allow-env --allow-net migrate.ts $POSTGRES_CONNECTION $(ls -1 migrations | sed \"s/.*/migrations\\/&/\")'",
+    "ci-migrate-db": "deno run --allow-read --allow-env --allow-net migrate.ts $POSTGRES_CONNECTION $(ls -1 migrations | sed \"s/.*/migrations\\/&/\")",
+    "start": "sh -c './startup.sh'"
   }
 }

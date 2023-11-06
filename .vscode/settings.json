@@ -2,7 +2,7 @@
   "deno.enablePaths": [
     "./pub-server"
   ],
-  "deno.importMap": "./pub-server/deno.json",
   "deno.enable": true,
-  "editor.inlayHints.enabled": "off"
+  "editor.inlayHints.enabled": "off",
+  "deno.config": "./pub-server/deno.json"
 }

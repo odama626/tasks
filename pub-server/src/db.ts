@@ -1,3 +1,6 @@
 import postgres from 'postgresjs';
+import { load } from 'dotenv';
 
-export const sql = postgres();
+await load({ export: true });
+console.log(Deno.env.get('POSTGRES_CONNECTION'))
+export const sql = postgres(Deno.env.get('POSTGRES_CONNECTION'));

@@ -55,7 +55,7 @@ router.post(
         ${hash},
         ${salt},
         ${JSON.stringify(privateKey)},
-        ${JSON.stringify(publicKey)}
+        ${publicKey}
       ) returning id`;
 
 		const { username } = body;
@@ -70,21 +70,31 @@ router.get('/:username', async (c) => {
 
 	if (!result) throw new HTTPException(400, { message: `user ${username} doesn't exist` });
 
-
-
-	return c.jsonT({
-    "@context": [
-      "https://www.w3.org/ns/activitystreams",
-      "https://w3id.org/security/v1"
-    ],
-    id: `https://${c.env.HOST}/users/${result.username}`,
-    type: 'Person',
-    preferredUsername: result.username,
-    inbox: `https://${c.env.HOST}/inbox`,
-    publicKey: {
-      id: `https://${c.env.HOST}/users/${result.username}#public-key`,
-      owner: `https://${c.env.HOST}/users/${result.username}`,
-      publicKeyPem: result.public_key
-    }
-  });
+	return c.jsonT(getUserLd(result, c.env));
 });
+
+function getUserLd(user, { HOST }) {
+	return {
+		'@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
+		id: `https://${HOST}/users/${user.username}`,
+		type: 'Person',
+		preferredUsername: user.username,
+		inbox: `https://${HOST}/inbox`,
+		publicKey: {
+			id: `https://${HOST}/users/${user.username}#public-key`,
+			owner: `https://${HOST}/users/${user.username}`,
+			publicKeyPem: user.public_key
+		}
+	};
+}
+
+router.get('/', async (c) => {
+	const results = await sql`select username, public_key from users`;
+
+	return c.jsonT(results.map((user) => getUserLd(user, c.env)));
+});
+
+
+router.post('/:username/inbox', c => {
+	
+})

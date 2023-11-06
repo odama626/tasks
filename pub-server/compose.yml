@@ -1,5 +1,19 @@
 
 services:
+  server:
+    image: omarzion/tasks-pub-server:latest
+    profiles: ['prod']
+    depends_on:
+      - db
+    build: .
+    pull_policy: always
+    env_file:
+      - .env
+    environment:
+      POSTGRES_CONNECTION: "postgresql://user:admin@pub-server-db-1:5432/pub_server"
+    ports:
+      - 8000:8000
+
   db:
     image: postgres:alpine3.18
     restart: always
@@ -8,10 +22,11 @@ services:
       POSTGRES_USER: user
       POSTGRES_DB: pub_server
     ports:
-      - 5432:5432
-      
+      - 5432:5432      
+
   pgadmin:
     image: dpage/pgadmin4:latest
+    profiles: ['dev']
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}

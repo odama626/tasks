@@ -18,7 +18,7 @@ router.get('/webfinger', (c) => {
 	console.log(c.env);
 
 	if (domain !== c.env?.HOST)
-		throw new HTTPException(400, { message: `not associated with domain "${domain}"` });
+		throw new HTTPException(400, { message: `user "${username}" not associated with domain "${domain}"` });
 
 	sql`select `;
 
