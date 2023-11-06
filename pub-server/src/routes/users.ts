@@ -79,7 +79,11 @@ function getUserLd(user, { HOST }) {
 		id: `https://${HOST}/users/${user.username}`,
 		type: 'Person',
 		preferredUsername: user.username,
-		inbox: `https://${HOST}/inbox`,
+		inbox: `https://${HOST}/users/${user.username}/inbox`,
+		outbox: `https://${HOST}/users/${user.username}/outbox`,
+		endpoints: {
+			sharedInbox: `https://${HOST}/inbox`,
+		},
 		publicKey: {
 			id: `https://${HOST}/users/${user.username}#public-key`,
 			owner: `https://${HOST}/users/${user.username}`,
@@ -97,4 +101,8 @@ router.get('/', async (c) => {
 
 router.post('/:username/inbox', c => {
 	
+})
+
+router.post('/:username/outbox', c => {
+
 })
