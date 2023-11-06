@@ -28,9 +28,8 @@ export async function transaction(sql) {
     hash text not null,
     salt text not null,
     private_key text not null,
-    public_key text not null,
-    inherits system
-  );`;
+    public_key text not null
+  ) inherits (system);`;
 	await sql`create trigger set_updated_timestamp before update on users for each row execute procedure trigger_update_timestamp();`;
 
 	await sql`create table inbox (
@@ -41,11 +40,13 @@ export async function transaction(sql) {
     object jsonb,
     published timestamp with time zone not null default now(),
     cc text[],
-    to text[],
-    inherits system
-    )
+    "to" text[]
+    ) inherits (system);
   `;
 	await sql`create trigger set_updated_timestamp before update on inbox for each row execute procedure trigger_update_timestamp();`;
+
+  await sql`create table outbox (like inbox) inherits (system)`
+  await sql`create trigger set_updated_timestamp before update on outbox for each row execute procedure trigger_update_timestamp();`;
 
 	// await sql`create table outbox like inbox`
 }

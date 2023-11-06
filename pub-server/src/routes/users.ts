@@ -9,6 +9,32 @@ export const router = new Hono();
 const worker = new ArgonWorker();
 const encoder = new TextEncoder();
 
+async function generateKeyPair() {
+	const keyPair = await crypto.subtle.generateKey(
+		{
+			name: 'RSA-OAEP',
+			modulusLength: 2048,
+			publicExponent: new Uint8Array([1, 0, 1]),
+			hash: 'SHA-512'
+		},
+		true,
+		['encrypt', 'decrypt']
+	);
+	const privateKey = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+	const publicKeySpki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+
+	return {
+		private: privateKey,
+		public: `-----BEGIN PUBLIC KEY-----${base64.encode(publicKeySpki)}-----END PUBLIC KEY-----`
+	};
+}
+
+async function hashPassword(password: string) {
+	const salt = crypto.getRandomValues(new Uint8Array(Math.max(8, Math.random() * 32)));
+	const hash = await worker.hash(encoder.encode(password), salt);
+	return { salt, hash };
+}
+
 router.post(
 	'/',
 	zValidator(
@@ -24,43 +50,26 @@ router.post(
 		console.log({ body });
 		const exists = await sql`select id from users where username = ${body.username}`;
 
-		console.log({ exists }, exists.length);
-
 		if (exists.length)
 			throw new HTTPException(400, { message: `A user with that username already exists` });
 
-		const salt = crypto.getRandomValues(new Uint8Array(Math.max(8, Math.random() * 32)));
-		const hash = await worker.hash(encoder.encode(body.password), salt);
-		const keyPair = await crypto.subtle.generateKey(
-			{
-				name: 'RSA-OAEP',
-				modulusLength: 2048,
-				publicExponent: new Uint8Array([1, 0, 1]),
-				hash: 'SHA-512'
-			},
-			true,
-			['encrypt', 'decrypt']
-		);
-		const privateKey = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-		const publicKeySpki = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+		const { salt, hash } = await hashPassword(body.password);
+		const key = await generateKeyPair();
 
-		const publicKey = `-----BEGIN PUBLIC KEY-----${base64.encode(
-			publicKeySpki
-		)}-----END PUBLIC KEY-----`;
+		const id = `https://${c.env.HOST}/users/${body.username}`;
 
-		const result = await sql`
-      insert into users(username, hash, salt, private_key, public_key)
+		const [result] = await sql`
+      insert into users(id, username, hash, salt, private_key, public_key)
       values(
+				${id},
         ${body.username},
         ${hash},
         ${salt},
-        ${JSON.stringify(privateKey)},
-        ${publicKey}
-      ) returning id`;
+        ${JSON.stringify(key.private)},
+        ${key.public}
+      ) returning id, username`;
 
-		const { username } = body;
-
-		return c.json({ username, id: result[0].id });
+		return c.json(getUserLd(result, c.env));
 	}
 );
 
@@ -82,7 +91,7 @@ function getUserLd(user, { HOST }) {
 		inbox: `https://${HOST}/users/${user.username}/inbox`,
 		outbox: `https://${HOST}/users/${user.username}/outbox`,
 		endpoints: {
-			sharedInbox: `https://${HOST}/inbox`,
+			sharedInbox: `https://${HOST}/inbox`
 		},
 		publicKey: {
 			id: `https://${HOST}/users/${user.username}#public-key`,
@@ -98,11 +107,6 @@ router.get('/', async (c) => {
 	return c.jsonT(results.map((user) => getUserLd(user, c.env)));
 });
 
+router.post('/:username/inbox', (c) => {});
 
-router.post('/:username/inbox', c => {
-	
-})
-
-router.post('/:username/outbox', c => {
-
-})
+router.post('/:username/outbox', (c) => {});
