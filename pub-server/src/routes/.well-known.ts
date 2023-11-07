@@ -1,5 +1,5 @@
 import { Hono, HTTPException } from 'hono';
-import { sql } from '../db.ts';
+import { sql } from '/db.ts';
 
 export const router = new Hono();
 

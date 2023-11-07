@@ -4,5 +4,5 @@
   ],
   "deno.enable": true,
   "editor.inlayHints.enabled": "off",
-  "deno.config": "./pub-server/deno.json"
+  "deno.config": "./pub-server/deno.jsonc"
 }

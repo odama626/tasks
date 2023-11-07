@@ -1,7 +1,7 @@
-import { load } from 'dotenv';
+import { load } from 'std/dotenv/mod.ts';
 import { Hono } from 'hono';
-import { router as wellKnownRouter } from './routes/.well-known.ts';
-import { router as usersRouter } from './routes/users.ts';
+import { router as wellKnownRouter } from '/routes/.well-known.ts';
+import { router as usersRouter } from '/routes/users.ts';
 
 type Bindings = {
 	HOST: string;

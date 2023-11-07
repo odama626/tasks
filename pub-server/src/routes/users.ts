@@ -1,9 +1,9 @@
 import { Hono, HTTPException } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { ArgonWorker } from 'argon2';
-import { sql } from '../db.ts';
+import { sql } from '/db.ts';
 import { z } from 'zod';
-import * as base64 from 'std/encoding/base64';
+import * as base64 from 'std/encoding/base64.ts';
 
 export const router = new Hono();
 const worker = new ArgonWorker();
@@ -35,53 +35,6 @@ async function hashPassword(password: string) {
 	return { salt, hash };
 }
 
-router.post(
-	'/',
-	zValidator(
-		'json',
-		z.object({
-			username: z.string().min(4),
-			password: z.string().min(13),
-			email: z.string().email()
-		})
-	),
-	async (c) => {
-		const body = c.req.json();
-		console.log({ body });
-		const exists = await sql`select id from users where username = ${body.username}`;
-
-		if (exists.length)
-			throw new HTTPException(400, { message: `A user with that username already exists` });
-
-		const { salt, hash } = await hashPassword(body.password);
-		const key = await generateKeyPair();
-
-		const id = `https://${c.env.HOST}/users/${body.username}`;
-
-		const [result] = await sql`
-      insert into users(id, username, hash, salt, private_key, public_key)
-      values(
-				${id},
-        ${body.username},
-        ${hash},
-        ${salt},
-        ${JSON.stringify(key.private)},
-        ${key.public}
-      ) returning id, username`;
-
-		return c.json(getUserLd(result, c.env));
-	}
-);
-
-router.get('/:username', async (c) => {
-	const username = c.req.param('username');
-	const [result] = await sql`select username, public_key from users where username = ${username}`;
-
-	if (!result) throw new HTTPException(400, { message: `user ${username} doesn't exist` });
-
-	return c.jsonT(getUserLd(result, c.env));
-});
-
 function getUserLd(user, { HOST }) {
 	return {
 		'@context': ['https://www.w3.org/ns/activitystreams', 'https://w3id.org/security/v1'],
@@ -101,12 +54,60 @@ function getUserLd(user, { HOST }) {
 	};
 }
 
+const schema = z.object({
+	username: z.string().min(4),
+	password: z.string().min(13),
+	email: z.string().email()
+});
+
+router.post('/', zValidator('json', schema), async (c) => {
+	const body = c.req.json();
+	console.log({ body });
+	const exists = await sql`select id from users where username = ${body.username}`;
+
+	if (exists.length)
+		throw new HTTPException(400, { message: `A user with that username already exists` });
+
+	const { salt, hash } = await hashPassword(body.password);
+	const key = await generateKeyPair();
+
+	const id = `https://${c.env.HOST}/users/${body.username}`;
+
+	const [result] = await sql`
+      insert into users(id, username, hash, salt, private_key, public_key)
+      values(
+				${id},
+        ${body.username},
+        ${hash},
+        ${salt},
+        ${JSON.stringify(key.private)},
+        ${key.public}
+      ) returning id, username`;
+
+	return c.json(getUserLd(result, c.env));
+});
+
+router.get('/:username', async (c) => {
+	const username = c.req.param('username');
+	const [result] = await sql`select username, public_key from users where username = ${username}`;
+
+	if (!result) throw new HTTPException(400, { message: `user ${username} doesn't exist` });
+
+	return c.jsonT(getUserLd(result, c.env));
+});
+
 router.get('/', async (c) => {
 	const results = await sql`select username, public_key from users`;
 
 	return c.jsonT(results.map((user) => getUserLd(user, c.env)));
 });
 
-router.post('/:username/inbox', (c) => {});
+router.post('/:username/inbox', async (c) => {
+	const username = c.req.param('username');
+
+	const results =
+		await sql`select * from inbox join users on users.username = ${username} order by inbox.created desc`;
+	return c.jsonT(results);
+});
 
 router.post('/:username/outbox', (c) => {});
