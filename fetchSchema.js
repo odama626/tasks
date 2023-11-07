@@ -35,7 +35,9 @@ types[0] = types[0].replace('RootObject', 'CollectionSchemas');
 types.unshift('');
 
 await fs.writeFile('./src/lib/db.schema.json', JSON.stringify(schema, null, 2));
-
 console.log('Created schema at ./src/lib/db.schema.json');
+await fs.writeFile('./src/lib/collections.json', JSON.stringify(pageResults, null, 2));
+console.log('generated importable collections file at ./src/lib/collections.json')
+
 await fs.writeFile('./src/lib/db.types.ts', types.join('\n\n'), { flag: 'a+' });
 console.log('added types for schema to ./src/lib/db.types.ts');

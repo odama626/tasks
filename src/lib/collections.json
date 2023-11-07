@@ -1,0 +1,697 @@
+[
+  {
+    "id": "_pb_users_auth_",
+    "created": "2023-06-18 07:29:59.761Z",
+    "updated": "2023-10-28 02:23:12.360Z",
+    "name": "users",
+    "type": "auth",
+    "system": false,
+    "schema": [
+      {
+        "id": "users_name",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "users_avatar",
+        "name": "avatar",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 104857600,
+          "mimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/svg+xml",
+            "image/gif",
+            "image/webp"
+          ],
+          "thumbs": null,
+          "protected": false
+        }
+      },
+      {
+        "id": "wqkg3zca",
+        "name": "primaryColor",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "gmf0zw4r",
+        "name": "accentColor",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": "id = @request.auth.id || (id ?= @collection.users_connections.id && @request.auth.id ?= @collection.users_connections.connection)",
+    "viewRule": "id = @request.auth.id",
+    "createRule": "",
+    "updateRule": "id = @request.auth.id",
+    "deleteRule": "id = @request.auth.id",
+    "options": {
+      "allowEmailAuth": true,
+      "allowOAuth2Auth": true,
+      "allowUsernameAuth": true,
+      "exceptEmailDomains": null,
+      "manageRule": null,
+      "minPasswordLength": 8,
+      "onlyEmailDomains": null,
+      "requireEmail": true
+    }
+  },
+  {
+    "id": "070s9pn87eu6cuz",
+    "created": "2023-06-27 04:54:28.531Z",
+    "updated": "2023-07-17 00:22:36.865Z",
+    "name": "projects",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "01vchfgl",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "pjvz6yza",
+        "name": "createdBy",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "ckyovghh",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [],
+    "listRule": "@request.auth.id ?= @collection.projects_users.user && id ?= @collection.projects_users.project",
+    "viewRule": "@request.auth.id ?= @collection.projects_users.user && id ?= @collection.projects_users.project",
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id ?= @collection.projects_users.user && id ?= @collection.projects_users.project && (\"admin\" ?= @collection.projects_users.access || 'editor' ?= @collection.projects_users.access)",
+    "deleteRule": null,
+    "options": {}
+  },
+  {
+    "id": "z6njzq3iaauegmm",
+    "created": "2023-06-27 04:55:28.880Z",
+    "updated": "2023-10-29 21:21:51.832Z",
+    "name": "docs",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "tmj5ulya",
+        "name": "title",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "ja5gvcqc",
+        "name": "createdBy",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "a0qm6isp",
+        "name": "project",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "070s9pn87eu6cuz",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "s0edxcrx",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "qndlsfbq",
+        "name": "excludeFromOverview",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "ruueucdi",
+        "name": "ydoc",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": true
+        }
+      },
+      {
+        "id": "u9teufen",
+        "name": "parent",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "owdl8imn",
+        "name": "hideCompletedTasks",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [],
+    "listRule": "(@request.auth.id ?= @collection.docs_users.user && id ?= @collection.docs_users.doc) || (@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project)",
+    "viewRule": "(@request.auth.id ?= @collection.docs_users.user && id ?= @collection.docs_users.doc) || (@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project)",
+    "createRule": "@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project && (\"editor\" ?= @collection.projects_users.access ||  \"admin\" ?= @collection.projects_users.access)",
+    "updateRule": "(@request.auth.id ?= @collection.docs_users.user && id ?= @collection.docs_users.doc && (\"editor\" ?= @collection.docs_users.access || \"admin\" ?= @collection.docs_users.access)) || (@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project && ('editor' ?= @collection.projects_users.access|| \"admin\" ?= @collection.projects_users.access))",
+    "deleteRule": "(@request.auth.id ?= @collection.docs_users.user && id ?= @collection.docs_users.doc && \"admin\" ?= @collection.docs_users.access) || (@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project && \"admin\" ?= @collection.projects_users.access)",
+    "options": {}
+  },
+  {
+    "id": "uecz5uet3midqvx",
+    "created": "2023-06-27 04:59:17.407Z",
+    "updated": "2023-08-07 02:18:06.639Z",
+    "name": "projects_users",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "ni3bgq6o",
+        "name": "user",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "e9rzwuip",
+        "name": "project",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "options": {
+          "collectionId": "070s9pn87eu6cuz",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "ou9lrdvc",
+        "name": "access",
+        "type": "select",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "admin",
+            "editor",
+            "viewer"
+          ]
+        }
+      },
+      {
+        "id": "ht1oc15k",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_Ux0TELR` ON `projects_users` (\n  `user`,\n  `project`\n)"
+    ],
+    "listRule": "@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project",
+    "viewRule": "@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project",
+    "createRule": "@request.auth.id != \"\" && (@request.data.project ?!= @collection.projects_users.project || (@request.data.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && ('admin' ?= @collection.projects_users.access || 'editor' ?= @collection.projects_users.access)))",
+    "updateRule": "@request.data.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && ('admin' ?= @collection.projects_users.access || ('editor' ?= @collection.projects_users.access && access != \"admin\" ))",
+    "deleteRule": "@request.data.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && ('admin' ?= @collection.projects_users.access || ('editor' ?= @collection.projects_users.access && access != \"admin\" ))",
+    "options": {}
+  },
+  {
+    "id": "jom92gfhte170m3",
+    "created": "2023-06-27 05:01:14.465Z",
+    "updated": "2023-08-07 02:17:25.390Z",
+    "name": "docs_users",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "sxemlomo",
+        "name": "user",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "y9xgddgp",
+        "name": "doc",
+        "type": "relation",
+        "system": false,
+        "required": true,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "smnphmpv",
+        "name": "access",
+        "type": "select",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "admin",
+            "editor",
+            "viewer"
+          ]
+        }
+      },
+      {
+        "id": "olb7pbgb",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX `idx_k9TYZyz` ON `docs_users` (\n  `user`,\n  `doc`\n)"
+    ],
+    "listRule": "(@request.auth.id ?= @collection.projects_users.user && doc.project ?= @collection.projects_users.project) || (@request.auth.id ?= @collection.docs_users.user && doc = @collection.docs_users.doc)",
+    "viewRule": "(@request.auth.id ?= @collection.projects_users.user && doc.project ?= @collection.projects_users.project) || (@request.auth.id ?= @collection.docs_users.user && doc = @collection.docs_users.doc)",
+    "createRule": "@request.auth.id != \"\" && ((@request.data.doc.project ?!= @collection.projects_users.project || (@request.data.doc.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && (\"admin\" ?= @collection.projects_users.access || \"editor\" ?= @collection.projects_users.access))) || (@request.data.doc ?!= @collection.docs_users.doc || (@request.data.doc ?= @collection.docs_users.doc && @request.auth.id ?= @collection.docs_users.user && (\"admin\" ?= @collection.docs_users.access || \"editor\" ?= @collection.projects_users.access))) )",
+    "updateRule": "(@request.data.doc.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && (\"admin\" ?= @collection.projects_users.access || (\"editor\" ?= @collection.projects_users.access && access != \"admin\" ))) || (@request.data.doc ?= @collection.docs_users.doc && @request.auth.id ?= @collection.docs_users.user && (\"admin\" ?= @collection.docs_users.access || (\"editor\" ?= @collection.docs_users.access && access != \"admin\" )))",
+    "deleteRule": "(@request.data.doc.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && (\"admin\" ?= @collection.projects_users.access || (\"editor\" ?= @collection.projects_users.access && access != \"admin\" ))) || (@request.data.doc ?= @collection.docs_users.doc && @request.auth.id ?= @collection.docs_users.user && (\"admin\" ?= @collection.docs_users.access || (\"editor\" ?= @collection.docs_users.access && access != \"admin\" )))",
+    "options": {}
+  },
+  {
+    "id": "yfrvhbqtxodcsog",
+    "created": "2023-07-18 07:05:47.471Z",
+    "updated": "2023-10-05 01:54:38.632Z",
+    "name": "users_connections",
+    "type": "view",
+    "system": false,
+    "schema": [
+      {
+        "id": "yxziqlul",
+        "name": "connection",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [],
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "options": {
+      "query": "select distinct id, connection\nfrom (\n  select user.id, userb.id as connection\n  from users as user\n  join projects_users as pa on pa.user = user.id\n  join projects_users as pb on pb.project = pa.project\n  join users as userb on userb.id = pb.user\n  \n  union all\n\n  select user.id, userb.id as connection\n  from users as user\n  join docs_users as da on da.user = user.id\n  join docs_users as db on db.doc = da.doc\n  join users as userb on userb.id = db.user\n)"
+    }
+  },
+  {
+    "id": "putgsu67hxqarfp",
+    "created": "2023-07-24 07:20:05.262Z",
+    "updated": "2023-08-06 00:34:59.598Z",
+    "name": "invites",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "3mruyjsf",
+        "name": "createdBy",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "i8p5zrry",
+        "name": "project",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "070s9pn87eu6cuz",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "krxsy0xv",
+        "name": "doc",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "j9ee3gdb",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "tfhlznnf",
+        "name": "access",
+        "type": "select",
+        "system": false,
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "admin",
+            "editor",
+            "viewer"
+          ]
+        }
+      },
+      {
+        "id": "pqfrcj2f",
+        "name": "secret",
+        "type": "text",
+        "system": false,
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": "(@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project) || (@request.auth.id ?= @collection.docs_users.user && doc = @collection.docs_users.doc)",
+    "viewRule": "(@request.auth.id ?= @collection.projects_users.user && project ?= @collection.projects_users.project) || (@request.auth.id ?= @collection.docs_users.user && doc = @collection.docs_users.doc)",
+    "createRule": "@request.auth.id != \"\" && ((@request.data.project ?!= @collection.projects_users.project || (@request.data.doc.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && (\"admin\" ?= @collection.projects_users.access || (\"editor\" ?= @collection.projects_users.access && @request.data.access != \"admin\")))) || (@request.data.doc ?!= @collection.docs_users.doc || (@request.data.doc ?= @collection.docs_users.doc && @request.auth.id ?= @collection.docs_users.user && (\"admin\" ?= @collection.docs_users.access || (\"editor\" ?= @collection.projects_users.access && @request.data.access != \"admin\")))) )",
+    "updateRule": "@request.auth.id != \"\" && ((@request.data.project ?!= @collection.projects_users.project || (@request.data.doc.project ?= @collection.projects_users.project && @request.auth.id ?= @collection.projects_users.user && (\"admin\" ?= @collection.projects_users.access || (\"editor\" ?= @collection.projects_users.access && @request.data.access != \"admin\")))) || (@request.data.doc ?!= @collection.docs_users.doc || (@request.data.doc ?= @collection.docs_users.doc && @request.auth.id ?= @collection.docs_users.user && (\"admin\" ?= @collection.docs_users.access || (\"editor\" ?= @collection.projects_users.access && @request.data.access != \"admin\")))) )",
+    "deleteRule": null,
+    "options": {}
+  },
+  {
+    "id": "fklznn1u1b9szgq",
+    "created": "2023-07-27 08:31:35.552Z",
+    "updated": "2023-10-28 02:22:52.140Z",
+    "name": "doc_attachments",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "id": "brvdwqh9",
+        "name": "file",
+        "type": "file",
+        "system": false,
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 104857600,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": true
+        }
+      },
+      {
+        "id": "mszjmw7d",
+        "name": "doc",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "z6njzq3iaauegmm",
+          "cascadeDelete": true,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "gxktabqm",
+        "name": "createdBy",
+        "type": "relation",
+        "system": false,
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": false,
+          "minSelect": null,
+          "maxSelect": 1,
+          "displayFields": []
+        }
+      },
+      {
+        "id": "1gbpaxz2",
+        "name": "deleted",
+        "type": "bool",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "j53vmuit",
+        "name": "type",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "id": "jslk0w6h",
+        "name": "size",
+        "type": "number",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": false
+        }
+      },
+      {
+        "id": "fnnn1wg1",
+        "name": "name",
+        "type": "text",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "",
+    "updateRule": "",
+    "deleteRule": "",
+    "options": {}
+  },
+  {
+    "id": "7a859y6ryfdgbod",
+    "created": "2023-10-05 05:17:36.494Z",
+    "updated": "2023-10-10 05:50:01.249Z",
+    "name": "doc_hierarchys",
+    "type": "view",
+    "system": false,
+    "schema": [
+      {
+        "id": "xgwmngy6",
+        "name": "docId",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "options": {}
+      },
+      {
+        "id": "zxduemmw",
+        "name": "parentId",
+        "type": "json",
+        "system": false,
+        "required": false,
+        "options": {}
+      }
+    ],
+    "indexes": [],
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "options": {
+      "query": "with doc_permission(id, parent) as (\n  select docs.id, docs.parent\n  from docs\n  where docs.parent != ''\n  union all\n  select docs2.id, docs2.parent\n  from docs as docs2\n  join docs as docs3 on docs3.parent = docs2.id\n  where docs2.parent != ''\n)\n\nselect (ROW_NUMBER() OVER()) as id, doc_permission.id as docId, doc_permission.parent as parentId from doc_permission"
+    }
+  },
+  {
+    "id": "hv38egyp3jve3tc",
+    "created": "2023-10-29 20:35:19.653Z",
+    "updated": "2023-10-29 20:38:38.539Z",
+    "name": "entities_per_user",
+    "type": "view",
+    "system": false,
+    "schema": [
+      {
+        "id": "x4jrqqce",
+        "name": "email",
+        "type": "email",
+        "system": false,
+        "required": false,
+        "options": {
+          "exceptDomains": null,
+          "onlyDomains": null
+        }
+      },
+      {
+        "id": "lse9fzu3",
+        "name": "doc_count",
+        "type": "number",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": false
+        }
+      },
+      {
+        "id": "pqx219lm",
+        "name": "project_count",
+        "type": "number",
+        "system": false,
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "noDecimal": false
+        }
+      }
+    ],
+    "indexes": [],
+    "listRule": null,
+    "viewRule": null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null,
+    "options": {
+      "query": "select u.id, u.email, count(distinct d.id) as doc_count, count(DISTINCT p.id) as project_count\nfrom users as u\njoin docs_users as du on du.user = u.id\njoin docs as d on d.id = du.doc\njoin projects_users as pu on pu.user = u.id\njoin projects as p on p.id = pu.project\ngroup by u.id\n"
+    }
+  }
+]
