@@ -22,8 +22,8 @@ create trigger set_updated_timestamp before update on system for each row execut
 create table users (
   id text primary key unique,
   username text unique not null,
-  hash text not null,
-  salt text not null,
+  email text not null,
+  password_hash text not null,
   private_key text not null,
   public_key text not null
 ) inherits (system);

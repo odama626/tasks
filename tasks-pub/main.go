@@ -6,14 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"tasks-pub/routes"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/unrolled/render"
-
-	"tasks-pub/routes"
 )
 
 func main() {
