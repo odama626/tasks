@@ -13,7 +13,7 @@
 	import { getDocProvider, getYdoc, sanitizeFilename, withKeys } from '$lib/utils';
 	import type { Editor } from '@tiptap/core';
 	import { liveQuery } from 'dexie';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import Portal from 'svelte-portal';
 	import { get } from 'svelte/store';
 	import type { WebrtcProvider } from 'y-webrtc';
@@ -60,9 +60,19 @@
 			const ydoc = await getYdoc(update);
 			const yjsUpdate = Y.encodeStateAsUpdate(ydoc);
 			Y.applyUpdate(data.ydoc, yjsUpdate);
+
+			window.addEventListener('beforeunload', onSave);
+
+			return () => {
+				window.removeEventListener('beforeunload', onSave);
+			};
 		});
 
 		return subscription.unsubscribe;
+	});
+
+	onDestroy(() => {
+		onSave();
 	});
 
 	let metadata = {
@@ -112,6 +122,7 @@
 
 	async function onSave() {
 		if (saving) return;
+		console.log('onsave');
 		saving = true;
 		const id = await saveDocument(data.doc, ydoc);
 
