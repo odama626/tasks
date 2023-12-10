@@ -5,7 +5,7 @@ import { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
 import type { YXmlElement } from 'yjs/dist/src/internals';
 import type { DocsResponse } from './db.types';
-import { db, type DocsInstance } from './storage';
+import { db, pb, type DocsInstance } from './storage';
 
 export const collectFormData = (callback) => (e) => {
 	console.log({ e });
@@ -168,7 +168,11 @@ export async function getYdoc(doc: DocsInstance, field = 'ydoc') {
 	if (doc?.[field] instanceof File) {
 		arrayBuffer = await doc[field].arrayBuffer();
 	} else if (doc?.cache_ydoc) {
-		arrayBuffer = await fetch(doc?.[`cache_${field}`]).then((r) => r.arrayBuffer());
+		arrayBuffer = await fetch(doc?.[`cache_${field}`]).then((r) => {
+			if (!r.ok) throw r;
+			return r.arrayBuffer();
+			// TODO: may need to recache here?
+		});
 	}
 
 	if (arrayBuffer) {
