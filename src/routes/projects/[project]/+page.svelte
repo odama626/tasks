@@ -8,7 +8,7 @@
 	import EmptyDocs from '$lib/icons/emptyDocs.svelte';
 	import { events } from '$lib/modelEvent.js';
 	import { saveDocument } from '$lib/saveDocument';
-	import { EventType, currentProject, db, type DocsInstance } from '$lib/storage.js';
+	import { EventType, currentProject, db, type DocsInstance, pb } from '$lib/storage.js';
 	import {
 		collectFormData,
 		getDocProvider,
@@ -74,9 +74,10 @@
 		let newLinks: TiptapNode<'text'>[] = [];
 		let newImages = [];
 		let docsToUnsubscribe = new Set(providersByDocId.keys());
+		const token = await pb.files.getToken().catch(e => null)
 		await Promise.all(
 			$docs.map(async (doc) => {
-				if (!ydocsByDocId[doc.id]) ydocsByDocId[doc.id] = await getYdoc(doc);
+				if (!ydocsByDocId[doc.id]) ydocsByDocId[doc.id] = await getYdoc(doc, undefined, token);
 				const ydoc = ydocsByDocId[doc.id];
 				const fragment = ydoc.getXmlFragment('doc');
 				let children = new Set();

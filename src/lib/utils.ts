@@ -5,7 +5,8 @@ import { WebrtcProvider } from 'y-webrtc';
 import * as Y from 'yjs';
 import type { YXmlElement } from 'yjs/dist/src/internals';
 import type { DocsResponse } from './db.types';
-import { db, pb, type DocsInstance } from './storage';
+import { events } from './modelEvent';
+import { db } from './storage';
 
 export const collectFormData = (callback) => (e) => {
 	console.log({ e });
@@ -161,18 +162,28 @@ export async function rehydrateAttachments(ydoc: Y.Doc, docId: string) {
 	}
 }
 
-export async function getYdoc(doc: DocsInstance, field = 'ydoc') {
+export async function getYdoc(
+	doc: DocsResponse,
+	field: keyof DocsResponse = 'ydoc',
+	token?: string | null
+) {
 	const ydoc = new Y.Doc();
-	let arrayBuffer: ArrayBuffer;
+	let arrayBuffer: ArrayBuffer | null = null;
 
 	if (doc?.[field] instanceof File) {
 		arrayBuffer = await doc[field].arrayBuffer();
-	} else if (doc?.cache_ydoc) {
-		arrayBuffer = await fetch(doc?.[`cache_${field}`]).then((r) => {
-			if (!r.ok) throw r;
-			return r.arrayBuffer();
-			// TODO: may need to recache here?
-		});
+	} else if (doc?.[`cache_${field}`]) {
+		try {
+			arrayBuffer = await fetch(doc?.[`cache_${field}`]).then((r) => {
+				if (!r.ok) throw r;
+				return r.arrayBuffer();
+			});
+		} catch (e) {
+			// TODO: may need to recatch here?
+			if (!token) throw e;
+			const updatedDoc = await events.recacheFields(doc, 'docs', token);
+			return getYdoc(updatedDoc, field, token);
+		}
 	}
 
 	if (arrayBuffer) {

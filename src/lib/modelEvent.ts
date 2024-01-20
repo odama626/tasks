@@ -76,13 +76,12 @@ export class ModelEvents {
 	private processing = false;
 	private syncing = false;
 	private queue: Promise<any> = Promise.resolve();
-
 	constructor() {
-		window.addEventListener('online', () => {
+		globalThis.window.addEventListener('online', () => {
 			this.online = true;
 			this.startSync();
 		});
-		window.addEventListener('offline', () => (this.online = false));
+		globalThis.window.addEventListener('offline', () => (this.online = false));
 	}
 
 	private async add(event: ModelEvent<any>) {
@@ -199,10 +198,21 @@ export class ModelEvents {
 		return results.updates;
 	}
 
-	private async cacheFields<
-		T extends ValueOf<CollectionResponses>,
-		R extends ValueOf<CollectionInstances>
-	>(record: T, fields: (keyof T)[], token: string): Promise<R> {
+	async recacheFields<T extends ValueOf<CollectionResponses>>(record: T, recordType: keyof ReturnType<typeof getSyncTablesByTable>, token: string) {
+		const syncTables = getSyncTablesByTable({ token })
+		const syncTable = syncTables[recordType];
+		if ('cacheFileFields' in syncTable) {
+			record = await this.cacheFields(record, syncTable.cacheFileFields, token)
+		}
+		db[recordType].update(record.id, record);
+		return record;
+	}
+
+	private async cacheFields<T extends ValueOf<CollectionResponses>, R extends ValueOf<CollectionInstances>>(
+		record: T,
+		fields: (keyof T)[],
+		token: string
+	): Promise<R> {
 		for (const field of fields) {
 			const value = record[field];
 			if (typeof value !== 'string') continue;
@@ -377,5 +387,9 @@ export class ModelEvents {
 		}
 	}
 }
+let events: ModelEvents;
+if ('window' in globalThis) {
+	events = new ModelEvents();
+}
 
-export const events = new ModelEvents();
+export { events };
