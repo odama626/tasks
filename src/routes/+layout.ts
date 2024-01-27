@@ -13,7 +13,7 @@ export const load = ((args) => {
 
 	if (!auth && !unauthenticatedRoutes.includes(args.route.id)) {
 		createRedirect(args.url);
-		throw redirect(307, '/user');
+		return redirect(307, '/user');
 	}
 	userStore.set(auth);
 	return {

@@ -11,7 +11,7 @@ export async function load({ params }) {
 
 	const content = !doc?.ydoc;
 	const token = await pb.files.getToken().catch(() => null);
-	const ydoc = getYdoc(doc, undefined, token);
+	const ydoc = await getYdoc(doc, undefined, token);
 
 	return {
 		doc,

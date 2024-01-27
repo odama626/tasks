@@ -46,7 +46,7 @@ export async function load({ params, url, cookies }) {
 	pb.authStore.save(token, user);
 
 	// this shouldn't be possible, layout should ensure authenticated
-	if (!pb.authStore.isValid) throw error(401, 'Not Authorized');
+	if (!pb.authStore.isValid) return error(401, 'Not Authorized');
 	pb.authStore.clear();
 
 	await pb.admins.authWithPassword(
@@ -60,7 +60,7 @@ export async function load({ params, url, cookies }) {
 	const newHash = await getHash(pick(invite, ['id', 'secret']));
 	const hash = url.searchParams.get('hash');
 	const valid = newHash === hash;
-	if (!valid) throw error(404, 'Not Found');
+	if (!valid) return error(404, 'Not Found');
 
 	const isProject = !!invite.project;
 
@@ -72,5 +72,5 @@ export async function load({ params, url, cookies }) {
 		result = await acceptInvite(invite, user, Collections.DocsUsers, 'doc', { expand: 'doc' });
 		result.location = `/projects/${result.record.expand.doc.project}/docs/${result.record.doc}`;
 	}
-	throw redirect(307, result.location);
+	return redirect(307, result.location);
 }

@@ -33,7 +33,7 @@ export async function load({ params, url, ...rest }) {
 
 	const valid = newHash === hash;
 
-	if (!valid) throw error(404, 'Not Found');
+	if (!valid) return error(404, 'Not Found');
 
 	const record = invite.export();
 
