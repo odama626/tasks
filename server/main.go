@@ -1,11 +1,15 @@
 package main
 
 import (
+	"crypto/aes"
+	"crypto/x509"
+	"encoding/base64"
 	"fmt"
 	"log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/odama626/tasks/server/routes"
+	"github.com/odama626/tasks/server/secure"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 )
@@ -60,14 +64,73 @@ func main() {
 	})
 
 	app.OnRecordBeforeCreateRequest("users").Add(func(e *core.RecordCreateEvent) error {
-		// fmt.Println(e.Record.Get("password"))
-		// password := e.Record.Get("password").(string)
-
-		// keyStore := generateKeyStore(password)
-
 		fmt.Println(e.Record)
+		fmt.Println("Wtffs")
+		password := e.Record.PasswordHash()
+		fmt.Println("asdfsdfdf")
+		fmt.Println(password)
 
-		// e.Record.Set()
+		salt, err := secure.GenerateSalt(32)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println("generated salt")
+
+		keyPair, err := secure.CreateKeyPair()
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		publicKey, err := x509.MarshalPKIXPublicKey(&keyPair.PublicKey)
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println("set Public key")
+
+		e.Record.Set("publicKey", base64.StdEncoding.EncodeToString(publicKey))
+
+		fmt.Println("public key set")
+
+		key, err := x509.MarshalPKCS8PrivateKey(keyPair)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		iv, err := secure.GenerateSalt(aes.BlockSize)
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println("setting password")
+
+		keyHash, err := secure.EncryptWithPassword([]byte(password), salt, iv, key)
+
+		fmt.Println("set password")
+
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+
+		fmt.Println("encrypted keyHash")
+
+		keyStore := map[string]string{
+			"keyHash": base64.StdEncoding.EncodeToString(keyHash),
+			"iv":      base64.StdEncoding.EncodeToString(iv),
+			"salt":    base64.StdEncoding.EncodeToString(salt),
+		}
+
+		fmt.Println("blah")
+
+		e.Record.Set("keyStore", keyStore)
 
 		return nil
 	})
