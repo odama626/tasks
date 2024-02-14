@@ -23,6 +23,7 @@ import {
 	prepareRecordFormData,
 	rehydrateAttachments
 } from './utils';
+import { createActivity, updateActivity } from './api';
 
 interface SyncTable<T extends keyof CollectionResponses, R> {
 	table: T;
@@ -361,6 +362,9 @@ export class ModelEvents {
 							.collection(record.modelType)
 							.create(prepareRecordFormData(record.payload), { $autoCancel: false })
 							.catch(attachRecordToError('Failed to create Record', record));
+
+						await createActivity(record);
+
 						break;
 					}
 					case EventType.Update: {
@@ -370,6 +374,7 @@ export class ModelEvents {
 								$autoCancel: false
 							})
 							.catch(attachRecordToError('Failed to update record', record));
+						await updateActivity(record);
 						break;
 					}
 					case EventType.Delete:
@@ -401,7 +406,9 @@ export class ModelEvents {
 		}
 	}
 }
+
 let events: ModelEvents;
+
 if ('window' in globalThis) {
 	events = new ModelEvents();
 }

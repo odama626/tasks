@@ -14,7 +14,7 @@ func BindRoutes(router *echo.Echo) {
 
 	router.GET("/.well-known/webfinger", webfinger)
 
-	activityPubRouter := router.Group("/ac")
+	activityPubRouter := router.Group("/ap")
 
 	bindUserRoutes(activityPubRouter)
 }

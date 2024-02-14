@@ -28,7 +28,7 @@ func getUser(c echo.Context) error {
 		"inbox":    uri + "/inbox",
 		"outbox":   uri + "/outbox",
 		"endpoints": map[string]string{
-			"sharedInbox": c.Request().Host + "/ac/inbox",
+			"sharedInbox": c.Request().Host + "/ap/inbox",
 		},
 		"id": record.Id,
 		"publicKey": map[string]string{
