@@ -76,6 +76,7 @@ export class ModelEvents {
 	private processing = false;
 	private syncing = false;
 	private queue: Promise<any> = Promise.resolve();
+	private cache: Cache;
 	constructor() {
 		globalThis.window.addEventListener('online', () => {
 			this.online = true;
@@ -140,6 +141,10 @@ export class ModelEvents {
 	>({ table, cacheFileFields = [], token, invalidateCache = [] }: SyncTable<T, R>) {
 		if (!this.online) return;
 
+		await caches.open('v1').then((cache) => {
+			this.cache = cache;
+		});
+
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();
 
@@ -198,27 +203,30 @@ export class ModelEvents {
 		return results.updates;
 	}
 
-	async recacheFields<T extends ValueOf<CollectionResponses>>(record: T, recordType: keyof ReturnType<typeof getSyncTablesByTable>, token: string) {
-		const syncTables = getSyncTablesByTable({ token })
+	async recacheFields<T extends ValueOf<CollectionResponses>>(
+		record: T,
+		recordType: keyof ReturnType<typeof getSyncTablesByTable>,
+		token: string
+	) {
+		const syncTables = getSyncTablesByTable({ token });
 		const syncTable = syncTables[recordType];
 		if ('cacheFileFields' in syncTable) {
-			record = await this.cacheFields(record, syncTable.cacheFileFields, token)
+			record = await this.cacheFields(record, syncTable.cacheFileFields, token);
 		}
 		db[recordType].update(record.id, record);
 		return record;
 	}
 
-	private async cacheFields<T extends ValueOf<CollectionResponses>, R extends ValueOf<CollectionInstances>>(
-		record: T,
-		fields: (keyof T)[],
-		token: string
-	): Promise<R> {
+	private async cacheFields<
+		T extends ValueOf<CollectionResponses>,
+		R extends ValueOf<CollectionInstances>
+	>(record: T, fields: (keyof T)[], token: string): Promise<R> {
 		for (const field of fields) {
 			const value = record[field];
 			if (typeof value !== 'string') continue;
 			if (!value.length) continue;
 			const url = pb.files.getUrl(record, value, { token });
-			await fetch(url);
+			this.cache.add(url);
 			record[`cache_${String(field)}`] = url;
 		}
 		return record as unknown as R;
@@ -291,7 +299,7 @@ export class ModelEvents {
 		if (this.syncing) return;
 
 		try {
-			await pb.collection('users').authRefresh();
+			await pb.collection('users').authRefresh(undefined, { $autoCancel: false });
 		} catch (e) {
 			this.syncing = false;
 			if (e.status !== 401) return;
@@ -302,7 +310,7 @@ export class ModelEvents {
 
 		try {
 			const scheduledWork: (() => Promise<void>)[] = [];
-			const token = await pb.files.getToken();
+			const token = await pb.files.getToken({ $autoCancel: false });
 
 			const syncTablesByTable = getSyncTablesByTable({ token });
 
