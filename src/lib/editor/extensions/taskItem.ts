@@ -22,6 +22,7 @@ export default TaskItem.extend({
 			}
 		};
 	},
+
 	addNodeView() {
 		return ({ node, HTMLAttributes, getPos, editor }) => {
 			const listItem = document.createElement('li');

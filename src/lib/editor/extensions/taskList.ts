@@ -1,5 +1,4 @@
 import TaskList from '@tiptap/extension-task-list';
-import TaskListOverlay from './taskListOverlay.svelte';
 
 export enum Priority {
 	Normal = 'normal',
@@ -9,7 +8,7 @@ export enum Priority {
 export default TaskList.extend({
 	addAttributes() {
 		return {
-			...this.parent?.(),
+			...this.parent?.()
 			// priority: {
 			// 	default: Priority.Normal
 			// }
@@ -19,7 +18,7 @@ export default TaskList.extend({
 	addNodeView() {
 		return ({ node, HTMLAttributes, getPos, editor }) => {
 			const dom = document.createElement('div');
-      dom.style.position = 'relative';
+			dom.style.position = 'relative';
 			dom.dataset.type = this.name;
 
 			for (const [attribute, value] of Object.entries(HTMLAttributes)) {

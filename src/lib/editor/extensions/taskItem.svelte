@@ -79,6 +79,7 @@
 <style lang="scss">
 	.checkbox:hover {
 	}
+
 	.checkbox {
 		.checked {
 			visibility: hidden;
@@ -88,6 +89,11 @@
 
 	label {
 		margin: 0;
+		user-select: text;
+	}
+
+	label * {
+		user-select: text;
 	}
 
 	[data-checked='true'] > .checkbox .checked,
