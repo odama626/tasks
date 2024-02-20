@@ -179,7 +179,6 @@ export async function getYdoc(
 				return r.arrayBuffer();
 			});
 		} catch (e) {
-			// TODO: may need to recatch here?
 			if (!token) throw e;
 			const updatedDoc = await events.recacheFields(doc, 'docs', token);
 			return getYdoc(updatedDoc, field, token);

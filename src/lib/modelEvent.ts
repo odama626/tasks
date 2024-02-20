@@ -141,9 +141,7 @@ export class ModelEvents {
 	>({ table, cacheFileFields = [], token, invalidateCache = [] }: SyncTable<T, R>) {
 		if (!this.online) return;
 
-		await caches.open('v1').then((cache) => {
-			this.cache = cache;
-		});
+		await this.initCache();
 
 		const lastSync = localStorage.getItem(`last-sync:${table}`);
 		const currentSync = DateTime.now();
@@ -210,6 +208,7 @@ export class ModelEvents {
 	) {
 		const syncTables = getSyncTablesByTable({ token });
 		const syncTable = syncTables[recordType];
+		await this.initCache()
 		if ('cacheFileFields' in syncTable) {
 			record = await this.cacheFields(record, syncTable.cacheFileFields, token);
 		}
@@ -292,6 +291,13 @@ export class ModelEvents {
 				timeout: 5000
 			});
 		}
+	}
+
+	async initCache() {
+		if (this.cache) return;
+		await caches.open('data').then((cache) => {
+			this.cache = cache;
+		});
 	}
 
 	async startSync() {
