@@ -77,9 +77,13 @@ export class ModelEvents {
 	private syncing = false;
 	private queue: Promise<any> = Promise.resolve();
 	private cache: Cache;
+
 	constructor() {
 		globalThis.window.addEventListener('online', () => {
 			this.online = true;
+			this.startSync();
+		});
+		globalThis.window.addEventListener('focus', () => {
 			this.startSync();
 		});
 		globalThis.window.addEventListener('offline', () => (this.online = false));
@@ -208,7 +212,7 @@ export class ModelEvents {
 	) {
 		const syncTables = getSyncTablesByTable({ token });
 		const syncTable = syncTables[recordType];
-		await this.initCache()
+		await this.initCache();
 		if ('cacheFileFields' in syncTable) {
 			record = await this.cacheFields(record, syncTable.cacheFileFields, token);
 		}
@@ -303,6 +307,7 @@ export class ModelEvents {
 	async startSync() {
 		if (!this.online) return;
 		if (this.syncing) return;
+		console.time('sync');
 
 		try {
 			await pb.collection('users').authRefresh(undefined, { $autoCancel: false });
@@ -347,6 +352,7 @@ export class ModelEvents {
 			});
 		} finally {
 			this.syncing = false;
+			console.timeEnd('sync');
 		}
 	}
 

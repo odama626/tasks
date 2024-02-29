@@ -9,7 +9,7 @@
 	import Collaboration from '@tiptap/extension-collaboration';
 	import FloatingMenu from '@tiptap/extension-floating-menu';
 	import Highlight from '@tiptap/extension-highlight';
-	import Link from '@tiptap/extension-link';
+	import { Link } from './editor/extensions/link';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Typography from '@tiptap/extension-typography';
 	import StarterKit from '@tiptap/starter-kit';

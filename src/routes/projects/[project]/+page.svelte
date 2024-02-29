@@ -28,6 +28,7 @@
 	let expandedDocs = {};
 	let isEditingName = false;
 	let isShareMenuOpen = false;
+	let token;
 
 	$: currentProject.set(data.projectId);
 
@@ -74,7 +75,7 @@
 		let newLinks: TiptapNode<'text'>[] = [];
 		let newImages = [];
 		let docsToUnsubscribe = new Set(providersByDocId.keys());
-		const token = await pb.files.getToken().catch(e => null)
+		token = token || (await pb.files.getToken().catch((e) => null));
 		await Promise.all(
 			$docs.map(async (doc) => {
 				if (!ydocsByDocId[doc.id]) ydocsByDocId[doc.id] = await getYdoc(doc, undefined, token);
