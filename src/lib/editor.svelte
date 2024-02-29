@@ -82,7 +82,7 @@
 				Placeholder.configure({
 					placeholder: 'Write something...'
 				}),
-				Link,
+				Link.configure({ openOnClick: false }),
 				file,
 				Id,
 				SlashCommand(metadata),

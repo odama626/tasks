@@ -1,28 +1,38 @@
 <svelte:options customElement="custom-link" />
 
 <script lang="ts">
+	import ExternalLink from '$lib/icons/external-link.svelte';
 	export let href;
 
 	const metadataPromise = fetch(`/api/urlmeta?url=${href}`).then((r) => r.json());
+
+	let hascontent;
+	metadataPromise.then((data) => {
+		hascontent = data.title || data.description;
+	});
 </script>
 
-<a {...$$props}>
+<span class="a">
 	<slot />
-	{#await metadataPromise then metadata}
-		{@const title = metadata.title ?? metadata.description}
-		{#if title}
-			<div class="preview">
-				{#if metadata.image.url}<img src={metadata.image.url} /> {/if}
-				<div class="content">
-					{title ?? ''}
-				</div>
-			</div>
-		{/if}
-	{/await}
-</a>
+	<a {...$$props}>
+		<div contenteditable="false" class="preview" class:hascontent>
+			{#await metadataPromise then metadata}
+				{@const title = metadata.title ?? metadata.description}
+				{#if title}
+					{#if metadata.image.url}<img src={metadata.image.url} /> {/if}
+					<div class="content">
+						{title ?? ''}
+					</div>
+				{/if}
+			{/await}
+			<ExternalLink />
+		</div>
+	</a>
+</span>
 
 <style lang="scss">
-	a {
+	a,
+	.a {
 		color: var(--text-3);
 		text-decoration: none;
 		overflow-wrap: break-word;
@@ -44,23 +54,34 @@
 	}
 
 	.preview {
+		display: inline-block;
 		all: unset;
 		color: var(--text-1);
 		text-decoration: none;
-		margin-top: 1rem;
-		border: 1px solid;
-		border-radius: 4px;
 		display: flex;
 		flex-direction: row;
-		height: 6rem;
-		// gap: calc(var(--block-spacing) * 2);
+		align-items: center;
 		overflow: hidden;
+		gap: var(--block-spacing);
+
+		&.hascontent {
+			height: 6rem;
+			margin-top: 1rem;
+			padding: calc(2 * var(--block-spacing));
+			border: 1px solid;
+			border-radius: 4px;
+		}
+
+		&:not(.hascontent) {
+			display: inline-flex;
+			align-items: center;
+		}
 	}
 
 	.content {
-		padding: calc(2 * var(--block-spacing));
 		align-self: center;
 		word-break: break-word;
 		text-overflow: ellipsis;
+		flex-grow: 1;
 	}
 </style>
