@@ -61,7 +61,7 @@
 
 		&[href*="//"]
 		{
-			box-shadow: 0px 1px 0px var(--text-3);
+			// box-shadow: 0px 1px 0px var(--text-3);
 			line-height: 1.4;
 		}
 		&:hover {
