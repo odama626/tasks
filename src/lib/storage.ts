@@ -19,16 +19,16 @@ import { Cookie } from './utils';
 export type Expand<T> = T extends (...args: infer A) => infer R
 	? (...args: Expand<A>) => Expand<R>
 	: T extends infer O
-	? { [K in keyof O]: O[K] }
-	: never;
+		? { [K in keyof O]: O[K] }
+		: never;
 
 export type ExpandRecursively<T> = T extends (...args: infer A) => infer R
 	? (...args: ExpandRecursively<A>) => ExpandRecursively<R>
 	: T extends object
-	? T extends infer O
-		? { [K in keyof O]: ExpandRecursively<O[K]> }
-		: never
-	: T;
+		? T extends infer O
+			? { [K in keyof O]: ExpandRecursively<O[K]> }
+			: never
+		: T;
 
 export enum EventType {
 	Add = 'add',
@@ -60,6 +60,14 @@ export interface ModelDeleteEvent<T> extends BaseModelEvent {
 	payload?: Partial<T>;
 }
 
+export interface LinkMetadata {
+	id: string;
+	href: string;
+	title: string;
+	description: string;
+	imageUrl: string;
+}
+
 export type ModelEvent<T> = ModelCreateEvent<T> | ModelUpdateEvent<T> | ModelDeleteEvent<T>;
 
 class Database extends Dexie {
@@ -73,6 +81,7 @@ class Database extends Dexie {
 	invites!: Dexie.Table<InvitesResponse, string>;
 	users_connections!: Dexie.Table<UsersConnectionsResponse, string>;
 	events!: Dexie.Table<{ id: string } & ModelEvent<ValueOf<CollectionResponses>>, string>;
+	link_metadata!: Dexie.Table<LinkMetadata, string>;
 
 	constructor() {
 		super('todo-db');
@@ -131,6 +140,10 @@ db.version(10).stores({
 
 db.version(11).stores({
 	invites: `&id, project, doc, invited_by, access`
+});
+
+db.version(12).stores({
+	link_metadata: `&href`
 });
 
 export enum RecordAccess {

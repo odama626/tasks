@@ -33,14 +33,10 @@ export async function GET(args) {
 	}
 	return json(
 		{
-			link,
-			...content,
-			url: link,
+			href: link,
 			title: content['og:title'] ?? content['twitter:title'] ?? content.title,
 			description: content['og:description'],
-			image: {
-				url: content['og:image']
-			}
+			imageUrl: content['og:image']
 		},
 		{
 			'cache-control': 'max-age=259200'
