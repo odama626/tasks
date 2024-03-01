@@ -32,7 +32,11 @@
 <span class="a">
 	<slot />
 	<a {...$$props}>
-		<div contenteditable="false" class="preview" class:hascontent={!!metadata}>
+		<div
+			contenteditable="false"
+			class="preview"
+			class:hascontent={metadata?.title || metadata?.description}
+		>
 			{#if metadata}
 				{@const title = metadata.title ?? metadata.description}
 				{#if title}
