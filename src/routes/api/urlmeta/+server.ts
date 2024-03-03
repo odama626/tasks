@@ -29,14 +29,15 @@ export async function GET(args) {
 		const favicon = extractHtmlElementAttributes(
 			html.match(/<link([\s\d\w=\\\/"':\.\-~?]*?rel="?icon"?[\s\d\w=\\\/"':\.\-~?]*?)>/)?.[1]
 		);
-		if (favicon.href) content['og:image'] = new URL(favicon.href, link).toString();
+		if (favicon.href) content.favicon = new URL(favicon.href, link).toString();
 	}
 	return json(
 		{
 			href: link,
 			title: content['og:title'] ?? content['twitter:title'] ?? content.title,
 			description: content['og:description'],
-			imageUrl: content['og:image']
+			imageUrl: content['og:image'],
+			favicon: content.favicon
 		},
 		{
 			'cache-control': 'max-age=259200'

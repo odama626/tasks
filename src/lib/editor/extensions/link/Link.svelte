@@ -7,6 +7,8 @@
 	export let href;
 	let metadata;
 
+	$: metadata, console.log({ metadata, $$props });
+
 	async function getMetadata(href: string) {
 		let storage = sessionStorage.getItem(href);
 		if (storage) {
@@ -19,37 +21,36 @@
 			sessionStorage.setItem(href, JSON.stringify(result));
 			return;
 		}
-		const payload = await fetch(`/api/urlmeta?url=${href}`, { cache: 'force-cache' }).then((r) =>
-			r.json()
-		);
+		const payload = await fetch(`/api/urlmeta?url=${href}`).then((r) => r.json());
 		db.link_metadata.add(href, payload);
 		sessionStorage.setItem(href, JSON.stringify(payload));
 		metadata = payload;
 	}
+
 	$: href, getMetadata(href);
+	getMetadata(href);
 </script>
 
-<span class="a">
+<div class="a container">
 	<slot />
-	<a {...$$props}>
-		<div
-			contenteditable="false"
-			class="preview"
-			class:hascontent={metadata?.title || metadata?.description}
-		>
-			{#if metadata}
-				{@const title = metadata.title ?? metadata.description}
-				{#if title}
-					{#if metadata.imageUrl}<img src={metadata.imageUrl} /> {/if}
-					<div class="content">
-						{title ?? ''}
+	{#if metadata?.title || metadata?.description}
+		<a {...$$props}>
+			<div
+				contenteditable="false"
+				class="preview"
+				class:hascontent={metadata?.title || metadata?.description}
+			>
+				<div class="content">
+					<div>{metadata.title ?? ''}</div>
+					<div class="a url">
+						{#if metadata.favicon}<img class="favicon" src={metadata.favicon} />{/if}
 					</div>
-				{/if}
-			{/if}
-			<ExternalLink />
-		</div>
-	</a>
-</span>
+				</div>
+				{#if metadata.imageUrl}<img class="large" src={metadata.imageUrl} /> {/if}
+			</div>
+		</a>
+	{/if}
+</div>
 
 <style lang="scss">
 	a,
@@ -58,6 +59,7 @@
 		text-decoration: none;
 		overflow-wrap: break-word;
 		word-break: break-all;
+		gap: var(--block-spacing);
 
 		&[href*="//"]
 		{
@@ -69,15 +71,32 @@
 		}
 	}
 
-	img {
-		object-fit: cover;
+	.url {
+		display: flex;
+	}
+
+	.container {
+		width: 100%;
+		> a {
+			width: 100%;
+		}
+	}
+
+	img.favicon {
+		width: 20px;
+		height: 20px;
+	}
+
+	img.large {
+		object-fit: contain;
 		height: 100%;
 	}
 
 	.preview {
+		all: unset;
+		width: 100%;
 		--padding: calc(2 * var(--block-spacing));
 		display: inline-block;
-		all: unset;
 		color: var(--text-1);
 		text-decoration: none;
 		display: flex;
@@ -86,13 +105,10 @@
 		overflow: hidden;
 		gap: var(--block-spacing);
 
-		&.hascontent {
-			height: 6rem;
-			margin-top: 1rem;
-			// padding: calc(2 * var(--block-spacing));
-			border: 1px solid;
-			border-radius: 4px;
-		}
+		height: 6rem;
+		margin-top: 1rem;
+		border: 1px solid;
+		border-radius: 4px;
 
 		&:not(.hascontent) {
 			display: inline-flex;
@@ -100,19 +116,42 @@
 		}
 	}
 
-	.preview.hascontent > :not(img) {
-		padding: 0 var(--padding);
+	@media only screen and (max-width: 480px) {
+		.preview {
+			flex-direction: column;
+			height: auto;
+
+			.content {
+				flex-direction: column;
+			}
+		}
+
+		img.large {
+			width: 100%;
+			height: auto;
+		}
 	}
 
-	.preview.hascontent > :global(:last-child) {
-		margin-right: var(--padding);
+	.preview.hascontent > :not(img) {
+		padding: var(--padding);
+		box-sizing: border-box;
 	}
 
 	.content {
-		align-self: center;
+		align-self: flex-start;
 		word-break: break-word;
+		height: 100%;
 		text-overflow: ellipsis;
 		padding: 0 calc(2 * var(--block-spacing));
+		display: flex;
+		justify-content: space-between;
+		flex-direction: column;
+		flex: 2 1 auto;
+
 		flex-grow: 1;
+	}
+
+	.description {
+		flex-shrink: 1;
 	}
 </style>
