@@ -104,6 +104,9 @@ dependencies:
   '@types/lodash-es':
     specifier: ^4.17.12
     version: 4.17.12
+  aes-js:
+    specifier: ^3.1.2
+    version: 3.1.2
   colorjs.io:
     specifier: ^0.4.5
     version: 0.4.5
@@ -113,6 +116,9 @@ dependencies:
   file-size:
     specifier: ^1.0.0
     version: 1.0.0
+  hash-wasm:
+    specifier: ^4.11.0
+    version: 4.11.0
   lodash-es:
     specifier: ^4.17.21
     version: 4.17.21
@@ -1443,6 +1449,10 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  /aes-js@3.1.2:
+    resolution: {integrity: sha512-e5pEa2kBnBOgR4Y/p20pskXI74UEz7de8ZGVo58asOtvSVG5YAbJeELPZxOmt+Bnz3rX753YKhfIn4X4l1PPRQ==}
+    dev: false
+
   /agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
@@ -2635,6 +2645,10 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
+
+  /hash-wasm@4.11.0:
+    resolution: {integrity: sha512-HVusNXlVqHe0fzIzdQOGolnFN6mX/fqcrSAOcTBXdvzrXVHwTz11vXeKRmkR5gTuwVpvHZEIyKoePDvuAR+XwQ==}
+    dev: false
 
   /hash.js@1.1.7:
     resolution: {integrity: sha512-taOaskGt4z4SOANNseOviYDvjEJinIkRgmp7LbKP2YTTmVxWBl87s/uzK9r+44BclBSp2X7K1hqeNfz9JbBeXA==}
