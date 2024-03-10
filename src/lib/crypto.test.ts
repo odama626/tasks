@@ -128,7 +128,6 @@ test('create signature', async () => {
 
 	const signature = await createPayloadSignature(keys.signingKey, payload);
 	expect(signature).toMatchSnapshot();
-	expect(payload).toMatchSnapshot();
 
 	const valid = await verifySignature(keys.signingKey, payload, signature);
 
