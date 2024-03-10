@@ -5,6 +5,9 @@ build:
 
 dev:
 	air
+	
+test:
+	go test -v ./...
 
 migrate-up:
 	# go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest

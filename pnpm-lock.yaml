@@ -110,6 +110,9 @@ dependencies:
   aes-js:
     specifier: ^3.1.2
     version: 3.1.2
+  byte-base64:
+    specifier: ^1.1.0
+    version: 1.1.0
   colorjs.io:
     specifier: ^0.4.5
     version: 0.4.5
@@ -1672,6 +1675,10 @@ packages:
     dependencies:
       base64-js: 1.5.1
       ieee754: 1.2.1
+    dev: false
+
+  /byte-base64@1.1.0:
+    resolution: {integrity: sha512-56cXelkJrVMdCY9V/3RfDxTh4VfMFCQ5km7B7GkIGfo4bcPL9aACyJLB0Ms3Ezu5rsHmLB2suis96z4fLM03DA==}
     dev: false
 
   /cac@6.7.14:

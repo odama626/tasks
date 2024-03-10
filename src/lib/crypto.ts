@@ -1,6 +1,6 @@
 import * as aesjs from 'aes-js';
 import { argon2id, sha3 } from 'hash-wasm';
-import { arrayBufferToBase64 } from './base64';
+import { bytesToBase64, base64ToBytes } from 'byte-base64';
 import type { ArgumentsType } from 'vitest';
 
 const ENCRYPTION_ALGORITHM = { name: 'RSA-OAEP', hash: { name: 'SHA-512' } };
@@ -58,7 +58,7 @@ export async function exportUserKeypair(
 
 	return {
 		publicKey,
-		privateKeyHash: aesjs.utils.hex.fromBytes(encPrivateKeyBytes)
+		privateKeyHash: bytesToBase64(encPrivateKeyBytes)
 	};
 }
 
@@ -76,7 +76,7 @@ export async function importKeyPair(
 	publicUsages: KeyUsage[]
 ): Promise<CryptoKeyPair> {
 	const passKey = await createSymmKeyFromPassword(password, salt);
-	const encPrivBytes = aesjs.utils.hex.toBytes(key.privateKeyHash);
+	const encPrivBytes = base64ToBytes(key.privateKeyHash);
 	const privBytes = new Uint8Array(passKey.decrypt(encPrivBytes));
 	const subtle = globalThis.crypto.subtle;
 
@@ -125,15 +125,15 @@ export async function createPayloadSignature(keyPair: CryptoKeyPair, payload: Ar
 		keyPair.privateKey,
 		payload
 	);
-	return aesjs.utils.hex.fromBytes(new Uint8Array(signature));
+	return bytesToBase64(new Uint8Array(signature));
 }
 
 export async function verifySignature(
 	keyPair: CryptoKeyPair,
 	payload: ArrayBuffer,
-	hexSignature: string
+	encodedSignature: string
 ) {
-	const signature = new Uint8Array(aesjs.utils.hex.toBytes(hexSignature));
+	const signature = new Uint8Array(base64ToBytes(encodedSignature));
 	return await globalThis.crypto.subtle.verify(
 		SIGNING_ALGORITHM.name,
 		keyPair.publicKey,
@@ -180,10 +180,13 @@ export async function exportSymmKey(keyPair: CryptoKeyPair, key: ArrayBuffer): P
 		keyPair.publicKey,
 		key
 	);
-	return aesjs.utils.hex.fromBytes(new Uint8Array(encrypted));
+	return bytesToBase64(new Uint8Array(encrypted));
 }
 
-export async function importSymmKey(keyPair: CryptoKeyPair, hexKey: string): Promise<ArrayBuffer> {
-	const key = new Uint8Array(aesjs.utils.hex.toBytes(hexKey));
+export async function importSymmKey(
+	keyPair: CryptoKeyPair,
+	encodedKey: string
+): Promise<ArrayBuffer> {
+	const key = new Uint8Array(base64ToBytes(encodedKey));
 	return await globalThis.crypto.subtle.decrypt({ name: `RSA-OAEP` }, keyPair.privateKey, key);
 }
