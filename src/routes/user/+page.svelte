@@ -6,13 +6,20 @@
 	import { ZodError, z } from 'zod';
 	import Profile from './profile.svelte';
 	import { handleRedirect } from './utils';
+	import wretch from 'wretch';
+	import {
+		createPayloadSignature,
+		exportUserKeypair,
+		generateEncryptionKeypair,
+		generateSalt,
+		generateSigningKeypair
+	} from '$lib/crypto';
+	import { encode } from '@msgpack/msgpack';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
 	let isRegistering = false;
 	let isLoggedIn = !!get(userStore)?.record;
-
-
 
 	const registrationSchema = z
 		.object({
@@ -32,9 +39,41 @@
 		password: z.string()
 	});
 
+	async function handleRegister(data) {
+		const salt = generateSalt();
+		const { password, passwordConfirm, ...rest } = data;
+		let unencodedSigningKeys;
+		const [signingKeys, encryptionKeys] = await Promise.all([
+			generateSigningKeypair().then((keys) => {
+				unencodedSigningKeys = keys;
+				return exportUserKeypair(keys, password, salt);
+			}),
+			generateEncryptionKeypair().then((keys) => exportUserKeypair(keys, password, salt))
+		]);
+		const rawPayload = {
+			...rest,
+			salt,
+			// signingPublicKey: signingKeys.publicKey,
+			// signingPrivateKeyHash: signingKeys.privateKeyHash,
+			// encryptionPublicKey: encryptionKeys.publicKey,
+			// encryptionPrivateKeyHash: encryptionKeys.privateKeyHash,
+			signingKeys,
+			encryptionKeys
+		};
+		const payload = encode(rawPayload);
+		console.log({ payload });
+		const signature = await createPayloadSignature(unencodedSigningKeys, payload);
+		wretch('http://localhost:4000/account/register')
+			.headers({ signature, 'Content-Type': 'application/msgpack' })
+			.post(payload);
+	}
+
 	const register = collectFormData(async (data, event) => {
 		const result = registrationSchema.safeParse(data);
 		if (!result.success) return (registerErrors = result.error);
+
+		// await handleRegister(data);
+		// return;
 
 		const payload = await pb.collection('users').create(data).catch(convertPbErrorToZod);
 		if (payload.error) return (registerErrors = payload.error);

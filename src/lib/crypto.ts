@@ -148,10 +148,16 @@ export async function login(
 	password: string,
 	salt: Uint32Array
 ) {
-	const encryptionKey = await importEncryptionKeyPair(protectedEncryptionKey, password, salt);
-	if (!(await testKeyPair(encryptionKey))) throw new Error('Failed to login');
-	const signingKey = await importSigningKeyPair(protectedSigningKey, password, salt);
-	return { encryptionKey, signingKey };
+	const encryptionKeys = await importEncryptionKeyPair(protectedEncryptionKey, password, salt);
+	if (!(await testKeyPair(encryptionKeys))) throw new Error('Failed to login');
+	const signingKeys = await importSigningKeyPair(protectedSigningKey, password, salt);
+	return { encryptionKeys, signingKeys };
+}
+
+export function generateSalt() {
+	const salt = new Uint32Array(32);
+	globalThis.crypto.getRandomValues(salt);
+	return salt;
 }
 
 export async function createSymmKey() {
