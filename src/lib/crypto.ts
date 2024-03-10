@@ -1,9 +1,12 @@
 import * as aesjs from 'aes-js';
-import { argon2id } from 'hash-wasm';
+import { argon2id, sha3 } from 'hash-wasm';
+import { arrayBufferToBase64 } from './base64';
+import type { ArgumentsType } from 'vitest';
 
-const HASH = 'SHA-512';
+const ENCRYPTION_ALGORITHM = { name: 'RSA-OAEP', hash: { name: 'SHA-512' } };
+const SIGNING_ALGORITHM = { name: 'RSASSA-PKCS1-v1_5', hash: { name: 'SHA-512' } };
 
-export async function hash(password: string, salt: Uint32Array) {
+export async function hashPassword(password: string, salt: Uint32Array) {
 	return await argon2id({
 		password,
 		salt,
@@ -16,25 +19,36 @@ export async function hash(password: string, salt: Uint32Array) {
 }
 
 export async function createSymmKeyFromPassword(password: string, salt: Uint32Array) {
-	const key = await hash(password, salt);
+	const key = await hashPassword(password, salt);
 	const aesCtr = new aesjs.ModeOfOperation.ctr(key);
 	return aesCtr;
 }
 
-export async function generateKeypair() {
+export async function generateEncryptionKeypair() {
 	return await globalThis.crypto.subtle.generateKey(
 		{
-			name: 'RSA-OAEP',
+			...ENCRYPTION_ALGORITHM,
 			modulusLength: 4096,
-			publicExponent: new Uint8Array([1, 0, 1]),
-			hash: HASH
+			publicExponent: new Uint8Array([1, 0, 1])
 		},
 		true,
 		['encrypt', 'decrypt']
 	);
 }
 
-export async function exportUserKeypair(key: CryptoKeyPair, password: string, salt: Uint32Array) {
+export async function generateSigningKeypair() {
+	return await globalThis.crypto.subtle.generateKey(
+		{ ...SIGNING_ALGORITHM, modulusLength: 4096, publicExponent: new Uint8Array([1, 0, 1]) },
+		true,
+		['sign', 'verify']
+	);
+}
+
+export async function exportUserKeypair(
+	key: CryptoKeyPair,
+	password: string,
+	salt: Uint32Array
+): Promise<ProtectedKeyPair> {
 	const publicKey = await globalThis.crypto.subtle.exportKey('jwk', key.publicKey);
 	const rawPrivateKeyBytes = await globalThis.crypto.subtle.exportKey('pkcs8', key.privateKey);
 
@@ -44,34 +58,51 @@ export async function exportUserKeypair(key: CryptoKeyPair, password: string, sa
 
 	return {
 		publicKey,
-		privateKey: aesjs.utils.hex.fromBytes(encPrivateKeyBytes)
+		privateKeyHash: aesjs.utils.hex.fromBytes(encPrivateKeyBytes)
 	};
 }
 
-export async function importUserKeypair(key, password: string, salt: Uint32Array) {
-	const passKey = await createSymmKeyFromPassword(password, salt);
-	const encPrivBytes = aesjs.utils.hex.toBytes(key.privateKey);
-	const privBytes = new Uint8Array(passKey.decrypt(encPrivBytes));
+interface ProtectedKeyPair {
+	privateKeyHash: string;
+	publicKey: JsonWebKey;
+}
 
-	const privateKey = await globalThis.crypto.subtle.importKey(
-		'pkcs8',
-		privBytes,
-		{ name: 'RSA-OAEP', hash: HASH },
-		true,
-		['decrypt']
-	);
-	const publicKey = await globalThis.crypto.subtle.importKey(
-		'jwk',
-		key.publicKey,
-		{ name: 'RSA-OAEP', hash: HASH },
-		true,
-		['encrypt']
-	);
+export async function importKeyPair(
+	key: ProtectedKeyPair,
+	password: string,
+	salt: Uint32Array,
+	algorithm: Parameters<SubtleCrypto['importKey']>[2],
+	privateUsages: KeyUsage[],
+	publicUsages: KeyUsage[]
+): Promise<CryptoKeyPair> {
+	const passKey = await createSymmKeyFromPassword(password, salt);
+	const encPrivBytes = aesjs.utils.hex.toBytes(key.privateKeyHash);
+	const privBytes = new Uint8Array(passKey.decrypt(encPrivBytes));
+	const subtle = globalThis.crypto.subtle;
+
+	const privateKey = await subtle.importKey('pkcs8', privBytes, algorithm, true, privateUsages);
+	const publicKey = await subtle.importKey('jwk', key.publicKey, algorithm, true, publicUsages);
 
 	return {
 		publicKey,
 		privateKey
 	};
+}
+
+export async function importEncryptionKeyPair(
+	key: ProtectedKeyPair,
+	password: string,
+	salt: Uint32Array
+) {
+	return importKeyPair(key, password, salt, ENCRYPTION_ALGORITHM, ['decrypt'], ['encrypt']);
+}
+
+export async function importSigningKeyPair(
+	key: ProtectedKeyPair,
+	password: string,
+	salt: Uint32Array
+) {
+	return importKeyPair(key, password, salt, SIGNING_ALGORITHM, ['sign'], ['verify']);
 }
 
 export async function testKeyPair(key: CryptoKeyPair) {
@@ -88,11 +119,39 @@ export async function testKeyPair(key: CryptoKeyPair) {
 	return new TextDecoder().decode(decoded) === 'Hello';
 }
 
-export async function login(storageKeyPair, password: string, salt: Uint32Array) {
-	const keyPair = await importUserKeypair(storageKeyPair, password, salt);
-	const success = await testKeyPair(keyPair);
-	if (!success) throw new Error('Failed to login');
-	return keyPair;
+export async function createPayloadSignature(keyPair: CryptoKeyPair, payload: ArrayBuffer) {
+	const signature = await globalThis.crypto.subtle.sign(
+		SIGNING_ALGORITHM.name,
+		keyPair.privateKey,
+		payload
+	);
+	return aesjs.utils.hex.fromBytes(new Uint8Array(signature));
+}
+
+export async function verifySignature(
+	keyPair: CryptoKeyPair,
+	payload: ArrayBuffer,
+	hexSignature: string
+) {
+	const signature = new Uint8Array(aesjs.utils.hex.toBytes(hexSignature));
+	return await globalThis.crypto.subtle.verify(
+		SIGNING_ALGORITHM.name,
+		keyPair.publicKey,
+		signature,
+		payload
+	);
+}
+
+export async function login(
+	protectedEncryptionKey: ProtectedKeyPair,
+	protectedSigningKey: ProtectedKeyPair,
+	password: string,
+	salt: Uint32Array
+) {
+	const encryptionKey = await importEncryptionKeyPair(protectedEncryptionKey, password, salt);
+	if (!(await testKeyPair(encryptionKey))) throw new Error('Failed to login');
+	const signingKey = await importSigningKeyPair(protectedSigningKey, password, salt);
+	return { encryptionKey, signingKey };
 }
 
 export async function createSymmKey() {
@@ -102,7 +161,7 @@ export async function createSymmKey() {
 	globalThis.crypto.getRandomValues(password);
 	globalThis.crypto.getRandomValues(salt);
 
-	return await hash(new TextDecoder().decode(password), salt);
+	return await hashPassword(new TextDecoder().decode(password), salt);
 }
 
 export function encryptWithKey(key: Uint8Array, payload: ArrayBuffer): ArrayBuffer {
