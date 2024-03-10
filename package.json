@@ -37,6 +37,7 @@
 	"type": "module",
 	"dependencies": {
 		"@floating-ui/dom": "^1.6.0",
+		"@msgpack/msgpack": "3.0.0-beta2",
 		"@rgossiaux/svelte-headlessui": "^2.0.0",
 		"@tiptap/core": "^2.1.16",
 		"@tiptap/extension-blockquote": "^2.1.16",
@@ -70,7 +71,6 @@
 		"@tiptap/suggestion": "^2.1.16",
 		"@types/lodash-es": "^4.17.12",
 		"aes-js": "^3.1.2",
-		"bson": "^6.4.0",
 		"colorjs.io": "^0.4.5",
 		"dexie": "^3.2.4",
 		"file-size": "^1.0.0",

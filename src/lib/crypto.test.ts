@@ -1,6 +1,5 @@
 import { test, expect } from 'vitest';
 import * as aesjs from 'aes-js';
-import { BSON } from 'bson';
 import {
 	createPayloadSignature,
 	createSymmKey,
@@ -16,6 +15,7 @@ import {
 	importSigningKeyPair,
 	verifySignature
 } from './crypto';
+import { encode, decode } from '@msgpack/msgpack';
 
 const encryptionKey = {
 	privateKeyHash:
@@ -122,9 +122,7 @@ test('create signature', async () => {
 		privateKeyHashed: encryptionKey.privateKeyHash
 	};
 
-	const payload = BSON.serialize(data);
-
-	console.log(payload);
+	const payload = encode(data);
 
 	expect(aesjs.utils.hex.fromBytes(payload)).toMatchSnapshot();
 
@@ -135,6 +133,6 @@ test('create signature', async () => {
 	const valid = await verifySignature(keys.signingKey, payload, signature);
 
 	expect(valid).toBe(true);
-	const result = BSON.deserialize(payload);
+	const result = decode(payload);
 	expect(result).toStrictEqual(data);
 });
