@@ -14,7 +14,7 @@
 		generateSalt,
 		generateSigningKeypair
 	} from '$lib/crypto';
-	import { encode } from '@msgpack/msgpack';
+	import { encode, ExtensionCodec } from '@msgpack/msgpack';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
@@ -40,27 +40,39 @@
 	});
 
 	async function handleRegister(data) {
-		const salt = generateSalt();
+		const passwordSalt = generateSalt();
 		const { password, passwordConfirm, ...rest } = data;
 		let unencodedSigningKeys;
 		const [signingKeys, encryptionKeys] = await Promise.all([
 			generateSigningKeypair().then((keys) => {
 				unencodedSigningKeys = keys;
-				return exportUserKeypair(keys, password, salt);
+				return exportUserKeypair(keys, password, passwordSalt);
 			}),
-			generateEncryptionKeypair().then((keys) => exportUserKeypair(keys, password, salt))
+			generateEncryptionKeypair().then((keys) => exportUserKeypair(keys, password, passwordSalt))
 		]);
+
+		const extensionCodec = new ExtensionCodec();
+
+		extensionCode.register({
+			type: 1,
+			encode(input: unknown): Uint8Array | null {
+				if (input instanceof ArrayBuffer || Arraybuffer.isView(input)) {
+					return encode(new Uint8Array(input));
+				}
+				return null;
+			}
+		});
 		const rawPayload = {
 			...rest,
-			salt,
+			passwordSalt,
 			// signingPublicKey: signingKeys.publicKey,
-			// signingPrivateKeyHash: signingKeys.privateKeyHash,
+			signingPrivateKeyHash: signingKeys.privateKeyHash,
 			// encryptionPublicKey: encryptionKeys.publicKey,
 			// encryptionPrivateKeyHash: encryptionKeys.privateKeyHash,
 			signingKeys,
 			encryptionKeys
 		};
-		const payload = encode(rawPayload);
+		const payload = encode(rawPayload, { extensionCodec });
 		console.log({ payload });
 		const signature = await createPayloadSignature(unencodedSigningKeys, payload);
 		wretch('http://localhost:4000/account/register')
@@ -72,8 +84,7 @@
 		const result = registrationSchema.safeParse(data);
 		if (!result.success) return (registerErrors = result.error);
 
-		// await handleRegister(data);
-		// return;
+		await handleRegister(data);
 
 		const payload = await pb.collection('users').create(data).catch(convertPbErrorToZod);
 		if (payload.error) return (registerErrors = payload.error);
