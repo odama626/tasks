@@ -12,7 +12,8 @@ import {
 	type ModelDeleteEvent,
 	type ModelEvent,
 	type ModelUpdateEvent,
-	type ValueOf
+	type ValueOf,
+	userStore
 } from './storage';
 import {
 	NotificationType,
@@ -23,6 +24,7 @@ import {
 	prepareRecordFormData,
 	rehydrateAttachments
 } from './utils';
+import { get } from 'svelte/store';
 
 interface SyncTable<T extends keyof CollectionResponses, R> {
 	table: T;
@@ -84,6 +86,8 @@ export class ModelEvents {
 			this.startSync();
 		});
 		globalThis.window.addEventListener('focus', () => {
+			const user = get(userStore);
+			if (!user) return;
 			this.startSync();
 		});
 		globalThis.window.addEventListener('offline', () => (this.online = false));

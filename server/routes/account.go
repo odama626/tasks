@@ -8,15 +8,12 @@ import (
 	"github.com/go-chi/render"
 	"github.com/odama626/tasks/server/httpError"
 	"github.com/odama626/tasks/server/models"
-	"github.com/ugorji/go/codec"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 func BindMsgPack(request *http.Request, v render.Binder) error {
-
-	// ... assume b contains the bytes to decode from
-	h := new(codec.MsgpackHandle)
-	var dec *codec.Decoder = codec.NewDecoder(request.Body, h)
-	return dec.Decode(v) //v2 or v8, or a pointer to v1, v3, v4, v5, v6, v7
+	decoder := msgpack.NewDecoder(request.Body)
+	return decoder.Decode(v)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +26,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Print(account.EncryptionPrivateKeyHash)
+	// fmt.Print(account)
+	fmt.Println(len(account.PasswordSalt.([]byte)))
 
 }
 

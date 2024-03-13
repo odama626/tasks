@@ -9,9 +9,13 @@ create table account (
     id uuid PRIMARY KEY default gen_random_uuid(),
     name text,
     username text unique,
-    public_key bytea,
     -- private key hashed by user password
-    private_key_hash bytea,
+    encryption_private_key_hash bytea,
+    encryption_public_key bytea,
+
+    signing_private_key_hash bytea,
+    signing_public_key bytea,
+    
     avatar_uri text,
     primary_color int,
     accent_color int
