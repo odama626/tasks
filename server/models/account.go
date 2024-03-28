@@ -11,16 +11,16 @@ type Account struct {
 	AccentColor  *int    `msgpack:"accentColor" json:"accentColor" db:"accent_color"`
 
 	SigningKeys struct {
-		PrivateKeyHash string      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"signing_private_key_hash"`
+		PrivateKeyHash []byte      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"signing_private_key_hash"`
 		PublicKey      interface{} `msgpack:"publicKey" json:"publicKey" db:"signing_public_key"`
 	} `json:"signingKeys" msgpack:"signingKeys"`
 
 	EncryptionKeys struct {
-		PrivateKeyHash string      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"encryption_private_key_hash"`
+		PrivateKeyHash []byte      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"encryption_private_key_hash"`
 		PublicKey      interface{} `msgpack:"publicKey" json:"publicKey" db:"encryption_public_key"`
 	} `msgpack:"encryptionKeys" json:"encryptionKeys"`
 
-	PasswordSalt interface{} `json:"passwordSalt" db:"password_salt"`
+	PasswordSalt []byte `msgpack:"passwordSalt" json:"passwordSalt" db:"password_salt"`
 }
 
 func (u *Account) Bind(r *http.Request) error {

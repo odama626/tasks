@@ -15,6 +15,7 @@
 		generateSigningKeypair
 	} from '$lib/crypto';
 	import { encode, ExtensionCodec } from '@msgpack/msgpack';
+	import { bytesToBase64 } from 'byte-base64';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
@@ -51,30 +52,18 @@
 			generateEncryptionKeypair().then((keys) => exportUserKeypair(keys, password, passwordSalt))
 		]);
 
-		const extensionCodec = new ExtensionCodec();
-
-		extensionCode.register({
-			type: 1,
-			encode(input: unknown): Uint8Array | null {
-				if (input instanceof ArrayBuffer || Arraybuffer.isView(input)) {
-					return encode(new Uint8Array(input));
-				}
-				return null;
-			}
-		});
 		const rawPayload = {
 			...rest,
-			passwordSalt,
-			// signingPublicKey: signingKeys.publicKey,
-			signingPrivateKeyHash: signingKeys.privateKeyHash,
-			// encryptionPublicKey: encryptionKeys.publicKey,
-			// encryptionPrivateKeyHash: encryptionKeys.privateKeyHash,
+			passwordSalt: passwordSalt,
 			signingKeys,
 			encryptionKeys
 		};
-		const payload = encode(rawPayload, { extensionCodec });
-		console.log({ payload });
+		const payload = encode(rawPayload);
+		const form = new FormData();
+		form.append('data', rawPayload);
+		console.log(bytesToBase64(payload));
 		const signature = await createPayloadSignature(unencodedSigningKeys, payload);
+		console.log(signature);
 		wretch('http://localhost:4000/account/register')
 			.headers({ signature, 'Content-Type': 'application/msgpack' })
 			.post(payload);

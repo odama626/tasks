@@ -6,16 +6,16 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/jwk"
 )
 
-func VerifySignature(jwkPublicKey []byte, payload []byte, encodedSignature string) error {
+func VerifySignature(jwkPublicKey interface{}, payload []byte, encodedSignature string) error {
 	signature, err := base64.StdEncoding.DecodeString(encodedSignature)
 	if err != nil {
 		return err
 	}
 
-	jwkKey, err := jwk.ParseKey(jwkPublicKey)
+	jwkKey, err := jwk.PublicKeyOf(jwkPublicKey)
 	if err != nil {
 		return err
 	}

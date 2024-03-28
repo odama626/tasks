@@ -58,7 +58,7 @@ export async function exportUserKeypair(
 
 	return {
 		publicKey,
-		privateKeyHash: bytesToBase64(encPrivateKeyBytes)
+		privateKeyHash: encPrivateKeyBytes
 	};
 }
 
@@ -76,7 +76,7 @@ export async function importKeyPair(
 	publicUsages: KeyUsage[]
 ): Promise<CryptoKeyPair> {
 	const passKey = await createSymmKeyFromPassword(password, salt);
-	const encPrivBytes = base64ToBytes(key.privateKeyHash);
+	const encPrivBytes = key.privateKeyHash;
 	const privBytes = new Uint8Array(passKey.decrypt(encPrivBytes));
 	const subtle = globalThis.crypto.subtle;
 
@@ -155,7 +155,7 @@ export async function login(
 }
 
 export function generateSalt() {
-	const salt = new Uint32Array(32);
+	const salt = new Uint8Array(128);
 	globalThis.crypto.getRandomValues(salt);
 	return salt;
 }
