@@ -5,9 +5,33 @@ import (
 	"crypto/rsa"
 	"crypto/sha512"
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/lestrrat-go/jwx/jwk"
 )
+
+func ParsePublicKey(jwkPublicKey interface{}) (*rsa.PublicKey, error) {
+
+	json, err := json.Marshal(jwkPublicKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	jwkKey, err := jwk.ParseKey(json)
+	if err != nil {
+		return nil, err
+	}
+	var publicKey rsa.PublicKey
+
+	err = jwkKey.Raw(&publicKey)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &publicKey, nil
+}
 
 func VerifySignature(jwkPublicKey interface{}, payload []byte, encodedSignature string) error {
 	signature, err := base64.StdEncoding.DecodeString(encodedSignature)
@@ -15,13 +39,7 @@ func VerifySignature(jwkPublicKey interface{}, payload []byte, encodedSignature 
 		return err
 	}
 
-	jwkKey, err := jwk.PublicKeyOf(jwkPublicKey)
-	if err != nil {
-		return err
-	}
-	var publicKey rsa.PublicKey
-
-	err = jwkKey.Raw(&publicKey)
+	publicKey, err := ParsePublicKey(jwkPublicKey)
 
 	if err != nil {
 		return err
@@ -29,5 +47,5 @@ func VerifySignature(jwkPublicKey interface{}, payload []byte, encodedSignature 
 
 	hashed := sha512.Sum512(payload)
 
-	return rsa.VerifyPKCS1v15(&publicKey, crypto.SHA512, hashed[:], signature)
+	return rsa.VerifyPKCS1v15(publicKey, crypto.SHA512, hashed[:], signature)
 }

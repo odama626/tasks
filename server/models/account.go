@@ -13,12 +13,12 @@ type Account struct {
 	SigningKeys struct {
 		PrivateKeyHash []byte      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"signing_private_key_hash"`
 		PublicKey      interface{} `msgpack:"publicKey" json:"publicKey" db:"signing_public_key"`
-	} `json:"signingKeys" msgpack:"signingKeys"`
+	} `json:"signingKeys" msgpack:"signingKeys" db:""`
 
 	EncryptionKeys struct {
 		PrivateKeyHash []byte      `msgpack:"privateKeyHash" json:"privateKeyHash" db:"encryption_private_key_hash"`
 		PublicKey      interface{} `msgpack:"publicKey" json:"publicKey" db:"encryption_public_key"`
-	} `msgpack:"encryptionKeys" json:"encryptionKeys"`
+	} `msgpack:"encryptionKeys" json:"encryptionKeys" db:""`
 
 	PasswordSalt []byte `msgpack:"passwordSalt" json:"passwordSalt" db:"password_salt"`
 }

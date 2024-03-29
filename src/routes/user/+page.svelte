@@ -6,16 +6,9 @@
 	import { ZodError, z } from 'zod';
 	import Profile from './profile.svelte';
 	import { handleRedirect } from './utils';
-	import wretch from 'wretch';
-	import {
-		createPayloadSignature,
-		exportUserKeypair,
-		generateEncryptionKeypair,
-		generateSalt,
-		generateSigningKeypair
-	} from '$lib/crypto';
 	import { encode, ExtensionCodec } from '@msgpack/msgpack';
 	import { bytesToBase64 } from 'byte-base64';
+	import { register as handleRegister, login as handleLogin } from '$lib/api';
 
 	let registerErrors: ZodError;
 	let loginErrors: ZodError;
@@ -40,35 +33,6 @@
 		password: z.string()
 	});
 
-	async function handleRegister(data) {
-		const passwordSalt = generateSalt();
-		const { password, passwordConfirm, ...rest } = data;
-		let unencodedSigningKeys;
-		const [signingKeys, encryptionKeys] = await Promise.all([
-			generateSigningKeypair().then((keys) => {
-				unencodedSigningKeys = keys;
-				return exportUserKeypair(keys, password, passwordSalt);
-			}),
-			generateEncryptionKeypair().then((keys) => exportUserKeypair(keys, password, passwordSalt))
-		]);
-
-		const rawPayload = {
-			...rest,
-			passwordSalt: passwordSalt,
-			signingKeys,
-			encryptionKeys
-		};
-		const payload = encode(rawPayload);
-		const form = new FormData();
-		form.append('data', rawPayload);
-		console.log(bytesToBase64(payload));
-		const signature = await createPayloadSignature(unencodedSigningKeys, payload);
-		console.log(signature);
-		wretch('http://localhost:4000/account/register')
-			.headers({ signature, 'Content-Type': 'application/msgpack' })
-			.post(payload);
-	}
-
 	const register = collectFormData(async (data, event) => {
 		const result = registrationSchema.safeParse(data);
 		if (!result.success) return (registerErrors = result.error);
@@ -89,6 +53,9 @@
 	const login = collectFormData(async (data, event) => {
 		const result = loginSchema.safeParse(data);
 		if (!result.success) return (loginErrors = result.error);
+
+		await handleLogin(result.data.username, result.data.password);
+
 		const auth = await pb
 			.collection('users')
 			.authWithPassword(result.data.username, result.data.password)

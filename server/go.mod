@@ -26,6 +26,7 @@ require (
 )
 
 require (
+	github.com/georgysavva/scany/v2 v2.1.1
 	github.com/go-chi/cors v1.2.1
 	github.com/go-chi/render v1.0.3
 	github.com/jackc/pgpassfile v1.0.0 // indirect
