@@ -14,7 +14,9 @@ import {
 	login,
 	generateSigningKeypair,
 	importSigningKeyPair,
-	verifySignature
+	verifySignature,
+	encryptPayload,
+	decryptPayload
 } from './crypto';
 import { encode, decode } from '@msgpack/msgpack';
 
@@ -143,4 +145,21 @@ test('create signature', async () => {
 	expect(valid).toBe(true);
 	const result = decode(payload);
 	expect(result).toStrictEqual(data);
+});
+
+test('encrypt and decrypt payload', async () => {
+	const password = 'test password';
+	const keys = await login(encryptionKey, signingKey, password, salt);
+
+	const data = {
+		msg: 'secure message'
+	};
+
+	const rawPayload = encode(data);
+	const encryptedPayload = await encryptPayload(keys.encryptionKeys, rawPayload);
+	const decryptedPayload = await decryptPayload(keys.encryptionKeys, encryptedPayload);
+
+	const payload = decode(decryptedPayload);
+
+	expect(payload).toStrictEqual(data);
 });

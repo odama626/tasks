@@ -1,16 +1,30 @@
 import {
 	createPayloadSignature,
+	encryptPayload,
+	encryptWithKey,
 	exportUserKeypair,
 	generateEncryptionKeypair,
 	generateSalt,
 	generateSigningKeypair
 } from '$lib/crypto';
 import { decode, encode } from '@msgpack/msgpack';
-import wretch from 'wretch';
+import wretch, { type Wretch, type WretchAddon } from 'wretch';
 import { login as cryptoLogin } from '$lib/crypto';
+import { userStore } from './storage';
+
+async function preparePayload(payload, user, encrypt = true) {
+	let body = encode(payload);
+	if (encrypt) {
+		body = await encryptPayload(user.encryptionKeys, body);
+	}
+	const signature = await createPayloadSignature(user.signingKeys, body);
+	return {
+		body,
+		headers: { signature, 'Content-Type': 'application/msgpack' }
+	};
+}
 
 const apiUrl = wretch(`http://localhost:4000`);
-
 export async function register(data) {
 	const passwordSalt = generateSalt();
 	const { password, passwordConfirm, ...rest } = data;
@@ -31,11 +45,19 @@ export async function register(data) {
 	};
 	const payload = encode(rawPayload);
 	const signature = await createPayloadSignature(unencodedSigningKeys, payload);
-	const result = await apiUrl
+	const { body, headers } = await preparePayload(
+		rawPayload,
+		{ signingKeys: unencodedSigningKeys },
+		false
+	);
+	const account = await apiUrl
 		.url('/account/register')
-		.headers({ signature, 'Content-Type': 'application/msgpack' })
+		.body(body)
+		.headers(headers)
 		.post(payload)
-		.json();
+		.arrayBuffer(decode);
+
+	userStore.update((user) => ({ ...user, account }));
 }
 
 export async function login(username: string, password: string) {

@@ -83,10 +83,12 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	result := models.Account{}
+
 	query := `INSERT into accounts
 		(name, username, password_salt, encryption_private_key_hash, encryption_public_key, signing_private_key_hash, signing_public_key) VALUES (
 			@name, @username, @password_salt,  @encryption_private_key_hash, @encryption_public_key, @signing_private_key_hash, @signing_public_key
-		) returning id`
+		) returning *`
 
 	args := pgx.NamedArgs{
 		"name":                        account.Name,
@@ -98,13 +100,21 @@ func register(w http.ResponseWriter, r *http.Request) {
 		"signing_public_key":          account.SigningKeys.PublicKey,
 	}
 
-	result, err := db.Exec(ctx, query, args)
-	fmt.Println(result, err)
+	err = pgxscan.Get(ctx, db, &result, query, args)
 
 	if err != nil {
 		render.Render(w, r, httpError.Internal(err))
 		return
 	}
+	payload, err = msgpack.Marshal(result)
+
+	if err != nil {
+		render.Render(w, r, httpError.Internal(err))
+		return
+	}
+
+	w.WriteHeader(200)
+	w.Write(payload)
 }
 
 type LoginPayload struct {

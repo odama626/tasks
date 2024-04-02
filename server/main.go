@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("../.env", ".env")
 
 	if err != nil {
 		panic(err)

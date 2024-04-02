@@ -128,6 +128,24 @@ export async function createPayloadSignature(keyPair: CryptoKeyPair, payload: Ar
 	return bytesToBase64(new Uint8Array(signature));
 }
 
+export async function encryptPayload(keyPair: CryptoKeyPair, payload: ArrayBuffer) {
+	const encrypted = await globalThis.crypto.subtle.encrypt(
+		ENCRYPTION_ALGORITHM.name,
+		keyPair.publicKey,
+		payload
+	);
+	return encrypted;
+}
+
+export async function decryptPayload(keyPair: CryptoKeyPair, payload: ArrayBuffer) {
+	const decrypted = await globalThis.crypto.subtle.decrypt(
+		ENCRYPTION_ALGORITHM.name,
+		keyPair.privateKey,
+		payload
+	);
+	return decrypted;
+}
+
 export async function verifySignature(
 	keyPair: CryptoKeyPair,
 	payload: ArrayBuffer,
@@ -169,6 +187,8 @@ export async function createSymmKey() {
 
 	return await hashPassword(new TextDecoder().decode(password), salt);
 }
+
+export async function encryptWithPrivateKey(encryptionKeys: CryptoKeyPair) {}
 
 export function encryptWithKey(key: Uint8Array, payload: ArrayBuffer): ArrayBuffer {
 	const aesCtr = new aesjs.ModeOfOperation.ctr(key);
