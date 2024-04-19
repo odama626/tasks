@@ -12,6 +12,8 @@ import wretch, { type Wretch, type WretchAddon } from 'wretch';
 import { login as cryptoLogin } from '$lib/crypto';
 import { userStore } from './storage';
 
+type Account = any;
+
 async function preparePayload(payload, user, encrypt = true) {
 	let body = encode(payload);
 	if (encrypt) {
@@ -57,13 +59,12 @@ export async function register(data) {
 		.post(payload)
 		.arrayBuffer(decode);
 
-	userStore.update((user) => ({ ...user, account }));
+	return account;
 }
 
-export async function login(username: string, password: string) {
+export async function login(username: string, password: string): Promise<Account> {
 	const payload = await apiUrl.url(`/account/username/${username}`).get().arrayBuffer();
 	const account = decode(payload);
-	console.log({ account });
 
 	const keys = await cryptoLogin(
 		account.encryptionKeys,
@@ -76,5 +77,22 @@ export async function login(username: string, password: string) {
 			message: 'Failed to authenticate'
 		};
 	});
-	console.log({ keys });
+
+	Object.defineProperty(account, 'keys', {
+		get() {
+			return keys;
+		}
+	});
+	return account;
+}
+
+export async function deleteAccount(account: Account) {
+	const { body, headers } = await preparePayload(
+		{ username: account.username },
+		account.keys,
+		false
+	);
+
+	const result = await apiUrl.url('/account/delete').headers(headers).body(body).post().res();
+	return result.ok;
 }

@@ -1,6 +1,7 @@
 package httpError
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -22,6 +23,7 @@ func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 func InvalidRequest(err error) render.Renderer {
+	fmt.Println(err)
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: 400,
@@ -31,6 +33,7 @@ func InvalidRequest(err error) render.Renderer {
 }
 
 func InvalidRequestWithData(err error, data interface{}) render.Renderer {
+	fmt.Println(err)
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: 400,
@@ -41,6 +44,7 @@ func InvalidRequestWithData(err error, data interface{}) render.Renderer {
 }
 
 func Internal(err error) render.Renderer {
+	fmt.Println(err)
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: 500,

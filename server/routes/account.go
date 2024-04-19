@@ -184,7 +184,60 @@ func getByUsername(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type DeleteAccountPayload struct {
+	Username string `msgpack:"username"`
+}
+
+func deleteAccount(w http.ResponseWriter, r *http.Request) {
+	payload := &DeleteAccountPayload{}
+	account := models.Account{}
+	ctx := r.Context()
+	db := GetDb(ctx)
+
+	signature := r.Header.Get("signature")
+
+	rawPayload, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		render.Render(w, r, httpError.InvalidRequest(err))
+		return
+	}
+
+	err = msgpack.Unmarshal(rawPayload, payload)
+
+	if err != nil {
+		render.Render(w, r, httpError.InvalidRequest(err))
+		return
+	}
+
+	err = pgxscan.Get(ctx, db, &account, `select * from accounts where username = $1`, payload.Username)
+
+	fmt.Println(account.SigningKeys.PublicKey)
+
+	if err != nil {
+		render.Render(w, r, httpError.InvalidRequest(err))
+		return
+	}
+
+	err = crypto.VerifySignature(account.SigningKeys.PublicKey, rawPayload, signature)
+
+	if err != nil {
+		render.Render(w, r, httpError.InvalidRequest(err))
+		return
+	}
+
+	_, err = db.Exec(ctx, `delete from accounts where id = $1`, account.Id)
+
+	if err != nil {
+		render.Render(w, r, httpError.Internal(err))
+		return
+	}
+
+	w.WriteHeader(200)
+}
+
 func ConnectAccountRoutes(router chi.Router) {
 	router.Post("/register", register)
+	router.Post("/delete", deleteAccount)
 	router.Get("/username/{username}", getByUsername)
 }

@@ -37,7 +37,9 @@
 		const result = registrationSchema.safeParse(data);
 		if (!result.success) return (registerErrors = result.error);
 
-		await handleRegister(data);
+		const account = await handleRegister(data);
+
+		userStore.update((user) => ({ ...user, account }));
 
 		const payload = await pb.collection('users').create(data).catch(convertPbErrorToZod);
 		if (payload.error) return (registerErrors = payload.error);
