@@ -45,8 +45,6 @@ export async function register(data) {
 		signingKeys,
 		encryptionKeys
 	};
-	const payload = encode(rawPayload);
-	const signature = await createPayloadSignature(unencodedSigningKeys, payload);
 	const { body, headers } = await preparePayload(
 		rawPayload,
 		{ signingKeys: unencodedSigningKeys },
@@ -56,7 +54,7 @@ export async function register(data) {
 		.url('/account/register')
 		.body(body)
 		.headers(headers)
-		.post(payload)
+		.post()
 		.arrayBuffer(decode);
 
 	return account;
