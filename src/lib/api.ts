@@ -94,3 +94,10 @@ export async function deleteAccount(account: Account) {
 	const result = await apiUrl.url('/account/delete').headers(headers).body(body).post().res();
 	return result.ok;
 }
+
+export async function createEvent(account: Account, event) {
+	const { body: payload } = await preparePayload(event.payload, account.keys);
+	const { payload: _, ...rest } = event;
+	const { body, headers } = await preparePayload({ ...rest, payload }, account.keys, false);
+	console.log({ body, headers });
+}

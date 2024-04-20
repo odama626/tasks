@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { deleteAccount, login, register } from './api';
+import { createEvent, deleteAccount, login, register } from './api';
 
 let account;
 let username = 'test-user';
@@ -20,6 +20,17 @@ test.sequential('login', async () => {
 	const result = await login(username, password);
 
 	account = result;
+});
+
+test.sequential('create document', async () => {
+	await createEvent(account, {
+		to: 'self',
+		from: '',
+		payload: {
+			update: 'document',
+			blah: '123'
+		}
+	});
 });
 
 test.sequential('delete account', async () => {
