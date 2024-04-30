@@ -10,6 +10,7 @@ import (
 func ConnectRoute(parent *chi.Mux) {
 	parent.Get("/ping", pong)
 	parent.Route("/account", ConnectAccountRoutes)
+	parent.Route("/event", ConnectEventRoutes)
 }
 
 func pong(w http.ResponseWriter, r *http.Request) {

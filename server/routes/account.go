@@ -147,7 +147,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	err = pgxscan.Get(ctx, db, &account, `select * from accounts where username = $1`, payload.Username)
 
 	if err != nil {
-
 		render.Render(w, r, httpError.InvalidRequest(err))
 		return
 	}
@@ -190,11 +189,8 @@ type DeleteAccountPayload struct {
 
 func deleteAccount(w http.ResponseWriter, r *http.Request) {
 	payload := &DeleteAccountPayload{}
-	account := models.Account{}
 	ctx := r.Context()
 	db := GetDb(ctx)
-
-	signature := r.Header.Get("signature")
 
 	rawPayload, err := io.ReadAll(r.Body)
 
@@ -205,28 +201,13 @@ func deleteAccount(w http.ResponseWriter, r *http.Request) {
 
 	err = msgpack.Unmarshal(rawPayload, payload)
 
-	if err != nil {
-		render.Render(w, r, httpError.InvalidRequest(err))
+	if err = VerifySignature(rawPayload, r); err != nil {
+		fmt.Println(err)
+		render.Render(w, r, httpError.InvalidRequest(errors.New("Invalid Signature")))
 		return
 	}
 
-	err = pgxscan.Get(ctx, db, &account, `select * from accounts where username = $1`, payload.Username)
-
-	fmt.Println(account.SigningKeys.PublicKey)
-
-	if err != nil {
-		render.Render(w, r, httpError.InvalidRequest(err))
-		return
-	}
-
-	err = crypto.VerifySignature(account.SigningKeys.PublicKey, rawPayload, signature)
-
-	if err != nil {
-		render.Render(w, r, httpError.InvalidRequest(err))
-		return
-	}
-
-	_, err = db.Exec(ctx, `delete from accounts where id = $1`, account.Id)
+	_, err = db.Exec(ctx, `delete from accounts where username = $1`, payload.Username)
 
 	if err != nil {
 		render.Render(w, r, httpError.Internal(err))

@@ -59,7 +59,7 @@ test('generate keys', async () => {
 
 	expect(signingKeys).toBeTruthy();
 	expect(encryptionKeys).toBeTruthy();
-});
+}, 5000);
 
 test('import export encryption keypair with password', async () => {
 	const password = 'test password';

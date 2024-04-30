@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { createEvent, deleteAccount, login, register } from './api';
 
-let account;
+let account: Account;
 let username = 'test-user';
 let password = 'test-password';
 
@@ -23,9 +23,11 @@ test.sequential('login', async () => {
 });
 
 test.sequential('create document', async () => {
+	console.log(account);
 	await createEvent(account, {
-		to: 'self',
-		from: '',
+		to: ['self'],
+		action: 'create',
+		type: '',
 		payload: {
 			update: 'document',
 			blah: '123'
@@ -34,6 +36,5 @@ test.sequential('create document', async () => {
 });
 
 test.sequential('delete account', async () => {
-	console.log({ account });
 	expect(deleteAccount(account)).resolves.toBeTruthy();
 });

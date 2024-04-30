@@ -14,15 +14,15 @@ import { userStore } from './storage';
 
 type Account = any;
 
-async function preparePayload(payload, user, encrypt = true) {
+async function preparePayload(payload, account: Account, encrypt = true) {
 	let body = encode(payload);
 	if (encrypt) {
-		body = await encryptPayload(user.encryptionKeys, body);
+		body = await encryptPayload(account.keys.encryptionKeys, body);
 	}
-	const signature = await createPayloadSignature(user.signingKeys, body);
+	const signature = await createPayloadSignature(account.keys.signingKeys, body);
 	return {
 		body,
-		headers: { signature, 'Content-Type': 'application/msgpack' }
+		headers: { signature, 'Content-Type': 'application/msgpack', signer: account.username }
 	};
 }
 
@@ -47,7 +47,7 @@ export async function register(data) {
 	};
 	const { body, headers } = await preparePayload(
 		rawPayload,
-		{ signingKeys: unencodedSigningKeys },
+		{ keys: { signingKeys: unencodedSigningKeys }, username: rest.username },
 		false
 	);
 	const account = await apiUrl
@@ -85,19 +85,21 @@ export async function login(username: string, password: string): Promise<Account
 }
 
 export async function deleteAccount(account: Account) {
-	const { body, headers } = await preparePayload(
-		{ username: account.username },
-		account.keys,
-		false
-	);
+	const { body, headers } = await preparePayload({ username: account.username }, account, false);
 
 	const result = await apiUrl.url('/account/delete').headers(headers).body(body).post().res();
 	return result.ok;
 }
 
 export async function createEvent(account: Account, event) {
-	const { body: payload } = await preparePayload(event.payload, account.keys);
+	const { body: payload } = await preparePayload(event.payload, account);
 	const { payload: _, ...rest } = event;
-	const { body, headers } = await preparePayload({ ...rest, payload }, account.keys, false);
+	const { body, headers } = await preparePayload(
+		{ ...rest, payload: new Uint8Array(payload) },
+		account,
+		false
+	);
+
 	console.log({ body, headers });
+	const result = await apiUrl.url('/event').headers(headers).body(body).post().res();
 }
