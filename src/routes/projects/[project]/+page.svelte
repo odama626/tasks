@@ -222,12 +222,11 @@
 {#if tasks && docs && links}
 	{#if tasks.length}
 		<h2>Tasks</h2>
-		<!-- TODO: wrap tasks in a tasklist to fix spacing -->
 		<Editor
 			on:taskItemUpdate={onTaskItemUpdate}
 			isOverview={true}
 			editable={false}
-			content={{ type: 'doc', content: [{ type: 'taskList', content: tasks }] }}
+			content={{ type: 'doc', content: tasks }}
 		/>
 		<br />
 	{/if}
@@ -273,7 +272,7 @@
 				{#if expanded && tasks?.length}
 					<div class="tasks-group">
 						<Editor
-							isOverview={true}
+							isOverview
 							on:taskItemUpdate={onTaskItemUpdate}
 							content={{ type: 'doc', content: tasks }}
 							editable={false}

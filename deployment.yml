@@ -1,0 +1,161 @@
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: caddy
+#   namespace: tasks
+#   labels:
+#     app: caddy
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: caddy
+#   strategy:
+#     type: RollingUpdate
+#   template:
+#     metadata:
+#       labels:
+#         app: caddy
+#     spec:
+#       containers:
+#         - image: ghcr.io/odama626/venue:latest
+#           name: caddy
+#           ports:
+#             - containerPort: 80
+#           env:
+#             - name: API_URL
+#               value: "pocketbase"
+
+#       restartPolicy: Always
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: caddy
+#   namespace: tasks
+# spec:
+#   ports:
+#     - name: http
+#       port: 80
+#       targetPort: 80
+#   type: ClusterIP
+#   selector:
+#     app: caddy
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: caddy
+#   namespace: tasks
+# spec:
+#   rules:
+#     - host: "liveframe.app"
+#       http:
+#         paths:
+#         - path: /
+#           pathType: Prefix
+#           backend:
+#             service:
+#               name: caddy
+#               port:
+#                 number: 80
+# ---
+# Pocketbase
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pocketbase
+  namespace: tasks
+  labels:
+    app: pocketbase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pocketbase
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      containers:
+        - image: ghcr.io/muchobien/pocketbase:latest
+          name: pocketbase
+          ports:
+            - containerPort: 8090
+          volumeMounts:
+            - mountPath: /pb_data
+              name: pb-data
+            - mountPath: /pb_public
+              name: pb-public
+      restartPolicy: Always
+      volumes:
+        - name: pb-data
+          persistentVolumeClaim:
+            claimName: pb-data
+        - name: pb-public
+          persistentVolumeClaim:
+            claimName: pb-public
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pocketbase
+  namespace: tasks
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8090
+  type: ClusterIP
+  selector:
+    app: pocketbase
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: tasks
+  labels:
+    io.kompose.service: pb-data
+  name: pb-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: tasks
+  labels:
+    io.kompose.service: pb-public
+  name: pb-public
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pocketbase # Name of the ingress object
+  namespace: tasks # Name of the namespace
+spec:
+  rules:
+  - host: "pb.tasks.lilbyte.dev"  # Your hostname
+    http:
+      paths:
+      # Path-based routing settings:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pocketbase  # The name of the service
+            port:
+              number: 80 # Service Portnumber
