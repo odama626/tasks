@@ -100,7 +100,7 @@
 				<Select
 					disabled={currentUserPermission.id === permission.id}
 					on:change={(e) =>
-						events.update(Collections.ProjectsUsers, permission.id, { access: e.target.value })}
+						events.update(Collections.ProjectsUsers, permission.id, { access: e.target.value, project: permission.project })}
 					class="ghost"
 					name="access"
 					value={permission.access}
