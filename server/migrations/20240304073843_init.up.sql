@@ -5,23 +5,26 @@
 -- login is accomplished by signing a login token 
 -- with the private key that can be verified with
 -- the public key
-create table account (
+create table accounts (
     id uuid PRIMARY KEY default gen_random_uuid(),
     name text,
     username text unique,
     -- private key hashed by user password
     encryption_private_key_hash bytea,
-    encryption_public_key bytea,
+    encryption_public_key jsonb,
 
     signing_private_key_hash bytea,
-    signing_public_key bytea,
+    signing_public_key jsonb,
+
+
+    password_salt bytea,
     
     avatar_uri text,
     primary_color int,
     accent_color int
 );
 
-create table file (
+create table files (
     id uuid primary key default gen_random_uuid(),
     -- header_hash is a yjs document
     -- encrypted by a symmetric key
@@ -36,16 +39,16 @@ create table file (
 );
 
 -- each page has it's own symetric key
-create table page (
+create table pages (
     id uuid PRIMARY KEY default gen_random_uuid(),
-    parent_id uuid references page(id),
-    file_id  uuid references file(id)
+    parent_id uuid references pages(id),
+    file_id  uuid references files(id)
 );
 
 
-create table account_page_key_hash (
-    account_id uuid  references account(id) on delete cascade,
-    page_id uuid references page(id) on delete cascade,
+create table account_page_key_hashes (
+    account_id uuid  references accounts(id) on delete cascade,
+    page_id uuid references pages(id) on delete cascade,
 
     -- symmetric key hashed with public key
     -- the symmetric key is unique for each page
@@ -54,9 +57,9 @@ create table account_page_key_hash (
     primary key(account_id, page_id)
 );
 
-create table account_outbox (
+create table account_outboxes (
     id uuid primary key default gen_random_uuid(),
-    account_id  uuid references account(id) on delete cascade,
+    account_id  uuid references accounts(id) on delete cascade,
     payload_hash bytea
 );
 

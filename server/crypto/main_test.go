@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"testing"
 )
 
@@ -16,7 +17,15 @@ func TestVerifySignature(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = VerifySignature([]byte(publicKeyString), []byte(payload), signature)
+	var publicKey interface{}
+
+	err = json.Unmarshal([]byte(publicKeyString), &publicKey)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = VerifySignature((publicKey), []byte(payload), signature)
 
 	if err != nil {
 		t.Fatal(err)
