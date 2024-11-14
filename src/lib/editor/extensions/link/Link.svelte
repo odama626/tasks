@@ -7,8 +7,6 @@
 	export let href;
 	let metadata;
 
-	$: metadata, console.log({ metadata, $$props });
-
 	async function getMetadata(href: string) {
 		let storage = sessionStorage.getItem(href);
 		if (storage) {

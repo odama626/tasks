@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import ContextMenu from '$lib/context-menu.svelte';
-	import { Collections } from '$lib/db.types.js';
+	import { Collections, type DocsResponse } from '$lib/db.types.js';
 	import Editor from '$lib/editor.svelte';
 	import ChevronLeft from '$lib/icons/chevron-left.svelte';
 	import DocumentPlus from '$lib/icons/document-plus.svelte';
@@ -159,7 +159,7 @@
 			.createTreeWalker((yxml) => yxml.nodeName === 'taskItem' && yxml.getAttribute('id') === id)
 			.next().value;
 		taskItem.setAttribute('checked', checked);
-		saveDocument(doc, ydoc);
+		saveDocument({ id: doc } as DocsResponse, ydoc);
 	}
 </script>
 

@@ -159,3 +159,49 @@ spec:
             name: pocketbase  # The name of the service
             port:
               number: 80 # Service Portnumber
+---
+# Signaling Server
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signaling
+  namespace: tasks
+  labels:
+    app: signaling
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: signaling
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: signaling
+    spec:
+      containers:
+        - image: omarzion/tasks-yjs-server:latest
+          name: signaling
+          ports:
+            - containerPort: 4444
+      restartPolicy: Always
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: signaling # Name of the ingress object
+  namespace: tasks # Name of the namespace
+spec:
+  rules:
+  - host: "signals.tasks.lilbyte.dev"  # Your hostname
+    http:
+      paths:
+      # Path-based routing settings:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: signaling  # The name of the service
+            port:
+              number: 80 # Service Portnumber
