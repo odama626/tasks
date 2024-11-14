@@ -8,21 +8,26 @@
 	let metadata;
 
 	async function getMetadata(href: string) {
-		let storage = sessionStorage.getItem(href);
-		if (storage) {
-			metadata = JSON.parse(storage);
-			return;
+		console.log({ href });
+		try {
+			let storage = sessionStorage.getItem(href);
+			if (storage) {
+				metadata = JSON.parse(storage);
+				return;
+			}
+			let result = await db.link_metadata.get(href);
+			if (result) {
+				metadata = result;
+				sessionStorage.setItem(href, JSON.stringify(result));
+				return;
+			}
+			const payload = await fetch(`/api/urlmeta?url=${href}`).then((r) => r.json());
+			db.link_metadata.add(href, payload);
+			sessionStorage.setItem(href, JSON.stringify(payload));
+			metadata = payload;
+		} catch (e) {
+			console.error(e);
 		}
-		let result = await db.link_metadata.get(href);
-		if (result) {
-			metadata = result;
-			sessionStorage.setItem(href, JSON.stringify(result));
-			return;
-		}
-		const payload = await fetch(`/api/urlmeta?url=${href}`).then((r) => r.json());
-		db.link_metadata.add(href, payload);
-		sessionStorage.setItem(href, JSON.stringify(payload));
-		metadata = payload;
 	}
 
 	$: href, getMetadata(href);
