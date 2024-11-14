@@ -4,7 +4,7 @@
 	import Portal from 'svelte-portal';
 	import ContextMenu from '$lib/context-menu.svelte';
 
-	$: projects = liveQuery(() => db.projects.toCollection().toArray());
+	$: projects = liveQuery(() => db.projects.toCollection().sortBy('name'));
 </script>
 
 <Portal target=".header-context-portal">

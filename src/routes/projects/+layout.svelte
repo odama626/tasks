@@ -48,7 +48,7 @@
 		});
 	});
 
-	let projects = liveQuery(() => db.projects.toArray());
+	let projects = liveQuery(() => db.projects.toCollection().sortBy('name'));
 	let isHeaderOpen: boolean = false;
 	let isContextMenuOpen = false;
 	let isCreating: string | undefined = undefined;
